@@ -39,7 +39,7 @@ allTinyPrimitiveGroups := function(size)
 end;;
 
 if not(IsBound(FERRET_TEST_COUNT)) then
-    IMAGES_TEST_COUNT := 50;
+    IMAGES_TEST_COUNT := 100;
 else
     IMAGES_TEST_COUNT := FERRET_TEST_COUNT;
 fi;
