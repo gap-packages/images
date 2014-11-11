@@ -1,6 +1,6 @@
 #############################################################################
 ##
-#W  files.gi                   ferret Package                  Chris Jefferson
+#W  files.gi                   images Package                  Chris Jefferson
 ##
 ##  Installation file for SmallestImage.
 ##
@@ -336,8 +336,8 @@ function(inGroup, inList, settings)
       if IsBound(settings.stabilizer) then
           stab := settings.stabilizer;
       else
-          stab :=  Group(Solve([ConInGroup(inGroup),
-                           ConStabilize(inList, OnSets)]));
+          stab :=  Solve([ConInGroup(inGroup),
+                           ConStabilize(inList, OnSets)]);
       fi;
       
       imageperm := _CanonicalSetImage(inGroup, inList, stab, settings);

@@ -1,16 +1,17 @@
 #############################################################################
 ##
-#A  test_findallimages.tst       YAPB package                Chris Jefferson
+#A  test_findallimages.tst       images package                Chris Jefferson
 ##
 ##
-gap> START_TEST("ferret package: test_findallimages.tst");
-gap> LoadPackage("ferret",false);
+gap> START_TEST("images package: test_findallimages.tst");
+gap> LoadPackage("images",false);
 true
 gap> LoadPackage("semigroups", false);
 true
-gap> t3 := ReadGenerators("trans-3");;
-gap> t4 := ReadGenerators("trans-4");;
-gap> t5 := ReadGenerators("trans-5");;
+gap> dir := DirectoriesPackageLibrary("images","tst");;
+gap> t3 := ReadGenerators(Filename(dir,"trans-3"));;
+gap> t4 := ReadGenerators(Filename(dir,"trans-4"));;
+gap> t5 := ReadGenerators(Filename(dir,"trans-5"));;
 gap> mt3 := AllMinimalTransformations(SymmetricGroup(3), 3);;
 gap> mt4 := AllMinimalTransformations(SymmetricGroup(4), 4);;
 gap> mt5 := AllMinimalTransformations(SymmetricGroup(5), 5);;
@@ -21,7 +22,7 @@ true
 gap> t5 = List(mt5, x -> [x]);
 true
 gap> STOP_TEST( "test_findallimages.tst", 10000 );
-ferret package: test_findallimages.tst
+images package: test_findallimages.tst
 #############################################################################
 ##
 #E

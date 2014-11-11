@@ -1,7 +1,7 @@
 #############################################################################
 ##
 ##
-#W  files.gd                   ferret Package                  Chris Jefferson
+#W  files.gd                   images Package                  Chris Jefferson
 ##
 ##  Declaration file for types for MinimalImage and CanonicalImage.
 ##

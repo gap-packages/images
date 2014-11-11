@@ -1,4 +1,4 @@
-LoadPackage("ferret");
+LoadPackage("images");
 
 
 gather := [];
