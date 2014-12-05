@@ -61,18 +61,18 @@ end;
 CheckMinimalImageTest := function(g, o, action, minList)
     local good_min, nostab_min, slow_min;
     good_min := MinimalImage(g, o, action);
-    nostab_min := CanonicalImage(g, o, rec(action := action, stabilizer := Group(()), result := GetImage));
+    nostab_min := CanonicalImage(g, o, action, rec(stabilizer := Group(()), result := GetImage));
     slow_min := minList(List(g, p -> action(o,p)));
 
     if good_min <> slow_min or good_min <> nostab_min then
       Print(GeneratorsOfGroup(g)," ",o, " we found ", [good_min, nostab_min], " right answer is: ", slow_min,"\n");
     fi;
 
-    if (good_min = o) <> CanonicalImage(g, o, rec(image := "Minimal", result := GetBool, action := action)) then
+    if (good_min = o) <> CanonicalImage(g, o, action, rec(image := "Minimal", result := GetBool)) then
         Print(GeneratorsOfGroup(g), " ",o, " failure of GetBool\n");
     fi;
 
-    if good_min <> action(o,CanonicalImage(g, o, rec(image := "Minimal", result := GetPerm, action := action))) then
+    if good_min <> action(o,CanonicalImage(g, o, action, rec(image := "Minimal", result := GetPerm))) then
         Print(GeneratorsOfGroup(g), " ",o, " failure of GetPerm\n");
     fi;
 

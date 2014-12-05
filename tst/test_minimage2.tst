@@ -4,7 +4,7 @@
 ##
 ##
 gap> START_TEST("images package: test_minimage2.tst");
-gap> ReadPackage("images","tst/test_functions.g");
+gap> ReadPackage("images","tst/test_functions.g");;
 gap> CheckMinimalImageSet();
 gap> CheckMinimalImageTuple();
 gap> STOP_TEST( "test_minimage2.tst", 10000 );
