@@ -184,11 +184,15 @@ end;
         
     
 # Returns the minimum image of a transformation
-InstallMethod(CanonicalImage, [IsPermGroup, IsTransformation, IsObject],
-function(inGroup, trans, settings)
+InstallMethod(CanonicalImageOp, [IsPermGroup, IsTransformation, IsFunction, IsObject],
+function(inGroup, trans, action, settings)
   local l, lresult, set, stab, imageperm, imageset, retset,
         transformMax, matrixMax, rowcolGroup, dom, img, i;
 
+  if action <> OnPoints then
+    Error("Can only act on transformations with OnPoints");
+  fi;
+  
   # Return in trivial cases
   if Maximum(LargestMovedPoint(trans),LargestImageOfMovedPoint(trans)) = 0 or
      LargestMovedPoint(inGroup) = 0 then
@@ -218,11 +222,15 @@ function(inGroup, trans, settings)
 end);
 
 # Returns the minimum image of a transformation
-InstallMethod(CanonicalImage, [IsPermGroup, IsPerm, IsObject],
-function(inGroup, trans, settings)
+InstallMethod(CanonicalImageOp, [IsPermGroup, IsPerm, IsFunction, IsObject],
+function(inGroup, trans, action, settings)
   local l, lresult, set, stab, imageperm, imageset, retset,
         transformMax, matrixMax, rowcolGroup, dom, img, i;
 
+  if action <> OnPoints then
+    Error("Can only act on permutations with OnPoints");
+  fi;
+  
   # Return in trivial cases
   if LargestMovedPoint(trans) = 0 or LargestMovedPoint(inGroup) = 0 then
       return _trivialReturn(trans, settings.result);
@@ -247,24 +255,29 @@ function(inGroup, trans, settings)
   
 end);
 
-InstallMethod(CanonicalImage, [IsPermGroup, IsPosInt, IsObject],
-        function(inGroup, i, settings)
+InstallMethod(CanonicalImageOp, [IsPermGroup, IsPosInt, IsFunction, IsObject],
+        function(inGroup, i, action, settings)
     local min;
-    min := Minimum(Orbit(inGroup, i, settings.action));
+    
+    min := Minimum(Orbit(inGroup, i, action));
     
     if settings.result = GetImage then
         return min;
     elif settings.result = GetBool then
         return min = i;
-    elif settings.result = GetPerm then
-        return RepresentativeAction(inGroup, i, min, settings.action);
+    else #GetPerm
+        return RepresentativeAction(inGroup, i, min, action);
     fi;
 end);
 
-InstallMethod(CanonicalImage, [IsPermGroup, IsPartialPerm, IsObject],
-function(inGroup, pp, settings)
+InstallMethod(CanonicalImageOp, [IsPermGroup, IsPartialPerm, IsFunction, IsObject],
+function(inGroup, pp, action, settings)
   local dom, max, matrixMax, minTrans, l, lresult, i;
 
+  if action <> OnPoints then
+    Error("Can only act on partial perms with OnPoints");
+  fi;
+  
   # First find the largest integer of interest
   max := Maximum(DegreeOfPartialPerm(pp),
                  CodegreeOfPartialPerm(pp));
@@ -322,10 +335,9 @@ end;
 
 # This handles some trivial cases (OnSets, OnTuples)
 # and some non-trival ones too!
-InstallMethod(CanonicalImage, [IsPermGroup, IsList, IsObject],
-function(inGroup, inList, settings)
-  local stab, bigGroup, maxIn, setImage, imageperm, currentperm, i, outset, inner, outer, fList, op;
-  op := settings.action;
+InstallMethod(CanonicalImageOp, [IsPermGroup, IsList, IsFunction, IsObject],
+function(inGroup, inList, op, settings)
+  local stab, bigGroup, maxIn, setImage, imageperm, currentperm, i, outset, inner, outer, fList;
   
   # Bail out in global trivial case:
   if LargestMovedPoint(inGroup) = 0 then
@@ -336,8 +348,8 @@ function(inGroup, inList, settings)
       if IsBound(settings.stabilizer) then
           stab := settings.stabilizer;
       else
-          stab :=  Solve([ConInGroup(inGroup),
-                           ConStabilize(inList, OnSets)]);
+          stab := Solve([ConInGroup(inGroup),
+                         ConStabilize(inList, OnSets)]);
       fi;
       
       imageperm := _CanonicalSetImage(inGroup, inList, stab, settings);
@@ -363,10 +375,8 @@ function(inGroup, inList, settings)
           return fList;
       elif settings.result = GetBool then
           return fList = inList;
-      elif settings.result = GetPerm then
+      else # GetPerm
           return currentperm;
-      else
-          Error("Bad 'result' value");
       fi;
   fi;
   
@@ -409,7 +419,6 @@ function(inGroup, inList, settings)
         return PermList(List([1..maxIn], x -> (x^imageperm - 1) mod maxIn + 1));
     fi;
     
-    
     outset := List([1..Length(fList)], x -> []);
 
     for i in imageperm do
@@ -430,15 +439,80 @@ function(inGroup, inList, settings)
 
 end);
 
-InstallMethod(MinimalImage, [IsPermGroup, IsObject],
-function(G, O)
-    return MinimalImage(G,O,OnPoints);
+InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, imagearg )
+  local G,        # Group
+        obj,      # object
+        action,   # action
+        settings, # settings
+        index;    # index
+      
+  if Length(arglist) < 2 or Length(arglist) > 4 then
+    Error("MinimalImage(G, obj [, action] [,config])");
+  fi;
+
+  G := arglist[1];
+  
+  if not(IsGroup(G)) then
+    Error("First argument must be a group");
+  fi;
+  
+  obj := arglist[2];
+  
+  index := 3;
+  
+  if Length(arglist) >= index and IsFunction(arglist[index]) then
+    action := arglist[3];
+    index := index + 1;
+  else
+    action := OnPoints;
+  fi;
+    
+  if Length(arglist) >= index and IsRecord(arglist[index]) then
+    settings := arglist[index];
+    index := index + 1;
+    if not(IsBound(settings.result)) then
+      settings.result := resultarg;
+    fi;
+    
+    if not(IsBound(settings.image)) then
+      settings.image := imagearg;
+    fi;
+  else
+    settings := rec(result := resultarg, image := imagearg);
+  fi;
+  
+  if index <= Length(arglist) then
+    Error("Failed to understand argument ",index);
+  fi;
+  
+  return CanonicalImageOp(G, obj, action, settings);
 end);
 
-InstallMethod(MinimalImage, [IsPermGroup, IsObject, IsFunction],
-function(G, O, F)
-    return CanonicalImage(G, O, rec(image := "Minimal", result := GetImage, action := F));
+InstallGlobalFunction(MinimalImage, function(arg)
+  return _CanonicalImageParse(arg, GetImage, TypeMinimal);
 end);
+
+InstallGlobalFunction(IsMinimalImage, function(arg)
+  return _CanonicalImageParse(arg, GetBool, TypeMinimal);
+end);
+
+InstallGlobalFunction(MinimalImagePerm, function(arg)
+  return _CanonicalImageParse(arg, GetPerm, TypeMinimal);
+end);
+
+InstallGlobalFunction(CanonicalImage, function(arg)
+  return _CanonicalImageParse(arg, GetImage, TypeCanonical);
+end);
+
+InstallGlobalFunction(IsCanonicalImage, function(arg)
+  return _CanonicalImageParse(arg, GetBool, TypeCanonical);
+end);
+
+InstallGlobalFunction(CanonicalImagePerm, function(arg)
+  return _CanonicalImageParse(arg, GetPerm, TypeCanonical);
+end);
+
+
 
 InstallMethod(MinimalImageOrderedPair, [IsPermGroup, IsObject],
   function(G,O) return MinimalImageOrderedPair(G,O,OnPoints);

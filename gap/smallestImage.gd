@@ -24,17 +24,22 @@ DeclareAttribute( "rowcolsquareGroup2", IsPermGroup );
 ##
 #F  MinimialImage
 ##
-DeclareOperation( "MinimalImage", [IsPermGroup, IsObject] );
 
-## MinimalImage for lists (takes OnSet, OnSetSets, etc.)
-
-DeclareOperation( "MinimalImage", [IsPermGroup, IsObject, IsFunction] );
+DeclareGlobalFunction("MinimalImage");
+DeclareGlobalFunction("IsMinimalImage");
+DeclareGlobalFunction("MinimalImagePerm");
 
 #############################################################################
 ##
 #F  CanonicalImage
 ##
-DeclareOperation( "CanonicalImage", [IsPermGroup, IsObject, IsObject] );
+DeclareGlobalFunction("CanonicalImage");
+DeclareGlobalFunction("IsCanonicalImage");
+DeclareGlobalFunction("CanonicalImagePerm");
+
+DeclareGlobalFunction("_CanonicalImageParse");
+
+DeclareOperation( "CanonicalImageOp", [IsPermGroup, IsObject, IsFunction, IsObject] );
 
 DeclareOperation( "MinimalImageUnorderedPair", [IsPermGroup, IsObject]);
 DeclareOperation( "MinimalImageUnorderedPair", [IsPermGroup, IsObject, IsFunction]);
@@ -42,10 +47,11 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject]);
 DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]);
 
   
-DeclareGlobalFunction("GetPerm");
-DeclareGlobalFunction("GetImage");
-DeclareGlobalFunction("GetBool");
+BindGlobal("GetPerm", 1);
+BindGlobal("GetImage", 2);
+BindGlobal("GetBool", 3);
 
-
+BindGlobal("TypeMinimal", 4);
+BindGlobal("TypeCanonical", 5);
 
 #E  files.gd  . . . . . . . . . . . . . . . . . . . . . . . . . . . ends here
