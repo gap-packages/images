@@ -17,5 +17,5 @@ install:
   - ln -s $(pwd) gap-root/pkg/images
 
 script:
-  - /opt/gap/bin/gap.sh -A tst/testall.g
+  - /opt/gap/bin/gap.sh -l "$(pwd)/gap-root/;" -A tst/testall.g
 
