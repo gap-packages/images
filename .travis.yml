@@ -13,7 +13,7 @@ before_install:
 
 install:
   - mkdir gap-root && mkdir gap-root/pkg
-  - cd gap-root/pkg && wget https://github.com/gap-system/ferret/releases/download/v0.5.0/ferret-0.5.0.tar.gz && tar xf ferret-0.5.0.tar.gz && cd ferret-0.5.0 && ./configure /opt/gap && make
+  - (cd gap-root/pkg && wget https://github.com/gap-system/ferret/releases/download/v0.5.0/ferret-0.5.0.tar.gz && tar xf ferret-0.5.0.tar.gz && cd ferret-0.5.0 && ./configure /opt/gap && make)
   - ln -s $(pwd) gap-root/pkg/images
 
 script:
