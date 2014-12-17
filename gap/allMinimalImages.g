@@ -71,7 +71,7 @@ recurseMinimalImage := function(baseG, G, l, max, accept)
     if Length(l) = 0 then
         min := 1;
     else 
-        if not(IsMinimalImage(baseG, l, rec(stabilizer := Group(())))) then
+        if not(IsMinimalImage(baseG, l, OnSets, rec(stabilizer := Group(())))) then
             return;
         fi;
         
