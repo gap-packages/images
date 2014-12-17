@@ -68,11 +68,11 @@ CheckMinimalImageTest := function(g, o, action, minList)
       Print(GeneratorsOfGroup(g)," ",o, " we found ", [good_min, nostab_min], " right answer is: ", slow_min,"\n");
     fi;
 
-    if (good_min = o) <> CanonicalImage(g, o, action, rec(image := "Minimal", result := GetBool)) then
+    if (good_min = o) <> IsMinimalImage(g, o, action) then
         Print(GeneratorsOfGroup(g), " ",o, " failure of GetBool\n");
     fi;
 
-    if good_min <> action(o,CanonicalImage(g, o, action, rec(image := "Minimal", result := GetPerm))) then
+    if good_min <> action(o,MinimalImagePerm(g, o, action)) then
         Print(GeneratorsOfGroup(g), " ",o, " failure of GetPerm\n");
     fi;
 

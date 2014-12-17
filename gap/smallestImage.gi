@@ -145,7 +145,7 @@ _MinimalImage_partialFunction := function(l, G, mMax, settings)
     rowcolGroup := _rowColGen(G, mMax);
   fi;
   
-  if IsBound(settings.stabilizer) then
+  if settings.stabilizer <> fail then
      stab := _rowColGen(settings.stabilizer, mMax);
   else
       # Find minimal image of set
@@ -345,7 +345,7 @@ function(inGroup, inList, op, settings)
   fi;
 
   if op = OnSets then
-      if IsBound(settings.stabilizer) then
+      if settings.stabilizer <> fail then
           stab := settings.stabilizer;
       else
           stab := Solve([ConInGroup(inGroup),
@@ -365,8 +365,7 @@ function(inGroup, inList, op, settings)
       fList := [];
       currentperm := ();
       for i in [1..Length(inList)] do
-          imageperm := CanonicalImage(inGroup, inList[i]^currentperm, 
-                               rec(image := "Minimal", result := GetPerm, action := OnPoints));
+          imageperm := MinimalImagePerm(inGroup, inList[i]^currentperm, OnPoints);
           currentperm := currentperm*imageperm;
           fList[i] := inList[i]^currentperm;
           inGroup := Stabilizer(inGroup, fList[i]);
@@ -398,7 +397,7 @@ function(inGroup, inList, op, settings)
 
     setImage := Flat(List([1..Length(fList)],
                         x -> List(fList[x], y -> y + (x-1)*maxIn)));
-    if IsBound(settings.stabilizer) then
+    if settings.stabilizer <> fail then
         if IsTrivial(settings.stabilizer) then
             stab := Group(());
         else
@@ -466,23 +465,16 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   else
     action := OnPoints;
   fi;
-    
+   
+  settings := rec(result := resultarg, image := imagearg, stabilizer := fail);
+  
   if Length(arglist) >= index and IsRecord(arglist[index]) then
-    settings := arglist[index];
+    _ImagesHelperFuncs.fillUserValues(settings, arglist[index]);
     index := index + 1;
-    if not(IsBound(settings.result)) then
-      settings.result := resultarg;
-    fi;
-    
-    if not(IsBound(settings.image)) then
-      settings.image := imagearg;
-    fi;
-  else
-    settings := rec(result := resultarg, image := imagearg);
   fi;
   
   if index <= Length(arglist) then
-    Error("Failed to understand argument ",index);
+    Error("Failed to understand argument ",index, ":", arglist[index]);
   fi;
   
   return CanonicalImageOp(G, obj, action, settings);
@@ -528,24 +520,24 @@ InstallMethod(MinimalImageUnorderedPair, [IsPermGroup, IsList, IsFunction],
   function(G, O, F)
     local fperm, sperm, first, second, act1, act2;
     
-    fperm := CanonicalImage(G, O[1], rec(image := "Minimal", result := GetPerm, action := F));
-    sperm := CanonicalImage(G, O[2], rec(image := "Minimal", result := GetPerm, action := F));
+    fperm := MinimalImagePerm(G, O[1], F);
+    sperm := MinimalImagePerm(G, O[2], F);
     
     act1 := F(O[1], fperm);
     act2 := F(O[2], sperm);
     
     if act1 < act2 then
-        second := CanonicalImage(Stabilizer(G, F(O[1], fperm)), F(O[2], fperm), rec(image := "Minimal", result := GetImage, action := F));
+        second := MinimalImage(Stabilizer(G, F(O[1], fperm)), F(O[2], fperm), F);
         return [F(O[1], fperm), second];
     fi;
     
     if act1 > act2 then
-        first := CanonicalImage(Stabilizer(G, F(O[2], sperm)), F(O[1], sperm), rec(image := "Minimal", result := GetImage, action := F));
+        first := MinimalImage(Stabilizer(G, F(O[2], sperm)), F(O[1], sperm), F);
         return [F(O[2], sperm), first];
     fi;
     
-     second := CanonicalImage(Stabilizer(G, F(O[1], fperm)), F(O[2], fperm), rec(image := "Minimal", result := GetImage, action := F));
-     first := CanonicalImage(Stabilizer(G, F(O[2], sperm)), F(O[1], sperm), rec(image := "Minimal", result := GetImage, action := F));
+     second := MinimalImage(Stabilizer(G, F(O[1], fperm)), F(O[2], fperm), F);
+     first := MinimalImage(Stabilizer(G, F(O[2], sperm)), F(O[1], sperm), F);
      
      if first < second then
          return [act1, first];

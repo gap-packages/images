@@ -71,7 +71,7 @@ recurseMinimalImage := function(baseG, G, l, max, accept)
     if Length(l) = 0 then
         min := 1;
     else 
-        if not(CanonicalImage(baseG, l, rec(action := OnSets, result := GetBool, stabilizer := Group(())))) then
+        if not(IsMinimalImage(baseG, l, rec(stabilizer := Group(())))) then
             return;
         fi;
         
@@ -143,7 +143,7 @@ AllMinimalUnorderedPairs := function(G, n, filter)
     local pairs, seconds, seconds_image, out, p, mimage;
     pairs := AllMinimalOrderedPairs(G, n, filter);
     seconds := Set(pairs, x -> x[2]);
-    seconds_image := List(seconds, x -> CanonicalImage(G, x, rec(result := GetImage, action := OnPoints, stabilizer := Group(()))));
+    seconds_image := List(seconds, x -> CanonicalImage(G, x, OnPoints, rec(result := GetImage, stabilizer := Group(()))));
 
     # Now we try to find the minimum unordered pairs [a,b].
     # We use the following facts:
