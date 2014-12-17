@@ -11,7 +11,7 @@ gap> START_TEST("images package: test_minimage.tst");
 # First load the package without banner (the banner must be suppressed to
 # avoid reporting discrepancies in the case when the package is already
 # loaded)
-gap> ReadPackage("images","tst/test_functions.g");
+gap> ReadPackage("images","tst/test_functions.g");;
 gap> CheckMinimalImageTransformations();
 gap> # CheckMinimalImagePartialPerm();
 gap> CheckMinimalImagePerm();
