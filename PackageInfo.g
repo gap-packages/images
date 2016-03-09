@@ -30,9 +30,9 @@ Persons := [
   ),
 ],
 
-PackageWWWHome := "http://ChrisJefferson.github.io/images/",
+PackageWWWHome := "http://gap-system.github.io/images/",
 
-ArchiveURL     := Concatenation("https://github.com/ChrisJefferson/images/",
+ArchiveURL     := Concatenation("https://github.com/gap-system/images/",
                                 "releases/download/v", ~.Version,
                                 "/images-", ~.Version),
 README_URL     := Concatenation( ~.PackageWWWHome, "README" ),
@@ -63,7 +63,7 @@ PackageDoc := rec(
 
 Dependencies := rec(
   GAP := ">= 4.6",
-  NeededOtherPackages := [ [ "GAPDoc", ">= 1.5" ], ["ferret", ">= 0.3.0"] ],
+  NeededOtherPackages := [ [ "GAPDoc", ">= 1.5" ], ["ferret", ">= 0.4.1"] ],
   SuggestedOtherPackages := [ ],
   ExternalConditions := [ ],
 ),
