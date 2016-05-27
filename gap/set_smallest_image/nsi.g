@@ -147,6 +147,8 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
             x,  num,  rep,  node2,  prevnode,  nodect,  changed,
             newnode,  image,  dict,  seen,  he,  bestim,  bestnode,
             imset,  p;
+            
+    ## Node exploration functions
     leftmost_node := function(depth)
         local   n,  i;
         n := root;
@@ -155,6 +157,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
         od;
         return n;
     end;
+    
     next_node := function(node)
         local   n;
         n := node;
@@ -163,6 +166,8 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
         until n = fail or not n.deleted;
         return n;
     end;
+    
+    # Delete a node, and recursively deleting all it's children.
     delete_node := function(node)
         local   i;
         if node.deleted then
@@ -196,7 +201,9 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
             delete_node(node);
         od;
     end;
-
+    
+    # Filter nodes by stabilizer group,
+    # Updates the stabilizer group of the node, 
     clean_subtree := function(node)
         local   bad,  seen,  c,  x,  q,  gens,  olen,  pt,  gen,  im;
         Info(InfoNSI,3,"Cleaning at ",node.selected);
@@ -234,6 +241,8 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
         delete_nodes(bad);
     end;
 
+    # Add a new stabilizer element, mapping node1 to node2, and then call
+    # clean_subtree to remove any new subtrees.
     handle_new_stabilizer_element := function(node1,node2)
         local   perm1,  i;
         # so node1 and node2 represnet group elements that map set to the same
@@ -245,6 +254,9 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
         root.substab := l;
         clean_subtree(root);
     end;
+    
+    # Given a group 'gp' and a set 'set', find orbit representatives
+    # of 'set' in 'gp' simply.
     simpleOrbitReps := function(gp,set)
         local   m,  n,  b,  seed,  reps,  gens,  q,  pt,  gen,  im;
         m := Length(set);
@@ -270,6 +282,8 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
         od;
         return reps;
     end;
+    
+    # Make orbit of x, updating orbnums, orbmins and orbsizes as approriate.
     make_orbit := function(x)
         local   q,  rep,  num,  pt,  gen,  img;
         q := [x];
@@ -413,6 +427,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
             StartTimer(shortcut);
             node := leftmost_node(depth);
             while node <> fail do
+                Assert(1, Length(node.validkids)=1);
                 Add(node.selected, node.validkids[1]);
                 node := next_node(node);
             od;
