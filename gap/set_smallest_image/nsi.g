@@ -146,7 +146,13 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
             orbsizes,  upb,  imsets,  imsetnodes,  node,  cands,  y,
             x,  num,  rep,  node2,  prevnode,  nodect,  changed,
             newnode,  image,  dict,  seen,  he,  bestim,  bestnode,
-            imset,  p;
+            imset,  p, config;
+            
+            
+    config := rec(
+        skipNewOrbit := -> (upb <= lastupb + 1),
+        getQuality := pt -> orbmins[pt]
+    );
             
     ## Node exploration functions
     leftmost_node := function(depth)
@@ -358,6 +364,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
             for y in cands do
                 IncCount(check1);
                 x := node.image[y];
+                
                 num := orbnums[x];
                 if num = -1 then
                     #
@@ -368,14 +375,14 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
                     # If there is no prospect of the new orbit being
                     # better than the current best then go on to the next candidate
                     #
-                    if upb <= lastupb+1 then
+                    if config.skipNewOrbit() then
                         IncCount(skippedorbit);
                         continue;
                     fi;
                     StartTimer(orbit);
                     num := make_orbit(x);
                     StopTimer(orbit);
-                    rep := orbmins[num];
+                    rep := config.getQuality(num);
                     if rep < upb then
                         StartTimer(improve);
                         ### CAJ - Support bailing out early when a smaller
@@ -396,7 +403,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
                     fi;
                 else
                     IncCount(check2);
-                    rep := orbmins[num];
+                    rep := config.getQuality(num);
                     if rep = upb then
                         Add(node.validkids,y);
                     fi;
