@@ -151,7 +151,9 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
             
     config := rec(
         skipNewOrbit := -> (upb <= lastupb + 1),
-        getQuality := pt -> orbmins[pt]
+        getQuality := pt -> orbmins[pt],
+        initial_lastupb := 0,
+        initial_upb := infinity
     );
             
     ## Node exploration functions
@@ -326,7 +328,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
     else
        hash := s->HashKeyBag(s,57,0,GAPInfo.BytesPerVariable*m+GAPInfo.BytesPerVariable);
     fi;
-    lastupb := 0;
+    lastupb := config.initial_lastupb;
     root := rec(selected := [],
                 image := set,
                 imset := Immutable(Set(set)),
@@ -340,7 +342,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
         orbnums := ListWithIdenticalEntries(n,-1);
         orbmins := [];
         orbsizes := [];
-        upb := infinity; # TODO: Can this be minimum of remaining points?
+        upb := config.initial_upb;
         imsets := [];
         imsetnodes := [];
         #
