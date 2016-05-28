@@ -1,21 +1,29 @@
 language: cpp
+sudo: false
 
 branches:
   except:
     - gh-pages
-    
 
-before_install:
-  - sudo add-apt-repository ppa:azumanga/gap -y
-  - sudo apt-get update -y
-  - sudo apt-get install gap-snapshot libgmp3-dev parallel valgrind -y
-
+addons:
+  apt_packages:
+      - libgmp3-dev
+      - parallel
+      - valgrind
 
 install:
-  - mkdir gap-root && mkdir gap-root/pkg
-  - (cd gap-root/pkg && wget https://github.com/gap-system/ferret/releases/download/v0.5.0/ferret-0.5.0.tar.gz && tar xf ferret-0.5.0.tar.gz && cd ferret-0.5.0 && ./configure /opt/gap && make)
-  - ln -s $(pwd) gap-root/pkg/images
+#  - git clone --depth=2 https://github.com/gap-system/gap.git gap-git
+  - git clone --depth=2 -b stab-iterator-fix https://github.com/ChrisJefferson/gap.git gap-git
+  - pwd
+  - ( cd gap-git && ./configure --with-gmp=system && make && make bootstrap-pkg-minimal)
+  - ( cd gap-git/pkg && wget http://www.gap-system.org/pub/gap/gap4/tar.bz2/packages/atlasrep1r5p0.tar.bz2 && tar -xf atlasrep*bz2 )
+  - ( cd gap-git/pkg && wget http://www.gap-system.org/pub/gap/gap4/tar.bz2/packages/semigroups-2.7.4.tar.bz2 && tar -xf semigroups*bz2 )
+  - ( cd gap-git/pkg && git clone --depth=2 https://github.com/gap-packages/io )
+  - ( cd gap-git/pkg && git clone --depth=2 https://github.com/gap-packages/orb )
+  - ( cd gap-git/pkg && git clone --depth=2 https://github.com/gap-packages/ferret )
+  - ln -s $(pwd) gap-git/pkg/images
+  - ( cd gap-git/pkg && ../bin/BuildPackages.sh )
 
 script:
-  - /opt/gap/bin/gap.sh -l "$(pwd)/gap-root/;" -A tst/testall.g
+  - gap-git/bin/gap.sh -A gap-git/pkg/images/tst/testall.g
 

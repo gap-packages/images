@@ -6,6 +6,7 @@
 #
 LoadPackage( "io" );
 LoadPackage( "images" );
+LoadPackage( "semigroups");
 dirs := DirectoriesPackageLibrary( "images", "tst" );
 
 TestDirectory(dirs, rec(exitGAP := true));
