@@ -131,7 +131,7 @@ CheckMinimalImageSet := function()
     CheckMinimalImageTest(Group((1,2,3)), [], OnSets, Minimum);
     CheckMinimalImageTest(Group(()), [1,2,3], OnSets, Minimum);
     for i in [1..FERRET_TEST_LIMIT.count] do
-        CheckMinimalImageTest(randomPrimitiveGroup(Random([2..FERRET_TEST_LIMIT.groupSize])),
+        CheckMinimalImageTest(randomPrimitiveGroup(Random([2..FERRET_TEST_LIMIT.groupSize + 1])),
                               RandomSet(Random([1..FERRET_TEST_LIMIT.groupSize + 2])), OnSets, Minimum);
     od;
 end;;
