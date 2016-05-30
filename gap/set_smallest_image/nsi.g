@@ -137,8 +137,11 @@ if not IsBound(InfoNSI) then
     DeclareInfoClass("InfoNSI");
 fi;
 
+BIND_GLOBAL("CanonicalConfig_MinVal", 1);
+BIND_GLOBAL("CanonicalConfig_MinOrbit", 2);
+BIND_GLOBAL("CanonicalConfig_MaxOrbit", 3);
 
-_NewSmallestImage := function(g,set,k,skip_func, early_exit)
+_NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
     local   leftmost_node,  next_node,  delete_node,  delete_nodes,
             clean_subtree,  handle_new_stabilizer_element,
             simpleOrbitReps,  make_orbit,  n,  s,  l,  m,  hash,
@@ -148,13 +151,16 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
             newnode,  image,  dict,  seen,  he,  bestim,  bestnode,
             imset,  p, config;
             
-            
-    config := rec(
-        skipNewOrbit := -> (upb <= lastupb + 1),
-        getQuality := pt -> orbmins[pt],
-        initial_lastupb := 0,
-        initial_upb := infinity
-    );
+
+    config := [rec(
+                skipNewOrbit := -> (upb <= lastupb + 1),
+                getQuality := pt -> orbmins[pt],
+                initial_lastupb := 0,
+                initial_upb := infinity
+               ),
+               rec(),
+               rec()]
+               [config_option];
             
     ## Node exploration functions
     leftmost_node := function(depth)
@@ -471,6 +477,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit)
                 fi;
                 prevnode := newnode;
                 Add(node.children,newnode);
+                
                 image := node.image;
                 if image[x] <> upb then
                     repeat
