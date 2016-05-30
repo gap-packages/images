@@ -86,7 +86,7 @@ _CanonicalSetImage := function(G, S, stab, settings)
         earlyskip := false;
     fi;
     
-    L := _NewSmallestImage(G, S, stab, x -> x, earlyskip);
+    L := _NewSmallestImage(G, S, stab, x -> x, earlyskip, settings.order );
     
     if L = false then
         return false;
@@ -110,7 +110,7 @@ end;
 _CanonicalSetSetImage := function(G, S, stab, stepval, settings)
     local L;
     
-    L := _NewSmallestImage_SetSet(G, S, stab, x -> x, stepval);
+    L := _NewSmallestImage_SetSet(G, S, stab, x -> x, stepval );
     
     if settings.result = GetImage then
         return L[1];
@@ -466,7 +466,7 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
     action := OnPoints;
   fi;
    
-  settings := rec(result := resultarg, image := imagearg, stabilizer := fail);
+  settings := rec(result := resultarg, image := imagearg, stabilizer := fail, order := 1);
   
   if Length(arglist) >= index and IsRecord(arglist[index]) then
     _ImagesHelperFuncs.fillUserValues(settings, arglist[index]);
