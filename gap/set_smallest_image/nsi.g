@@ -137,6 +137,7 @@ if not IsBound(InfoNSI) then
     DeclareInfoClass("InfoNSI");
 fi;
 
+BIND_GLOBAL("CanonicalConfig_Fast", 0);
 BIND_GLOBAL("CanonicalConfig_MinVal", 1);
 BIND_GLOBAL("CanonicalConfig_MinOrbit", 2);
 BIND_GLOBAL("CanonicalConfig_MaxOrbit", 3);
@@ -152,14 +153,32 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
             imset,  p, config;
             
 
+    # Set to fastest known config option
+    if config_option = 0 then
+        config_option := 3;
+    fi;
+    
     config := [rec(
-                skipNewOrbit := -> (upb <= lastupb + 1),
-                getQuality := pt -> orbmins[pt],
-                initial_lastupb := 0,
-                initial_upb := infinity
+                   skipNewOrbit := -> (upb <= lastupb + 1),
+                   getQuality := pt -> orbmins[pt],
+                   getBasePoint := IdFunc,
+                   initial_lastupb := 0,
+                   initial_upb := infinity,
                ),
-               rec(),
-               rec()]
+               rec(
+                   skipNewOrbit := ReturnFalse,
+                   getQuality := pt -> [orbsizes[pt], orbmins[pt]],
+                   getBasePoint := pt -> pt[2],
+                   initial_lastupb := [-infinity, -infinity],
+                   initial_upb := [infinity, infinity]
+               ),
+               rec(
+                   skipNewOrbit := ReturnFalse,
+                   getQuality := pt -> [-orbsizes[pt], orbmins[pt]],
+                   getBasePoint := pt -> pt[2],
+                   initial_lastupb := [-infinity, -infinity],
+                   initial_upb := [infinity, infinity]
+               )]
                [config_option];
             
     ## Node exploration functions
@@ -431,7 +450,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
         #
         lastupb := upb;
         StartTimer(changeStabChain);
-        ChangeStabChain(s,[upb],false);
+        ChangeStabChain(s,[config.getBasePoint(upb)],false);
         StopTimer(changeStabChain);
         if Length(s.orbit) = 1 then
             #
@@ -479,10 +498,10 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                 Add(node.children,newnode);
                 
                 image := node.image;
-                if image[x] <> upb then
+                if image[x] <> config.getBasePoint(upb) then
                     repeat
                         image := OnTuples(image, s.transversal[image[x]]);
-                    until image[x] = upb;
+                    until image[x] = config.getBasePoint(upb);
                     newnode.image := image;
                     newnode.imset := Set(image);
                     MakeImmutable(newnode.imset);
