@@ -155,7 +155,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
 
     # Set to fastest known config option
     if config_option = 0 then
-        config_option := 3;
+        config_option := 2;
     fi;
     
     config := [rec(
