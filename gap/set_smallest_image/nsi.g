@@ -100,7 +100,7 @@ if _IMAGES_DO_TIMING then
 
     _IMAGES_ResetStats();
 
-    GetStats := function()
+    _IMAGES_GetStats := function()
         local   r,  c;
         r := rec();
         for c in _IMAGES_TIME_CLASSES do
@@ -126,7 +126,7 @@ else
         return;
     end;
 
-    GetStats := function()
+    _IMAGES_GetStats := function()
         return fail;
     end;
 
