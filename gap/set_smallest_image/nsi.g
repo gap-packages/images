@@ -76,25 +76,25 @@ _IMAGES_DeclareTimeClass("check2");
 _IMAGES_DeclareTimeClass("prune");
 
 
-_nsi_stats := fail;
+_IMAGES_nsi_stats := fail;
 
 _IMAGES_DO_TIMING := true;
 
 if _IMAGES_DO_TIMING then
     StartTimer := function(cat)
-        _nsi_stats[cat] := _nsi_stats[cat] - Runtime();
+        _IMAGES_nsi_stats[cat] := _IMAGES_nsi_stats[cat] - Runtime();
     end;
 
     StopTimer := function(cat)
-        _nsi_stats[cat] := _nsi_stats[cat] + Runtime();
+        _IMAGES_nsi_stats[cat] := _IMAGES_nsi_stats[cat] + Runtime();
     end;
 
     IncCount := function(cat)
-        _nsi_stats[cat] := _nsi_stats[cat] + 1;
+        _IMAGES_nsi_stats[cat] := _IMAGES_nsi_stats[cat] + 1;
     end;
 
     ResetStats := function()
-        _nsi_stats := ListWithIdenticalEntries(Length(_IMAGES_TIME_CLASSES),0);
+        _IMAGES_nsi_stats := ListWithIdenticalEntries(Length(_IMAGES_TIME_CLASSES),0);
     end;
 
     ResetStats();
@@ -103,7 +103,7 @@ if _IMAGES_DO_TIMING then
         local   r,  c;
         r := rec();
         for c in _IMAGES_TIME_CLASSES do
-            r.(c) := _nsi_stats[ValueGlobal(c)];
+            r.(c) := _IMAGES_nsi_stats[ValueGlobal(c)];
         od;
         return r;
     end;
