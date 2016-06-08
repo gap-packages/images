@@ -54,26 +54,26 @@
 _IMAGES_NSI_HASH_LIMIT :=100;
 
 
-TIME_CLASSES := [];
+_IMAGES_TIME_CLASSES := [];
 
-DeclareTimeClass := function(name)
-    BindGlobal(name, Length(TIME_CLASSES)+1);
-    Add(TIME_CLASSES,name);
+_IMAGES_DeclareTimeClass := function(name)
+    BindGlobal(name, Length(_IMAGES_TIME_CLASSES)+1);
+    Add(_IMAGES_TIME_CLASSES,name);
 end;
 
 
-DeclareTimeClass("pass1");
-DeclareTimeClass("pass2");
-DeclareTimeClass("pass3");
-DeclareTimeClass("shortcut");
-DeclareTimeClass("changeStabChain");
-DeclareTimeClass("orbit");
-DeclareTimeClass("skippedorbit");
-DeclareTimeClass("getcands");
-DeclareTimeClass("improve");
-DeclareTimeClass("check1");
-DeclareTimeClass("check2");
-DeclareTimeClass("prune");
+_IMAGES_DeclareTimeClass("pass1");
+_IMAGES_DeclareTimeClass("pass2");
+_IMAGES_DeclareTimeClass("pass3");
+_IMAGES_DeclareTimeClass("shortcut");
+_IMAGES_DeclareTimeClass("changeStabChain");
+_IMAGES_DeclareTimeClass("orbit");
+_IMAGES_DeclareTimeClass("skippedorbit");
+_IMAGES_DeclareTimeClass("getcands");
+_IMAGES_DeclareTimeClass("improve");
+_IMAGES_DeclareTimeClass("check1");
+_IMAGES_DeclareTimeClass("check2");
+_IMAGES_DeclareTimeClass("prune");
 
 
 _nsi_stats := fail;
@@ -94,7 +94,7 @@ if _IMAGES_DO_TIMING then
     end;
 
     ResetStats := function()
-        _nsi_stats := ListWithIdenticalEntries(Length(TIME_CLASSES),0);
+        _nsi_stats := ListWithIdenticalEntries(Length(_IMAGES_TIME_CLASSES),0);
     end;
 
     ResetStats();
@@ -102,7 +102,7 @@ if _IMAGES_DO_TIMING then
     GetStats := function()
         local   r,  c;
         r := rec();
-        for c in TIME_CLASSES do
+        for c in _IMAGES_TIME_CLASSES do
             r.(c) := _nsi_stats[ValueGlobal(c)];
         od;
         return r;
