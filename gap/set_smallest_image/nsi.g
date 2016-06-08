@@ -74,7 +74,8 @@ _IMAGES_DeclareTimeClass("improve");
 _IMAGES_DeclareTimeClass("check1");
 _IMAGES_DeclareTimeClass("check2");
 _IMAGES_DeclareTimeClass("prune");
-
+_IMAGES_DeclareTimeClass("ShallowNode");
+_IMAGES_DeclareTimeClass("DeepNode");
 
 _IMAGES_nsi_stats := fail;
 
@@ -424,6 +425,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                             delete_node(node2);
                             node2 := node2.prev;
                         od;
+                        _IMAGES_IncCount(ShallowNode);
                         node.validkids := [y];
                         Info(InfoNSI,3,"Best down to ",upb);
                         _IMAGES_StopTimer(improve);
@@ -432,6 +434,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                     _IMAGES_IncCount(check2);
                     rep := config.getQuality(num);
                     if rep = upb then
+                        _IMAGES_IncCount(ShallowNode);
                         Add(node.validkids,y);
                     fi;
                 fi;
@@ -483,6 +486,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
         while node <> fail do
             node.children := [];
             for x in node.validkids do
+                _IMAGES_IncCount(DeepNode);
                 newnode := rec( selected := Concatenation(node.selected,[x]),
                                 substab := Stabilizer(node.substab,x),
                                 parent := node,
