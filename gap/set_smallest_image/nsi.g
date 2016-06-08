@@ -78,9 +78,9 @@ DeclareTimeClass("prune");
 
 _nsi_stats := fail;
 
-DO_TIMING := true;
+_IMAGES_DO_TIMING := true;
 
-if DO_TIMING then
+if _IMAGES_DO_TIMING then
     StartTimer := function(cat)
         _nsi_stats[cat] := _nsi_stats[cat] - Runtime();
     end;
