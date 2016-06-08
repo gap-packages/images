@@ -51,7 +51,7 @@
 # branches that are now non-canonical -- propagate new K down through
 # tree. Continue with surviving nodes at current level.
 
-HASH_LIMIT :=100;
+_IMAGES_NSI_HASH_LIMIT :=100;
 
 
 TIME_CLASSES := [];
@@ -523,7 +523,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
         StartTimer(pass3);
         if  changed then
             node := leftmost_node(depth+1);
-            if nodect > HASH_LIMIT then
+            if nodect > _IMAGES_NSI_HASH_LIMIT then
                 dict := SparseHashTable(hash);
                 seen := [];
                 while node <> fail do

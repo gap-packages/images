@@ -433,7 +433,7 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
         StartTimer(pass3);
         if  changed then
             node := leftmost_node(depth+1);
-            if nodect > HASH_LIMIT then
+            if nodect > _IMAGES_NSI_HASH_LIMIT then
                 dict := SparseHashTable(hash);
                 seen := [];
                 while node <> fail do
