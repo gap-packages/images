@@ -245,11 +245,11 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
         # At this point, all bottom nodes are blue
         # first pass creates appropriate set of virtual red nodes
         #
-        StartTimer(pass1);
+        _IMAGES_StartTimer(pass1);
         node := leftmost_node(depth);
         while node <> fail do
             Info(InfoNSI,5,"Start Node");
-            StartTimer(getcands);
+            _IMAGES_StartTimer(getcands);
             cands := Difference([1..m],skip_func(node.selected));
             if Length(cands) > 1 and not IsTrivial(node.substab) then
                 cands := simpleOrbitReps(node.substab,cands);
@@ -258,7 +258,7 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
             # These index the children of node that will
             # not be immediately deleted under rule C
             #
-            StopTimer(getcands);
+            _IMAGES_StopTimer(getcands);
             reloop := true;
             while reloop do
                 Info(InfoNSI,5,"Start Reloop");
@@ -281,12 +281,12 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
                         # better than the current best then go on to the next candidate
                         #
                         #if upb <= lastupb+1 then
-                        #    IncCount(skippedorbit);
+                        #    _IMAGES_IncCount(skippedorbit);
                         #    continue;
                         #fi;
-                        StartTimer(orbit);
+                        _IMAGES_StartTimer(orbit);
                         num := make_orbit(x);
-                        StopTimer(orbit);
+                        _IMAGES_StopTimer(orbit);
                     fi;
                 od;
 
@@ -316,7 +316,7 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
 
                         if rep < upb then
                             Info(InfoNSI,5,"Improved Node: ",y, " from ", upb ," to ", rep);
-                            StartTimer(improve);
+                            _IMAGES_StartTimer(improve);
                             upb := rep;
                             node2 := node.prev;
                             while node2 <> fail do
@@ -325,7 +325,7 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
                             od;
                             node.validkids := [y];
                             Info(InfoNSI,3,"Best down to ",upb);
-                            StopTimer(improve);
+                            _IMAGES_StopTimer(improve);
                         fi;
 
                         candsmin := Minimum(candsmin, orbmins[num]);
@@ -349,28 +349,28 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
 
 
             if node.validkids = [] then
-                StartTimer(prune);
+                _IMAGES_StartTimer(prune);
                 delete_node(node);
-                StopTimer(prune);
+                _IMAGES_StopTimer(prune);
             fi;
             node := next_node(node);
         od;
         Info(InfoNSI,2,"Layer ",depth," pass 1 complete. Best is ",upb);
-        StopTimer(pass1);
+        _IMAGES_StopTimer(pass1);
         #
         # Second pass. Actually make all the red nodes and turn them blue
         #
         lastupb := upb;
-        StartTimer(changeStabChain);
+        _IMAGES_StartTimer(changeStabChain);
         ChangeStabChain(s,[upb],false);
-        StopTimer(changeStabChain);
+        _IMAGES_StopTimer(changeStabChain);
         if Length(s.orbit) = 1 then
             #
             # In this case nothing much can happen. Each surviving node will have exactly one child
             # and none of the imsets will change
             # so we mutate the nodes in-place
             #
-            StartTimer(shortcut);
+            _IMAGES_StartTimer(shortcut);
             node := leftmost_node(depth);
             while node <> fail do
                 Add(node.selected, node.validkids[1]);
@@ -378,7 +378,7 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
             od;
             Info(InfoNSI,2,"Nothing can happen, short-cutting");
             s := s.stabilizer;
-            StopTimer(shortcut);
+            _IMAGES_StopTimer(shortcut);
             if Size(skip_func(leftmost_node(depth+1).selected)) = m then
                 Info(InfoNSI,2,"Skip would skip all remaining points");
                 break;
@@ -386,7 +386,7 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
 
             continue; # to the next depth
         fi;
-        StartTimer(pass2);
+        _IMAGES_StartTimer(pass2);
         node := leftmost_node(depth);
         prevnode := fail;
         nodect := 0;
@@ -424,13 +424,13 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
             od;
             node := next_node(node);
         od;
-        StopTimer(pass2);
+        _IMAGES_StopTimer(pass2);
         Info(InfoNSI,2,"Layer ",depth," pass 2 complete. ",nodect," new nodes");
         #
         # Third pass detect stabilizer elements
         #
 
-        StartTimer(pass3);
+        _IMAGES_StartTimer(pass3);
         if  changed then
             node := leftmost_node(depth+1);
             if nodect > _IMAGES_NSI_HASH_LIMIT then
@@ -465,7 +465,7 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
                         fi;
                         node := next_node(node);
                     od;
-                    StopTimer(pass3);
+                    _IMAGES_StopTimer(pass3);
                     return [bestnode.image,l];
                 fi;
             else
@@ -484,7 +484,7 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
                 s := s.stabilizer;
                 if Length(s.generators) = 0 then
                     Info(InfoNSI,2,"Run out of group, return best image");
-                    StopTimer(pass3);
+                    _IMAGES_StopTimer(pass3);
                     return [CAJSetSetListMin(List(imsetnodes, x -> x.image), block_distance), l];
                     #return [imsetnodes[1].image,l];
                 fi;
@@ -492,7 +492,7 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
         else
             s := s.stabilizer;
         fi;
-        StopTimer(pass3);
+        _IMAGES_StopTimer(pass3);
         if Size(skip_func(leftmost_node(depth+1).selected)) = m then
             Info(InfoNSI,2,"Skip would skip all remaining points");
             break;
