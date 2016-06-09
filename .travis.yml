@@ -12,8 +12,7 @@ addons:
       - valgrind
 
 install:
-#  - git clone --depth=2 https://github.com/gap-system/gap.git gap-git
-  - git clone --depth=2 -b stab-iterator-fix https://github.com/ChrisJefferson/gap.git gap-git
+  - git clone --depth=2 https://github.com/gap-system/gap.git gap-git
   - pwd
   - ( cd gap-git && ./configure --with-gmp=system && make && make bootstrap-pkg-minimal)
   - ( cd gap-git/pkg && wget http://www.gap-system.org/pub/gap/gap4/tar.bz2/packages/atlasrep1r5p0.tar.bz2 && tar -xf atlasrep*bz2 )
@@ -26,4 +25,3 @@ install:
 
 script:
   - gap-git/bin/gap.sh -A gap-git/pkg/images/tst/testall.g
-
