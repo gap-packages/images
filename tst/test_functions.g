@@ -185,3 +185,24 @@ CheckMinimalImageSetSet := function()
                               RandomSetSet(Random([1..FERRET_TEST_LIMIT.groupSize + 2])), OnSetsSets, Minimum);
     od;
 end;;
+
+
+FindAllMinimalImagesSetSlow := function(G, maxpnt, size)
+    return Filtered(Combinations([1..maxpnt], size), 
+        function(x)
+            return IsMinimalImage(G, x, OnSets);
+        end);
+end;
+
+CheckFindAllMinimalImages := function()
+    local i, grp, min1, min2, size;
+    for i in [1..FERRET_TEST_LIMIT.count] do
+        size := Random([1..3]);
+        grp := randomGroup(Random([2..FERRET_TEST_LIMIT.groupSize]));
+        min1 :=  AllMinimalSetsFiltered(grp, LargestMovedPoint(grp), acceptSetOfSize(LargestMovedPoint(grp), size) );
+        min2 := FindAllMinimalImagesSetSlow(grp, LargestMovedPoint(grp), size);
+        if min1 <> min2 then
+            Print(grp, ":", size, "::\n", min1, "\n", min2, "\n");
+        fi;
+    od;
+end;

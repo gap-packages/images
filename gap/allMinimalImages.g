@@ -65,36 +65,74 @@ acceptPartialPerm := function(m, sollength)
     return f;
 end;
 
-recurseMinimalImage := function(baseG, G, l, max, accept)
-    local orbmins, i, min;
+acceptSetOfSize := function(maxpoint, setsize)
+    local f;
+    f := rec(
+        filter := function(l)
+            local len;
+            len := Length(l);
+            if len > setsize then
+                return false;
+            fi;
+            return true;#(maxpoint - l[len]) < (setsize - len);
+        end,
+        record := function(l)
+            if Length(l) = setsize then
+                Add(gather, ShallowCopy(l));
+            fi;
+            return true;
+        end);
+    return f;
+end;
 
+recurseMinimalImage := function(baseG, G, l, blockSet, max, accept)
+    local orbmins, i, it, min, orbs, blockSetCpy;
+    #Print("Considering ", l,"\n");
     if Length(l) = 0 then
         min := 1;
     else 
         if not(IsMinimalImage(baseG, l, OnSets, rec(stabilizer := Group(())))) then
+            #Print("!not minimal: ", l, "\n");
             return;
         fi;
         
         if not(accept.record(l)) then
+            #Print("!record rejects: ", l, "\n");
             return;
         fi;
         
         if l[Length(l)] = max then
+            #Print("!maxsize: ", l, "\n");
             return;
         fi;
 
         min := l[Length(l)] + 1;
     fi;
 
-    orbmins := List(Orbits(G, [min..max]), x -> Minimum(x));
-    Sort(orbmins);
-    for i in orbmins do
-        if i >= min then
+    #Print(G, ":", l, ":", min, ":", max);
+    orbs := List(Orbits(Stabilizer(baseG, l, OnSets), [min..max]));
+    #Print("::", orbs,"\n");
+    orbmins := List(orbs, x -> Minimum(x));
+    SortParallel(orbmins, orbs);
+    blockSetCpy := Set(blockSet);
+    for it in [1..Length(orbmins)] do
+        i := orbmins[it];
+        if i < min then
+            UniteSet(blockSetCpy, orbs[it]);
+        fi;
+    od;
+    
+    #Print("orbs ", orbmins, " in ",l,"\n");
+    for it in [1..Length(orbmins)] do
+        i := orbmins[it];
+        if i >= min and not(i in blockSet) then
             Add(l, i);
             if accept.filter(l) then
-                recurseMinimalImage(baseG, Stabilizer(G,i), l, max, accept);
+                recurseMinimalImage(baseG, Stabilizer(G,i), l, blockSetCpy, max, accept);
+            else
+                #Print("!filter failed ", l, "\n");
             fi;
-            
+            UniteSet(blockSetCpy, orbs[it]);
             Remove(l);
         fi;
     od;
@@ -102,7 +140,13 @@ end;
 
 AllMinimalSetsFiltered := function(G, max, accept)
     gather := [];
-    recurseMinimalImage(G, G, [], max, accept);
+    recurseMinimalImage(G, G, [], Set([]), max, accept);
+    return gather;
+end;
+
+AllMinimalSetsOfSize := function(G, max, size)
+    gather := [];
+    recurseMinimalImage(G, G, [], Set([]),max, acceptSetOfSize(max, size));
     return gather;
 end;
 
