@@ -469,7 +469,7 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   settings := rec(result := resultarg, image := imagearg, stabilizer := fail, order := 1);
   
   if Length(arglist) >= index and IsRecord(arglist[index]) then
-    _ImagesHelperFuncs.fillUserValues(settings, arglist[index]);
+    settings := _FerretHelperFuncs.fillUserValues(settings, arglist[index]);
     index := index + 1;
   fi;
   
