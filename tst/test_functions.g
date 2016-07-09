@@ -64,11 +64,11 @@ CheckMinimalImageTest := function(g, o, action, minList)
     local good_min, nostab_min, slow_min, cpyg, rando, can_orig, can_rand, perm_orig, perm_rand, order, gp;
     cpyg := Group(GeneratorsOfGroup(g), ());
     good_min := MinimalImage(g, o, action);
-    nostab_min := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), result := GetImage));
+    nostab_min := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), result := GetImage, order := CanonicalConfig_Minimum));
     slow_min := minList(List(g, p -> action(o,p)));
 
     if good_min <> slow_min or good_min <> nostab_min then
-      Print(GeneratorsOfGroup(g)," ",o, " we found ", [good_min, nostab_min], " right answer is: ", slow_min,"\n");
+      Print(GeneratorsOfGroup(g)," ",o, ":",action,":",minList," we found ", [good_min, nostab_min], " right answer is: ", slow_min,"\n");
     fi;
 
     if (good_min = o) <> IsMinimalImage(g, o, action) then
