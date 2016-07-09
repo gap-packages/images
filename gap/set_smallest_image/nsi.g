@@ -416,7 +416,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                         ### CAJ - Support bailing out early when a smaller
                         # set is found
                         if early_exit and rep < set[depth] then
-                            return false;
+                            return [false, l];
                         fi;
                         ### END of bailing out early
                         upb := rep;
