@@ -138,11 +138,6 @@ if not IsBound(InfoNSI) then
     DeclareInfoClass("InfoNSI");
 fi;
 
-BIND_GLOBAL("CanonicalConfig_Fast", 0);
-BIND_GLOBAL("CanonicalConfig_MinVal", 1);
-BIND_GLOBAL("CanonicalConfig_MinOrbit", 2);
-BIND_GLOBAL("CanonicalConfig_MaxOrbit", 3);
-
 _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
     local   leftmost_node,  next_node,  delete_node,  delete_nodes,
             clean_subtree,  handle_new_stabilizer_element,

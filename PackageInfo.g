@@ -10,8 +10,8 @@ SetPackageInfo( rec(
 
 PackageName := "images",
 Subtitle := "Minimal and Canonical images",
-Version := "0.1",
-Date := "14/10/2014", # dd/mm/yyyy format
+Version := "0.6.0",
+Date := "09/07/2016", # dd/mm/yyyy format
 
 Persons := [
   rec(
@@ -69,14 +69,14 @@ PackageDoc := rec(
 
 Dependencies := rec(
   GAP := ">= 4.6",
-  NeededOtherPackages := [ [ "GAPDoc", ">= 1.5" ], ["ferret", ">= 0.4.1"] ],
+  NeededOtherPackages := [ [ "GAPDoc", ">= 1.5" ], ["ferret", ">= 0.6.0"] ],
   SuggestedOtherPackages := [ ],
   ExternalConditions := [ ],
 ),
 
 AvailabilityTest := function()
         return true;
-    end,
+end,
 
 TestFile := "tst/testall.g",
 

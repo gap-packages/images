@@ -470,7 +470,7 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
     action := OnPoints;
   fi;
    
-  settings := rec(result := resultarg, image := imagearg, stabilizer := fail, order := 1, getStab := false);
+  settings := rec(result := resultarg, stabilizer := fail, order := imagearg, getStab := false);
   
   if Length(arglist) >= index and IsRecord(arglist[index]) then
     settings := _FerretHelperFuncs.fillUserValues(settings, arglist[index]);
@@ -479,34 +479,34 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   fi;
   
   if index <= Length(arglist) then
-    Error("Failed to understand argument ",index, ":", arglist[index]);
+    Error("Failed to understand argument ",index, ", which was ", arglist[index]);
   fi;
   
   return CanonicalImageOp(G, obj, action, settings);
 end);
 
 InstallGlobalFunction(MinimalImage, function(arg)
-  return _CanonicalImageParse(arg, GetImage, TypeMinimal);
+  return _CanonicalImageParse(arg, GetImage, CanonicalConfig_Minimum);
 end);
 
 InstallGlobalFunction(IsMinimalImage, function(arg)
-  return _CanonicalImageParse(arg, GetBool, TypeMinimal);
+  return _CanonicalImageParse(arg, GetBool, CanonicalConfig_Minimum);
 end);
 
 InstallGlobalFunction(MinimalImagePerm, function(arg)
-  return _CanonicalImageParse(arg, GetPerm, TypeMinimal);
+  return _CanonicalImageParse(arg, GetPerm, CanonicalConfig_Minimum);
 end);
 
 InstallGlobalFunction(CanonicalImage, function(arg)
-  return _CanonicalImageParse(arg, GetImage, TypeCanonical);
+  return _CanonicalImageParse(arg, GetImage, CanonicalConfig_Fast);
 end);
 
 InstallGlobalFunction(IsCanonicalImage, function(arg)
-  return _CanonicalImageParse(arg, GetBool, TypeCanonical);
+  return _CanonicalImageParse(arg, GetBool, CanonicalConfig_Fast);
 end);
 
 InstallGlobalFunction(CanonicalImagePerm, function(arg)
-  return _CanonicalImageParse(arg, GetPerm, TypeCanonical);
+  return _CanonicalImageParse(arg, GetPerm, CanonicalConfig_Fast);
 end);
 
 
