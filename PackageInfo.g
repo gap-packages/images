@@ -30,9 +30,9 @@ Persons := [
   ),
 ],
 
-PackageWWWHome := "http://gap-system.github.io/images/",
+PackageWWWHome := "http://gap-packages.github.io/images/",
 
-ArchiveURL     := Concatenation("https://github.com/gap-system/images/",
+ArchiveURL     := Concatenation("https://github.com/gap-packages/images/",
                                 "releases/download/v", ~.Version,
                                 "/images-", ~.Version),
 README_URL     := Concatenation( ~.PackageWWWHome, "README" ),
@@ -82,6 +82,18 @@ TestFile := "tst/testall.g",
 
 #Keywords := [ "TODO" ],
 
+AutoDoc := rec(
+    TitlePage := rec(
+        Copyright := """
+&copyright; 2013-2016 by Christopher Jefferson<P/>
+The Images package is free software;
+you can redistribute it and/or modify it under the terms of the
+<URL Text="GNU General Public License">http://www.fsf.org/licenses/gpl.html</URL>
+as published by the Free Software Foundation; either version 2 of the License,
+or (at your option) any later version.
+"""
+    )
+)
 ));
 
 
