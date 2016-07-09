@@ -1,5 +1,3 @@
-LoadPackage("images");
-
 
 gather := [];
 
