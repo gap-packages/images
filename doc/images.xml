@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE Book SYSTEM "gapdoc.dtd"
-   [ <!ENTITY Example "<Package>Ferret</Package>">
+   [ <!ENTITY Example "<Package>Images</Package>">
    ]>
 
-<!-- Documentation of the Ferret package. -->
+<!-- Documentation of the Images package. -->
 
-<Book Name="Ferret"> 
+<Book Name="Images"> 
 
 <#Include SYSTEM "title.xml">
 
