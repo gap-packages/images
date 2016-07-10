@@ -28,6 +28,8 @@ While this produces the correct answer, it is very inefficient, as it requires e
 The images package produces a function MinimalImage, which performs this same operation, more efficiently.
 
 <Example><![CDATA[
+gap> LoadPackage("images", false);
+true
 gap> MinimalImage(G, [2,3,5,7], OnSets);
 [ 1, 2, 4, 9 ]
 ]]></Example>
