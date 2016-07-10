@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This is an automatically generated file. -->
+<TitlePage>
+  <Title>
+    images
+  </Title>
+  <Subtitle>
+    Minimal and Canonical images
+  </Subtitle>
+  <Version>
+    0.6.0
+  </Version>
+  <Author>
+    Christopher Jefferson<Alt Only="LaTeX"><Br/></Alt>
+<Address>
+St Andrews<Br/>
+Scotland<Br/>
+UK<Br/>
+</Address>
+<Email>caj21@st-andrews.ac.uk</Email>
+<Homepage>http://caj.host.cs.st-andrews.ac.uk/</Homepage>
+
+  </Author>
+  <Date>
+    09/07/2016
+  </Date>
+  <Copyright>
+    
+&copyright; 2013-2016 by Christopher Jefferson<P/>
+The Images package is free software;
+you can redistribute it and/or modify it under the terms of the
+<URL Text="GNU General Public License">http://www.fsf.org/licenses/gpl.html</URL>
+as published by the Free Software Foundation; either version 2 of the License,
+or (at your option) any later version.
+
+  </Copyright>
+  </TitlePage>

@@ -1,0 +1,35 @@
+
+<!-- %W  install.xml            GAP documentation                  Greg Gamble -->
+<!-- %H                                                                        -->
+<!-- %Y  Copyright (C) 2001, School of Math & Comp. Sci., St Andrews, Scotland -->
+
+
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+<Chapter Label="Installing and Loading the Images Package">
+<Heading>Installing and Loading the Images Package</Heading>
+
+Installing the Images packages requires installing and building the kernel
+module of the Ferret package. After this simply place Images into the pkg
+directory of your GAP installation.
+
+
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+<Section Label="Loading the Images Package">
+<Heading>Loading the Images Package</Heading>
+
+To use the Images Package you have to request it explicitly. This  is
+done by calling <Ref Func="LoadPackage" BookName="ref"/>:
+<P/>
+<Example><![CDATA[
+gap> LoadPackage("images");
+true
+]]></Example>
+<P/>
+
+</Section>
+</Chapter>
+
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+<!-- %% -->
+<!-- %E -->
+
