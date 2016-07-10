@@ -9,8 +9,8 @@
 
 <Index>Images package</Index>
 This chapter describes the &GAP; package Images. Images implements efficient algorithms
-to calculate Minimal Images and Canonical Images in permutation groups. implements highly efficient
-implementations of a range of search algorithms on permutation groups.
+to calculate Minimal Images and Canonical Images in permutation groups.
+
 <P/>
 If you want help on applying Images to your problem, please contact the authors, who will be happy to
 look into if your problem can be solved with Images.
