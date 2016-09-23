@@ -174,7 +174,22 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                    getBasePoint := pt -> pt[2],
                    initial_lastupb := [-infinity, -infinity],
                    initial_upb := [infinity, infinity]
-               )]
+               ),
+               rec(
+                   skipNewOrbit := ReturnFalse,
+                   getQuality := function(pt)
+                                    if orbsizes[pt] = 1 then
+                                        return [-(2^64), orbmins[pt]];
+                                    else
+                                        return [-orbsizes[pt], orbmins[pt]];
+                                    fi;
+                                 end,
+                   getBasePoint := pt -> pt[2],
+                   initial_lastupb := [-infinity, -infinity],
+                   initial_upb := [infinity, infinity]
+               )
+
+    ]
                [config_option];
             
     ## Node exploration functions

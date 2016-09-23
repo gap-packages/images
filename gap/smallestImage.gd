@@ -95,5 +95,6 @@ BIND_GLOBAL("CanonicalConfig_Fast", 0);
 BIND_GLOBAL("CanonicalConfig_Minimum", 1);
 BIND_GLOBAL("CanonicalConfig_MinOrbit", 2);
 BIND_GLOBAL("CanonicalConfig_MaxOrbit", 3);
+BIND_GLOBAL("CanonicalConfig_FixMaxOrbit", 4);
 
 #E  files.gd  . . . . . . . . . . . . . . . . . . . . . . . . . . . ends here
