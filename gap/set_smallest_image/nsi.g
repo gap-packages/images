@@ -146,7 +146,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
             orbsizes,  upb,  imsets,  imsetnodes,  node,  cands,  y,
             x,  num,  rep,  node2,  prevnode,  nodect,  changed,
             newnode,  image,  dict,  seen,  he,  bestim,  bestnode,
-            imset,  p, config;
+            imset,  p, config, configrec;
             
 
     # Set to fastest known config option
@@ -154,7 +154,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
         config_option := 2;
     fi;
     
-    config := [rec(
+    configrec := [rec(
                    skipNewOrbit := -> (upb <= lastupb + 1),
                    getQuality := pt -> orbmins[pt],
                    getBasePoint := IdFunc,
@@ -187,11 +187,10 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                    getBasePoint := pt -> pt[2],
                    initial_lastupb := [-infinity, -infinity],
                    initial_upb := [infinity, infinity]
-               )
+               )];
 
-    ]
-               [config_option];
-            
+    config := configrec[config_option];
+
     ## Node exploration functions
     leftmost_node := function(depth)
         local   n,  i;
