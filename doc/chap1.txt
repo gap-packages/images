@@ -1,0 +1,11 @@
+  
+  [1X1 [33X[0;0YThe Images Package[133X[101X
+  
+  [33X[0;0YThis  chapter  describes the [5XGAP[105X package Images. Images implements efficient
+  algorithms  to  calculate Minimal Images and Canonical Images in permutation
+  groups.[133X
+  
+  [33X[0;0YIf  you  want  help  on  applying Images to your problem, please contact the
+  authors,  who  will be happy to look into if your problem can be solved with
+  Images.[133X
+  

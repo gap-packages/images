@@ -6,10 +6,10 @@
                          [1X Minimal and Canonical images [101X
   
   
-                                     0.6.0
+                                     0.7.0
   
   
-                                   09/07/2016
+                                   19/10/2016
   
   
                              Christopher Jefferson
@@ -39,10 +39,14 @@
   -------------------------------------------------------
   
   
-  [1XContents (images)[101X
+  [1XContents (Images)[101X
   
+  1 [33X[0;0YThe Images Package[133X
+  2 [33X[0;0YMinimal and Canonical Images[133X
+    2.1 [33X[0;0YFunction documentation[133X
+      2.1-1 MinimalImage
+  3 [33X[0;0YInstalling and Loading the Images Package[133X
+    3.1 [33X[0;0YLoading the Images Package[133X
   
   
   [32X
-  [33X[0;0Y [133X
-  

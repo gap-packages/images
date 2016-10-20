@@ -2,6 +2,10 @@
   
   [1XIndex[101X
   
+  Images package  1.
+  [2XIsMinimalImage[102X  2.1-1
+  [2XMinimalImage[102X  2.1-1
+  [2XMinimalImagePerm[102X  2.1-1
   
   
   -------------------------------------------------------
