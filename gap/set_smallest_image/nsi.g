@@ -76,6 +76,7 @@ _IMAGES_DeclareTimeClass("check2");
 _IMAGES_DeclareTimeClass("prune");
 _IMAGES_DeclareTimeClass("ShallowNode");
 _IMAGES_DeclareTimeClass("DeepNode");
+_IMAGES_DeclareTimeClass("FilterOrbCount");
 
 _IMAGES_nsi_stats := fail;
 
@@ -138,6 +139,34 @@ if not IsBound(InfoNSI) then
     DeclareInfoClass("InfoNSI");
 fi;
 
+_IMAGES_RARE_ORBIT :=  function(orbmins, orbitCounts)
+    local index, result, i, ret;
+    index := 1;
+    result := [orbitCounts[1], orbmins[1]];
+    for i in [2..Length(orbmins)] do
+        ret := [orbitCounts[i], orbmins[i]];
+        if (result[1] = 0) or (ret < result and ret[1] <> 0) then
+            index := i;
+            result := ret;
+        fi;
+    od;
+    return index;
+end;
+
+_IMAGES_COMMON_ORBIT := function(orbmins, orbitCounts)
+    local index, result, i, ret;
+    index := 1;
+    result := [-orbitCounts[1], orbmins[1]];
+    for i in [2..Length(orbmins)] do
+        ret := [-orbitCounts[i], orbmins[i]];
+        if (result[1] = 0) or (ret < result and ret[1] <> 0) then
+            index := i;
+            result := ret;
+        fi;
+    od;
+    return index;
+end;
+
 _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
     local   leftmost_node,  next_node,  delete_node,  delete_nodes,
             clean_subtree,  handle_new_stabilizer_element,
@@ -146,7 +175,8 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
             orbsizes,  upb,  imsets,  imsetnodes,  node,  cands,  y,
             x,  num,  rep,  node2,  prevnode,  nodect,  changed,
             newnode,  image,  dict,  seen,  he,  bestim,  bestnode,
-            imset,  p, config, configrec;
+            imset,  p, config, configrec, globalOrbitCounts, globalBestOrbit,
+            minOrbitMset, orbitMset;
             
 
     # Set to fastest known config option
@@ -160,20 +190,30 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                    getBasePoint := IdFunc,
                    initial_lastupb := 0,
                    initial_upb := infinity,
+                   countRareOrbits := false,
+                   tryImproveStabilizer := true,
+                   preFilterByOrbMset := false,
                ),
                rec(
                    skipNewOrbit := ReturnFalse,
                    getQuality := pt -> [orbsizes[pt], orbmins[pt]],
                    getBasePoint := pt -> pt[2],
                    initial_lastupb := [-infinity, -infinity],
-                   initial_upb := [infinity, infinity]
+                   initial_upb := [infinity, infinity],
+                   countRareOrbits := false,
+                   tryImproveStabilizer := true,
+                   preFilterByOrbMset := false,
+
                ),
                rec(
                    skipNewOrbit := ReturnFalse,
                    getQuality := pt -> [-orbsizes[pt], orbmins[pt]],
                    getBasePoint := pt -> pt[2],
                    initial_lastupb := [-infinity, -infinity],
-                   initial_upb := [infinity, infinity]
+                   initial_upb := [infinity, infinity],
+                   countRareOrbits := false,
+                   tryImproveStabilizer := true,
+                   preFilterByOrbMset := false,
                ),
                rec(
                    skipNewOrbit := ReturnFalse,
@@ -186,7 +226,43 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                                  end,
                    getBasePoint := pt -> pt[2],
                    initial_lastupb := [-infinity, -infinity],
-                   initial_upb := [infinity, infinity]
+                   initial_upb := [infinity, infinity],
+                   countRareOrbits := false,
+                   tryImproveStabilizer := true,
+                   preFilterByOrbMset := false,
+               ),
+               rec(
+                   skipNewOrbit := -> ReturnFalse,
+                   getQuality := pt -> orbmins[pt],
+                   getBasePoint := IdFunc,
+                   initial_lastupb := 0,
+                   initial_upb := infinity,
+                   countRareOrbits := true,
+                   calculateBestOrbit := _IMAGES_RARE_ORBIT,
+                   tryImproveStabilizer := false,
+                   preFilterByOrbMset := false,
+               ),
+               rec(
+                   skipNewOrbit := -> ReturnFalse,
+                   getQuality := pt -> orbmins[pt],
+                   getBasePoint := IdFunc,
+                   initial_lastupb := 0,
+                   initial_upb := infinity,
+                   countRareOrbits := true,
+                   calculateBestOrbit := _IMAGES_COMMON_ORBIT,
+                   tryImproveStabilizer := false,
+                   preFilterByOrbMset := false,
+               ),
+               rec(
+                   skipNewOrbit := -> ReturnFalse,
+                   getQuality := pt -> orbmins[pt],
+                   getBasePoint := IdFunc,
+                   initial_lastupb := 0,
+                   initial_upb := infinity,
+                   countRareOrbits := true,
+                   calculateBestOrbit := _IMAGES_RARE_ORBIT,
+                   tryImproveStabilizer := false,
+                   preFilterByOrbMset := true,
                )];
 
     config := configrec[config_option];
@@ -329,6 +405,9 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
     # Make orbit of x, updating orbnums, orbmins and orbsizes as approriate.
     make_orbit := function(x)
         local   q,  rep,  num,  pt,  gen,  img;
+        if orbnums[x] <> -1 then
+            return orbnums[x];
+        fi;
         q := [x];
         rep := x;
         num := Length(orbmins)+1;
@@ -373,6 +452,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                 prev := fail,
                 parent := fail);
     for depth in [1..m] do
+        Info(InfoNSI, 3, "Stabilizer is :", s.generators);
         gens := s.generators;
         orbnums := ListWithIdenticalEntries(n,-1);
         orbmins := [];
@@ -385,8 +465,87 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
         # first pass creates appropriate set of virtual red nodes
         #
         _IMAGES_StartTimer(pass1);
+        
+        if config.preFilterByOrbMset then
+            minOrbitMset := [infinity];
+            node := leftmost_node(depth);
+            while node <> fail do
+                Info(InfoNSI,4, "CheckNode1");
+                _IMAGES_StartTimer(getcands);
+                cands := Difference([1..m],skip_func(node.selected));
+                if Length(cands) > 1 and not IsTrivial(node.substab) then
+                    cands := simpleOrbitReps(node.substab,cands);
+                fi;
+  
+                _IMAGES_StopTimer(getcands);
+                orbitMset := [];
+                for y in cands do
+                    _IMAGES_IncCount(check1);
+                    x := node.image[y];
+                    num := make_orbit(x);
+                    Add(orbitMset, orbmins[num]);
+                od;
+                Sort(orbitMset);
+                Info(InfoNSI, 5, "Considering: ", orbitMset, "::",node.selected);
+                if orbitMset < minOrbitMset then
+                    Info(InfoNSI, 4, "New min: ", orbitMset);
+                    minOrbitMset := orbitMset;
+                    node2 := node.prev;
+                    while node2 <> fail do
+                        Info(InfoNSI, 4, "Clean up old big set");
+                        _IMAGES_IncCount(FilterOrbCount);
+                        delete_node(node2);
+                        node2 := node2.prev;
+                    od;
+                elif orbitMset > minOrbitMset then
+                    Info(InfoNSI, 4, "Too big!");
+                    delete_node(node);
+                fi;
+
+
+                node := next_node(node);
+            od;
+        fi;
+
+        if config.countRareOrbits then
+            globalOrbitCounts := ListWithIdenticalEntries(Length(orbmins), 0) ;
+            node := leftmost_node(depth);
+            Info(InfoNSI,4, "CountRareOrbits");
+            while node <> fail do
+                _IMAGES_StartTimer(getcands);
+                cands := Difference([1..m],skip_func(node.selected));
+                if Length(cands) > 1 and not IsTrivial(node.substab) then
+                    cands := simpleOrbitReps(node.substab,cands);
+                fi;
+                #
+                # These index the children of node that will
+                # not be immediately deleted under rule C
+                #
+                _IMAGES_StopTimer(getcands);
+                for y in cands do
+                    _IMAGES_IncCount(check1);
+                    x := node.image[y];
+                    num := make_orbit(x);
+
+                    if IsBound(globalOrbitCounts[num]) then
+                        globalOrbitCounts[num] := globalOrbitCounts[num] + 1;
+                    else
+                        globalOrbitCounts[num] := 1;
+                    fi;
+                od;
+                node := next_node(node);
+            od;
+
+            globalBestOrbit := config.calculateBestOrbit(orbmins, globalOrbitCounts);
+            upb := orbmins[globalBestOrbit];
+            Info(InfoNSI,4, "Orbit info:", globalOrbitCounts,":", globalBestOrbit, ":", globalOrbitCounts[globalBestOrbit]);
+        fi;
+
+
         node := leftmost_node(depth);
         while node <> fail do
+             Info(InfoNSI,4, "MainBranchPass");
+
             _IMAGES_StartTimer(getcands);
             cands := Difference([1..m],skip_func(node.selected));
             if Length(cands) > 1 and not IsTrivial(node.substab) then
@@ -403,6 +562,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                 x := node.image[y];
                 
                 num := orbnums[x];
+                Info(InfoNSI,4, "Check orbit ", y, ":", x, ":", num);
                 if num = -1 then
                     #
                     # Need a new orbit. Also require the smallest point
@@ -442,13 +602,16 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                 else
                     _IMAGES_IncCount(check2);
                     rep := config.getQuality(num);
+                    Info(InfoNSI,4, "Check2", [num,rep,upb]);
                     if rep = upb then
                         _IMAGES_IncCount(ShallowNode);
                         Add(node.validkids,y);
                     fi;
                 fi;
             od;
+            Info(InfoNSI,4, "ValidKids: ", node.validkids);
             if node.validkids = [] then
+                Info(InfoNSI,4, "Prune!");
                 _IMAGES_StartTimer(prune);
                 delete_node(node);
                 _IMAGES_StopTimer(prune);
@@ -461,6 +624,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
         # Second pass. Actually make all the red nodes and turn them blue
         #
         lastupb := upb;
+        Info(InfoNSI, 2, "Branch on ", upb);
         _IMAGES_StartTimer(changeStabChain);
         ChangeStabChain(s,[config.getBasePoint(upb)],false);
         _IMAGES_StopTimer(changeStabChain);
@@ -534,7 +698,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
         #
 
         _IMAGES_StartTimer(pass3);
-        if  changed then
+        if  changed and config.tryImproveStabilizer then
             node := leftmost_node(depth+1);
             if nodect > _IMAGES_NSI_HASH_LIMIT then
                 dict := SparseHashTable(hash);
