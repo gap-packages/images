@@ -19,6 +19,10 @@
 DeclareAttribute( "rowcolsquareGroup", IsPermGroup );
 DeclareAttribute( "rowcolsquareGroup2", IsPermGroup );
 
+DeclareAttribute( "MinOrbitPerm", IsPermGroup );
+DeclareAttribute( "MaxOrbitPerm", IsPermGroup );
+
+
 
 #############################################################################
 ##
@@ -95,9 +99,13 @@ BIND_GLOBAL("CanonicalConfig_Fast", 0);
 BIND_GLOBAL("CanonicalConfig_Minimum", 1);
 BIND_GLOBAL("CanonicalConfig_MinOrbit", 2);
 BIND_GLOBAL("CanonicalConfig_MaxOrbit", 3);
-BIND_GLOBAL("CanonicalConfig_FixMaxOrbit", 4);
+BIND_GLOBAL("CanonicalConfig_SingleMaxOrbit", 4);
 BIND_GLOBAL("CanonicalConfig_RareOrbit", 5);
 BIND_GLOBAL("CanonicalConfig_CommonOrbit", 6);
 BIND_GLOBAL("CanonicalConfig_RareOrbitPlus", 7);
+
+BIND_GLOBAL("CanonicalConfig_FixedMinOrbit", -2);
+BIND_GLOBAL("CanonicalConfig_FixedMaxOrbit", -3);
+
 
 #E  files.gd  . . . . . . . . . . . . . . . . . . . . . . . . . . . ends here

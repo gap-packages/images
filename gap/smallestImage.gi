@@ -38,6 +38,56 @@ _rowColGen := function( inGroup, x )
   return Group(generators,());
 end;
 
+_minOrbBuilder := function(select)
+    local fixedPoints, Func;
+    fixedPoints := function ( pts, gens )
+        return Filtered( pts, x -> ForAll( gens, y -> (x^y=x) ) );
+    end;
+
+    Func := function( G )
+        local vals,fp, order, branch;
+        if LargestMovedPoint(G) = 0 then
+            return ();
+        fi;
+        vals := Set([1..LargestMovedPoint(G)]);
+        order := [];
+        while vals <> [] do
+            branch := select(G, vals);
+            G := Stabilizer(G, branch);
+            SubtractSet(vals, [branch]);
+            Add(order, branch);
+        od;
+        return PermList(order)^-1;
+    end;
+
+    return Func;
+end;
+
+
+
+InstallMethod(MinOrbitPerm, [IsPermGroup],
+    _minOrbBuilder(
+        function(G, vals)
+            local orbs, o, smallOrbSize;
+            orbs := Orbits(G, vals);
+            orbs := List(orbs, Set);
+            orbs := Set(orbs);
+            smallOrbSize := Minimum(List(orbs, Size));
+            return (First(orbs, x -> Size(x) = smallOrbSize))[1];
+        end
+));
+
+InstallMethod(MaxOrbitPerm, [IsPermGroup],
+    _minOrbBuilder(
+        function(G, vals)
+            local orbs, o, largeOrbSize;
+            orbs := Orbits(G, vals);
+            orbs := List(orbs, Set);
+            orbs := Set(orbs);
+            largeOrbSize := Maximum(List(orbs, Size));
+            return (First(orbs, x -> Size(x) = largeOrbSize))[1];
+        end
+));
   
 # Install the two most common cases of rowColGen
 # as an attribute

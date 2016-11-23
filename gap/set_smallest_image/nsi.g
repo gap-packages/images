@@ -175,13 +175,36 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
             orbsizes,  upb,  imsets,  imsetnodes,  node,  cands,  y,
             x,  num,  rep,  node2,  prevnode,  nodect,  changed,
             newnode,  image,  dict,  seen,  he,  bestim,  bestnode,
-            imset,  p, config, configrec, globalOrbitCounts, globalBestOrbit,
-            minOrbitMset, orbitMset;
+            imset,  p, 
+            config, configrec,
+            globalOrbitCounts, globalBestOrbit, minOrbitMset, orbitMset,
+            savedArgs
+            ;
             
 
+    if config_option < 0 then
+        if config_option = CanonicalConfig_FixedMinOrbit then
+            savedArgs := rec( config_option := config_option, g := g, k := k, set := set,
+                              perm := MinOrbitPerm(g), perminv := MinOrbitPerm(g)^-1);
+            g := g^savedArgs.perm;
+            k := k^savedArgs.perm;
+            set := OnTuples(set, savedArgs.perm);
+        elif config_option = CanonicalConfig_FixedMaxOrbit then
+            savedArgs := rec( config_option := config_option, g := g, k := k, set := set,
+                              perm := MaxOrbitPerm(g), perminv := MaxOrbitPerm(g)^-1);
+            g := g^savedArgs.perm;
+            k := k^savedArgs.perm;
+            set := OnTuples(set, savedArgs.perm);
+        fi;
+        config_option := CanonicalConfig_Minimum;
+    else
+        savedArgs := rec(perminv := ());
+    fi;
+
+
     # Set to fastest known config option
-    if config_option = 0 then
-        config_option := 2;
+    if config_option = CanonicalConfig_Fast then
+        config_option := CanonicalConfig_RareOrbitPlus;
     fi;
     
     configrec := [rec(
@@ -430,7 +453,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
     end;
 
     if set = [] then
-      return [ [], k];
+      return [ [], k^(savedArgs.perminv)];
     fi;
 
     n := Maximum(LargestMovedPoint(g), Maximum(set));
@@ -585,7 +608,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                         ### CAJ - Support bailing out early when a smaller
                         # set is found
                         if early_exit and rep < set[depth] then
-                            return [false, l];
+                            return [false, l^(savedArgs.perminv)];
                         fi;
                         ### END of bailing out early
                         upb := rep;
@@ -732,7 +755,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                         node := next_node(node);
                     od;
                     _IMAGES_StopTimer(pass3);
-                    return [bestnode.image,l];
+                    return [OnTuples(bestnode.image,savedArgs.perminv),l^savedArgs.perminv];
                 fi;
             else
                 while node <> fail do
@@ -751,7 +774,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                 if Length(s.generators) = 0 then
                     Info(InfoNSI,2,"Run out of group, return best image");
                     _IMAGES_StopTimer(pass3);
-                    return [imsetnodes[1].image,l];
+                    return [OnTuples(imsetnodes[1].image,savedArgs.perminv),l^savedArgs.perminv];
                 fi;
             fi;
         else
@@ -763,7 +786,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
             break;
         fi;
     od;
-    return [leftmost_node(depth+1).image,l];
+    return [OnTuples(leftmost_node(depth+1).image,savedArgs.perminv),l^savedArgs.perminv];
 end;
 
 
