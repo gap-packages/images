@@ -159,7 +159,10 @@ _IMAGES_RARE_RATIO_ORBIT :=  function(orbmins, orbitCounts, orbsizes)
     index := 1;
     result := [(Log2(Float(orbitCounts[1]))+1)/orbsizes[1], orbmins[1]];
     for i in [2..Length(orbmins)] do
-        ret := [(Log2(Float(orbitCounts[1]))+1)/orbsizes[1], orbmins[i]];
+        if orbitCounts[i] > 1 and orbsizes[i] = 1 then
+            return i;
+        fi;
+        ret := [(Log2(Float(orbitCounts[i]))+1)/orbsizes[i], orbmins[i]];
         if (result[1] = minusinf) or (ret < result and ret[1] <> minusinf) then
             index := i;
             result := ret;
