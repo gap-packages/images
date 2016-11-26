@@ -139,7 +139,7 @@ if not IsBound(InfoNSI) then
     DeclareInfoClass("InfoNSI");
 fi;
 
-_IMAGES_RARE_ORBIT :=  function(orbmins, orbitCounts)
+_IMAGES_RARE_ORBIT :=  function(orbmins, orbitCounts, orbsizes)
     local index, result, i, ret;
     index := 1;
     result := [orbitCounts[1], orbmins[1]];
@@ -153,7 +153,22 @@ _IMAGES_RARE_ORBIT :=  function(orbmins, orbitCounts)
     return index;
 end;
 
-_IMAGES_COMMON_ORBIT := function(orbmins, orbitCounts)
+_IMAGES_RARE_RATIO_ORBIT :=  function(orbmins, orbitCounts, orbsizes)
+    local index, result, i, ret, minusinf;
+    minusinf := -(1.0/0.0);
+    index := 1;
+    result := [(Log2(Float(orbitCounts[1]))+1)/orbsizes[1], orbmins[1]];
+    for i in [2..Length(orbmins)] do
+        ret := [(Log2(Float(orbitCounts[1]))+1)/orbsizes[1], orbmins[i]];
+        if (result[1] = minusinf) or (ret < result and ret[1] <> minusinf) then
+            index := i;
+            result := ret;
+        fi;
+    od;
+    return index;
+end;
+
+_IMAGES_COMMON_ORBIT := function(orbmins, orbitCounts, orbsizes)
     local index, result, i, ret;
     index := 1;
     result := [-orbitCounts[1], orbmins[1]];
@@ -195,6 +210,8 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
             g := g^savedArgs.perm;
             k := k^savedArgs.perm;
             set := OnTuples(set, savedArgs.perm);
+        else
+            ErrorNoReturn("Invalid ordering for CanonicalImage");
         fi;
         config_option := CanonicalConfig_Minimum;
     else
@@ -273,6 +290,17 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                    initial_upb := infinity,
                    countRareOrbits := true,
                    calculateBestOrbit := _IMAGES_COMMON_ORBIT,
+                   tryImproveStabilizer := false,
+                   preFilterByOrbMset := false,
+               ),
+               rec(
+                   skipNewOrbit := -> ReturnFalse,
+                   getQuality := pt -> orbmins[pt],
+                   getBasePoint := IdFunc,
+                   initial_lastupb := 0,
+                   initial_upb := infinity,
+                   countRareOrbits := true,
+                   calculateBestOrbit := _IMAGES_RARE_RATIO_ORBIT,
                    tryImproveStabilizer := false,
                    preFilterByOrbMset := false,
                ),
@@ -559,7 +587,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                 node := next_node(node);
             od;
 
-            globalBestOrbit := config.calculateBestOrbit(orbmins, globalOrbitCounts);
+            globalBestOrbit := config.calculateBestOrbit(orbmins, globalOrbitCounts, orbsizes);
             upb := orbmins[globalBestOrbit];
             Info(InfoNSI,4, "Orbit info:", globalOrbitCounts,":", globalBestOrbit, ":", globalOrbitCounts[globalBestOrbit]);
         fi;

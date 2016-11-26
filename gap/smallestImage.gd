@@ -102,7 +102,8 @@ BIND_GLOBAL("CanonicalConfig_MaxOrbit", 3);
 BIND_GLOBAL("CanonicalConfig_SingleMaxOrbit", 4);
 BIND_GLOBAL("CanonicalConfig_RareOrbit", 5);
 BIND_GLOBAL("CanonicalConfig_CommonOrbit", 6);
-BIND_GLOBAL("CanonicalConfig_RareOrbitPlus", 7);
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbit", 7);
+BIND_GLOBAL("CanonicalConfig_RareOrbitPlus", 8);
 
 BIND_GLOBAL("CanonicalConfig_FixedMinOrbit", -2);
 BIND_GLOBAL("CanonicalConfig_FixedMaxOrbit", -3);
