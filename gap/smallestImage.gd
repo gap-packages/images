@@ -95,18 +95,51 @@ BindGlobal("GetPerm", 1);
 BindGlobal("GetImage", 2);
 BindGlobal("GetBool", 3);
 
-BIND_GLOBAL("CanonicalConfig_Fast", 0);
-BIND_GLOBAL("CanonicalConfig_Minimum", 1);
-BIND_GLOBAL("CanonicalConfig_MinOrbit", 2);
-BIND_GLOBAL("CanonicalConfig_MaxOrbit", 3);
-BIND_GLOBAL("CanonicalConfig_SingleMaxOrbit", 4);
-BIND_GLOBAL("CanonicalConfig_RareOrbit", 5);
-BIND_GLOBAL("CanonicalConfig_CommonOrbit", 6);
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbit", 7);
-BIND_GLOBAL("CanonicalConfig_RareOrbitPlus", 8);
 
-BIND_GLOBAL("CanonicalConfig_FixedMinOrbit", -2);
-BIND_GLOBAL("CanonicalConfig_FixedMaxOrbit", -3);
+BIND_GLOBAL("CanonicalConfig_Minimum", rec(
+    branch := "minimum"
+));
 
+BIND_GLOBAL("CanonicalConfig_FixedMinOrbit", rec(
+    branch := "static", order := "MinOrbit"
+));
+
+BIND_GLOBAL("CanonicalConfig_FixedMaxOrbit", rec(
+    branch := "static", order := "MaxOrbit"
+));
+
+
+
+BIND_GLOBAL("CanonicalConfig_MinOrbit", rec(
+    branch := "dynamic", order := "MinOrbit"
+));
+BIND_GLOBAL("CanonicalConfig_MaxOrbit", rec(
+    branch := "dynamic", order := "MaxOrbit"));
+
+
+BIND_GLOBAL("CanonicalConfig_SingleMaxOrbit",  rec(
+    branch := "dynamic", order := "SingleMaxOrbit"
+));
+BIND_GLOBAL("CanonicalConfig_RareOrbit", rec(
+    branch := "dynamic", order := "RareOrbit"
+));
+
+BIND_GLOBAL("CanonicalConfig_CommonOrbit", rec(
+    branch := "dynamic", order := "CommonOrbit"
+));
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbit", rec(
+    branch := "dynamic", order := "RareRatioOrbit"
+));
+BIND_GLOBAL("CanonicalConfig_CommonRatioOrbit", rec(
+    branch := "dynamic", order := "RareRatioOrbit"
+));
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbitPlus", rec(
+    branch := "dynamic", order := "RareRatioOrbit",
+    orbfilt := true
+));
+
+
+
+BIND_GLOBAL("CanonicalConfig_Fast", CanonicalConfig_RareRatioOrbitPlus);
 
 #E  files.gd  . . . . . . . . . . . . . . . . . . . . . . . . . . . ends here

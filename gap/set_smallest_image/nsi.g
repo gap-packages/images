@@ -139,51 +139,46 @@ if not IsBound(InfoNSI) then
     DeclareInfoClass("InfoNSI");
 fi;
 
-_IMAGES_RARE_ORBIT :=  function(orbmins, orbitCounts, orbsizes)
-    local index, result, i, ret;
-    index := 1;
-    result := [orbitCounts[1], orbmins[1]];
-    for i in [2..Length(orbmins)] do
-        ret := [orbitCounts[i], orbmins[i]];
-        if (result[1] = 0) or (ret < result and ret[1] <> 0) then
-            index := i;
-            result := ret;
-        fi;
-    od;
-    return index;
+_IMAGES_RATIO := function(selector)
+    return function(orbmins, orbitCounts, orbsizes)
+        local index, result, i, ret;
+        index := 1;
+        result := [selector(1, orbmins, orbitCounts, orbsizes), orbmins[1]];
+        for i in [2..Length(orbmins)] do
+            ret := [selector(i, orbmins, orbitCounts, orbsizes), orbmins[i]];
+            if (orbitCounts[index] = 0) or (ret < result and orbitCounts[i] <> 0) then
+                index := i;
+                result := ret;
+            fi;
+        od;
+        return index;
+    end;
 end;
 
-_IMAGES_RARE_RATIO_ORBIT :=  function(orbmins, orbitCounts, orbsizes)
-    local index, result, i, ret, minusinf;
-    minusinf := -(1.0/0.0);
-    index := 1;
-    result := [(Log2(Float(orbitCounts[1]))+1)/orbsizes[1], orbmins[1]];
-    for i in [2..Length(orbmins)] do
-        if orbitCounts[i] > 1 and orbsizes[i] = 1 then
-            return i;
-        fi;
-        ret := [(Log2(Float(orbitCounts[i]))+1)/orbsizes[i], orbmins[i]];
-        if (result[1] = minusinf) or (ret < result and ret[1] <> minusinf) then
-            index := i;
-            result := ret;
-        fi;
-    od;
-    return index;
-end;
+_IMAGES_RARE_RATIO_ORBIT := _IMAGES_RATIO(
+    function(i, orbmins, orbitCounts, orbsizes)
+        return (Log2(Float(orbitCounts[i])))/orbsizes[i];
+    end
+);
 
-_IMAGES_COMMON_ORBIT := function(orbmins, orbitCounts, orbsizes)
-    local index, result, i, ret;
-    index := 1;
-    result := [-orbitCounts[1], orbmins[1]];
-    for i in [2..Length(orbmins)] do
-        ret := [-orbitCounts[i], orbmins[i]];
-        if (result[1] = 0) or (ret < result and ret[1] <> 0) then
-            index := i;
-            result := ret;
-        fi;
-    od;
-    return index;
-end;
+_IMAGES_COMMON_RATIO_ORBIT := _IMAGES_RATIO(
+    function(i, orbmins, orbitCounts, orbsizes)
+        return -(Log2(Float(orbitCounts[i])))/orbsizes[i];
+    end
+);
+
+_IMAGES_RARE_ORBIT := _IMAGES_RATIO(
+    function(i, orbmins, orbitCounts, orbsizes)
+        return orbitCounts[i];
+    end
+);
+
+_IMAGES_COMMON_ORBIT := _IMAGES_RATIO(
+    function(i, orbmins, orbitCounts, orbsizes)
+        return -orbitCounts[i];
+    end
+);
+
 
 _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
     local   leftmost_node,  next_node,  delete_node,  delete_nodes,
@@ -194,40 +189,31 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
             x,  num,  rep,  node2,  prevnode,  nodect,  changed,
             newnode,  image,  dict,  seen,  he,  bestim,  bestnode,
             imset,  p, 
-            config, configrec,
+            config,
             globalOrbitCounts, globalBestOrbit, minOrbitMset, orbitMset,
             savedArgs
             ;
             
-
-    if config_option < 0 then
-        if config_option = CanonicalConfig_FixedMinOrbit then
-            savedArgs := rec( config_option := config_option, g := g, k := k, set := set,
-                              perm := MinOrbitPerm(g), perminv := MinOrbitPerm(g)^-1);
-            g := g^savedArgs.perm;
-            k := k^savedArgs.perm;
-            set := OnTuples(set, savedArgs.perm);
-        elif config_option = CanonicalConfig_FixedMaxOrbit then
-            savedArgs := rec( config_option := config_option, g := g, k := k, set := set,
-                              perm := MaxOrbitPerm(g), perminv := MaxOrbitPerm(g)^-1);
-            g := g^savedArgs.perm;
-            k := k^savedArgs.perm;
-            set := OnTuples(set, savedArgs.perm);
+    if config_option.branch = "static" then
+            savedArgs := rec( config_option := config_option, g := g, k := k, set := set );
+        if config_option.order = "MinOrbit" then
+            savedArgs.perm := MinOrbitPerm(g);
+        elif config_option.order = "MaxOrbit" then
+            savedArgs.perm := MaxOrbitPerm(g);
         else
-            ErrorNoReturn("Invalid ordering for CanonicalImage");
+            ErrorNoReturn("Invalid 'order' when branch = 'static' in CanonicalImage");
         fi;
-        config_option := CanonicalConfig_Minimum;
-    else
+        savedArgs.perminv := savedArgs.perm^-1;
+        g := g^savedArgs.perm;
+        k := k^savedArgs.perm;
+        set := OnTuples(set, savedArgs.perm);
+        config_option := rec(branch := "minimum");
+    else    
         savedArgs := rec(perminv := ());
     fi;
 
-
-    # Set to fastest known config option
-    if config_option = CanonicalConfig_Fast then
-        config_option := CanonicalConfig_RareOrbitPlus;
-    fi;
-    
-    configrec := [rec(
+    if config_option.branch = "minimum" then
+        config := rec(
                    skipNewOrbit := -> (upb <= lastupb + 1),
                    getQuality := pt -> orbmins[pt],
                    getBasePoint := IdFunc,
@@ -236,90 +222,60 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
                    countRareOrbits := false,
                    tryImproveStabilizer := true,
                    preFilterByOrbMset := false,
-               ),
-               rec(
-                   skipNewOrbit := ReturnFalse,
-                   getQuality := pt -> [orbsizes[pt], orbmins[pt]],
-                   getBasePoint := pt -> pt[2],
-                   initial_lastupb := [-infinity, -infinity],
-                   initial_upb := [infinity, infinity],
-                   countRareOrbits := false,
-                   tryImproveStabilizer := true,
-                   preFilterByOrbMset := false,
+               );
+    elif config_option.branch = "dynamic" then
+        config := rec(skipNewOrbit := ReturnFalse,
+                      preFilterByOrbMset := false);
+        if config_option.order in ["MinOrbit", "MaxOrbit", "SingleMaxOrbit"] then
+            config.getBasePoint := pt->pt[2];
+            config.initial_lastupb := [-infinity, -infinity];
+            config.initial_upb := [infinity, infinity];
+            config.countRareOrbits := false;
+            config.tryImproveStabilizer := true;
 
-               ),
-               rec(
-                   skipNewOrbit := ReturnFalse,
-                   getQuality := pt -> [-orbsizes[pt], orbmins[pt]],
-                   getBasePoint := pt -> pt[2],
-                   initial_lastupb := [-infinity, -infinity],
-                   initial_upb := [infinity, infinity],
-                   countRareOrbits := false,
-                   tryImproveStabilizer := true,
-                   preFilterByOrbMset := false,
-               ),
-               rec(
-                   skipNewOrbit := ReturnFalse,
-                   getQuality := function(pt)
+            if config_option.order = "MinOrbit" then
+                config.getQuality := pt -> [orbsizes[pt], orbmins[pt]];
+            elif config_option.order = "MaxOrbit" then
+                config.getQuality := pt -> [-orbsizes[pt], orbmins[pt]];
+            elif config_option.order = "SingleMaxOrbit" then
+                config.getQuality := function(pt)
                                     if orbsizes[pt] = 1 then
                                         return [-(2^64), orbmins[pt]];
                                     else
                                         return [-orbsizes[pt], orbmins[pt]];
                                     fi;
-                                 end,
-                   getBasePoint := pt -> pt[2],
-                   initial_lastupb := [-infinity, -infinity],
-                   initial_upb := [infinity, infinity],
-                   countRareOrbits := false,
-                   tryImproveStabilizer := true,
-                   preFilterByOrbMset := false,
-               ),
-               rec(
-                   skipNewOrbit := -> ReturnFalse,
-                   getQuality := pt -> orbmins[pt],
-                   getBasePoint := IdFunc,
-                   initial_lastupb := 0,
-                   initial_upb := infinity,
-                   countRareOrbits := true,
-                   calculateBestOrbit := _IMAGES_RARE_ORBIT,
-                   tryImproveStabilizer := false,
-                   preFilterByOrbMset := false,
-               ),
-               rec(
-                   skipNewOrbit := -> ReturnFalse,
-                   getQuality := pt -> orbmins[pt],
-                   getBasePoint := IdFunc,
-                   initial_lastupb := 0,
-                   initial_upb := infinity,
-                   countRareOrbits := true,
-                   calculateBestOrbit := _IMAGES_COMMON_ORBIT,
-                   tryImproveStabilizer := false,
-                   preFilterByOrbMset := false,
-               ),
-               rec(
-                   skipNewOrbit := -> ReturnFalse,
-                   getQuality := pt -> orbmins[pt],
-                   getBasePoint := IdFunc,
-                   initial_lastupb := 0,
-                   initial_upb := infinity,
-                   countRareOrbits := true,
-                   calculateBestOrbit := _IMAGES_RARE_RATIO_ORBIT,
-                   tryImproveStabilizer := false,
-                   preFilterByOrbMset := false,
-               ),
-               rec(
-                   skipNewOrbit := -> ReturnFalse,
-                   getQuality := pt -> orbmins[pt],
-                   getBasePoint := IdFunc,
-                   initial_lastupb := 0,
-                   initial_upb := infinity,
-                   countRareOrbits := true,
-                   calculateBestOrbit := _IMAGES_RARE_ORBIT,
-                   tryImproveStabilizer := false,
-                   preFilterByOrbMset := true,
-               )];
+                                 end;
+            else
+                ErrorNoReturn("?");
+            fi;
+        elif config_option.order in ["RareOrbit", "CommonOrbit", "RareRatioOrbit", "CommonRatioOrbit"] then
+            config.getBasePoint := IdFunc;
+            config.initial_lastupb := 0;
+            config.initial_upb := infinity;
+            config.countRareOrbits := true;
+            config.tryImproveStabilizer := true;
+            config.getQuality := pt -> orbmins[pt];
+            if config_option.order = "RareOrbit" then
+                config.calculateBestOrbit := _IMAGES_RARE_ORBIT;
+            elif config_option.order = "CommonOrbit" then
+                config.calculateBestOrbit := _IMAGES_COMMON_ORBIT;
+            elif config_option.order = "RareRatioOrbit" then
+                config.calculateBestOrbit := _IMAGES_RARE_RATIO_ORBIT;
+            elif config_option.order = "CommonRatioOrbit" then
+                config.calcuateBestOrbit := _IMAGES_COMMON_RATIO_ORBIT;
+            else
+                ErrorNoReturn("?");
+            fi;
+        else
+            ErrorNoReturn("Invalid ordering: ", config_option.order);
+        fi;
 
-    config := configrec[config_option];
+        if IsBound(config_option.orbfilt) and config_option.orbfilt then
+            config.preFilterByOrbMset := true;
+        fi;
+    else
+        ErrorNoReturn("'branch' must be minimum, static or dynamic");
+    fi;
 
     ## Node exploration functions
     leftmost_node := function(depth)
