@@ -83,12 +83,12 @@ CheckMinimalImageTest := function(g, o, action, minList)
     for order in [CanonicalConfig_Fast, CanonicalConfig_Minimum, CanonicalConfig_MinOrbit, CanonicalConfig_MaxOrbit, CanonicalConfig_SingleMaxOrbit,
                   CanonicalConfig_RareOrbit, CanonicalConfig_RareRatioOrbit, CanonicalConfig_CommonOrbit, CanonicalConfig_RareRatioOrbitPlus,
                   CanonicalConfig_FixedMinOrbit, CanonicalConfig_FixedMaxOrbit ] do
-        for gp in [cpyg, Group(())] do
-            can_orig := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), order := order, result := GetImage));
-            can_rand := CanonicalImage(cpyg, rando, action, rec(stabilizer := Group(()), order := order, result := GetImage));
-            perm_orig := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), order := order, result := GetPerm));
-            perm_rand := CanonicalImage(cpyg, rando, action, rec(stabilizer := Group(()), order := order, result := GetPerm));
-        od;
+
+        can_orig := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), order := order, result := GetImage));
+        can_rand := CanonicalImage(cpyg, rando, action, rec(stabilizer := Group(()), order := order, result := GetImage));
+        perm_orig := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), order := order, result := GetPerm));
+        perm_rand := CanonicalImage(cpyg, rando, action, rec(stabilizer := Group(()), order := order, result := GetPerm));
+
         if not(perm_orig in g and perm_rand in g and
                action(o, perm_orig) = can_orig and action(rando, perm_rand) = can_rand and
                can_orig = can_rand) then
