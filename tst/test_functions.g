@@ -61,7 +61,7 @@ RandomSetSet := function(len)
 end;
 
 CheckMinimalImageTest := function(g, o, action, minList)
-    local good_min, nostab_min, slow_min, cpyg, rando, can_orig, can_rand, perm_orig, perm_rand, order, gp;
+    local good_min, nostab_min, slow_min, cpyg, rando, can_orig, can_rand, perm_orig, perm_rand, order, gp, can_nostab;
     cpyg := Group(GeneratorsOfGroup(g), ());
     good_min := MinimalImage(g, o, action);
     nostab_min := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), result := GetImage, order := CanonicalConfig_Minimum));
@@ -86,13 +86,14 @@ CheckMinimalImageTest := function(g, o, action, minList)
 
         can_orig := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), order := order, result := GetImage));
         can_rand := CanonicalImage(cpyg, rando, action, rec(stabilizer := Group(()), order := order, result := GetImage));
+        can_nostab :=  CanonicalImage(cpyg, rando, action, rec(stabilizer := Group(()), order := order, result := GetImage, disableStabilizerCheck := true));
         perm_orig := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), order := order, result := GetPerm));
         perm_rand := CanonicalImage(cpyg, rando, action, rec(stabilizer := Group(()), order := order, result := GetPerm));
 
         if not(perm_orig in g and perm_rand in g and
                action(o, perm_orig) = can_orig and action(rando, perm_rand) = can_rand and
-               can_orig = can_rand) then
-            Print(GeneratorsOfGroup(g), ":", order, ":", o, ":", rando, ":", can_orig, ":", can_rand, "\n");
+               can_orig = can_rand and can_orig = can_nostab) then
+            Print(GeneratorsOfGroup(g), ":", order, ":", o, ":", rando, ":", can_orig, ":", can_rand, ":", can_nostab, "\n");
         fi;
     od;
 

@@ -136,7 +136,7 @@ _CanonicalSetImage := function(G, S, stab, settings)
         earlyskip := false;
     fi;
     
-    L := _NewSmallestImage(G, S, stab, x -> x, earlyskip, settings.order );
+    L := _NewSmallestImage(G, S, stab, x -> x, earlyskip, settings.disableStabilizerCheck, settings.order );
     
     if settings.getStab then
         settings.original.stab := L[2];
@@ -520,7 +520,8 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
     action := OnPoints;
   fi;
    
-  settings := rec(result := resultarg, stabilizer := fail, order := imagearg, getStab := false);
+  settings := rec(result := resultarg, stabilizer := fail, order := imagearg, getStab := false,
+                  disableStabilizerCheck := false);
   
   if Length(arglist) >= index and IsRecord(arglist[index]) then
     settings := _FerretHelperFuncs.fillUserValues(settings, arglist[index]);

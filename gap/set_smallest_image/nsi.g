@@ -180,7 +180,7 @@ _IMAGES_COMMON_ORBIT := _IMAGES_RATIO(
 );
 
 
-_NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
+_NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCheck_in, config_option)
     local   leftmost_node,  next_node,  delete_node,  delete_nodes,
             clean_subtree,  handle_new_stabilizer_element,
             simpleOrbitReps,  make_orbit,  n,  s,  l,  m,  hash,
@@ -275,6 +275,10 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, config_option)
         fi;
     else
         ErrorNoReturn("'branch' must be minimum, static or dynamic");
+    fi;
+
+    if disableStabilizerCheck_in = true then
+        config.tryImproveStabilizer := false;
     fi;
 
     ## Node exploration functions
