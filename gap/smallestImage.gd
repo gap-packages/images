@@ -133,13 +133,23 @@ BIND_GLOBAL("CanonicalConfig_RareRatioOrbit", rec(
 BIND_GLOBAL("CanonicalConfig_CommonRatioOrbit", rec(
     branch := "dynamic", order := "RareRatioOrbit"
 ));
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbitPlus", rec(
+
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbitPlusMin", rec(
     branch := "dynamic", order := "RareRatioOrbit",
-    orbfilt := true
+    orbfilt := "Min"
+));
+
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbitPlusRare", rec(
+    branch := "dynamic", order := "RareRatioOrbit",
+    orbfilt := "Rare"
+));
+
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbitPlusCommon", rec(
+    branch := "dynamic", order := "RareRatioOrbit",
+    orbfilt := "Common"
 ));
 
 
-
-BIND_GLOBAL("CanonicalConfig_Fast", CanonicalConfig_RareRatioOrbitPlus);
+BIND_GLOBAL("CanonicalConfig_Fast", CanonicalConfig_RareRatioOrbitPlusMin);
 
 #E  files.gd  . . . . . . . . . . . . . . . . . . . . . . . . . . . ends here

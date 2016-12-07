@@ -133,6 +133,44 @@ else
 
 fi;
 
+# GAP dictionaries don't (currently) provide a way of getting the values
+# stored in them, so here we cache them seperately
+_countingDict := function(dictexample) 
+    local data;
+    data := rec(
+        d := NewDictionary(dictexample, true),
+        l := []
+    );
+
+    return rec(
+        add := function(list)
+            local val;
+            val := LookupDictionary(data.d, list);
+            if val = fail then
+                val := 0;
+                Add(data.l, list);
+            fi;
+            val := val + 1;
+            AddDictionary(data.d, list, val);
+        end,
+
+        findElement := function(comp)
+            local smallval, smalllist, val, i;
+            smallval := infinity;
+            smalllist := data.l[1];
+            for i in data.l do
+                val := LookupDictionary(data.d, i);
+                if comp(val, smallval) or (val = smallval and i < smalllist) then
+                    smallval := val;
+                    smalllist := i;
+                fi;
+            od;
+            return smalllist;
+        end,
+        
+        dump := function() return data; end
+        );
+end;
 
 
 if not IsBound(InfoNSI) then
@@ -191,7 +229,9 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             imset,  p, 
             config,
             globalOrbitCounts, globalBestOrbit, minOrbitMset, orbitMset,
-            savedArgs
+            savedArgs,
+            countOrbDict,
+            bestOrbitMset
             ;
             
     if config_option.branch = "static" then
@@ -270,7 +310,16 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             ErrorNoReturn("Invalid ordering: ", config_option.order);
         fi;
 
-        if IsBound(config_option.orbfilt) and config_option.orbfilt then
+        if IsBound(config_option.orbfilt) then
+            if config_option.orbfilt = "Min" then
+                # This space intensionally blank
+            elif config_option.orbfilt = "Rare" then
+                config.findBestOrbMset := function(x,y) return x < y; end;
+            elif config_option.orbfilt = "Common" then
+                config.findBestOrbtMset := function(x,y) return x > y; end;
+            else
+                Error("Invalid 'orbfilt' option");
+            fi;
             config.preFilterByOrbMset := true;
         fi;
     else
@@ -479,7 +528,33 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
         # first pass creates appropriate set of virtual red nodes
         #
         _IMAGES_StartTimer(pass1);
-        
+
+        if IsBound(config.findBestOrbMset) then
+            countOrbDict := _countingDict([1,2,3]);
+            node := leftmost_node(depth);
+            while node <> fail do
+                _IMAGES_StartTimer(getcands);
+                cands := Difference([1..m],skip_func(node.selected));
+                if Length(cands) > 1 and not IsTrivial(node.substab) then
+                    cands := simpleOrbitReps(node.substab,cands);
+                fi;
+  
+                _IMAGES_StopTimer(getcands);
+                orbitMset := [];
+                for y in cands do
+                    _IMAGES_IncCount(check1);
+                    x := node.image[y];
+                    num := make_orbit(x);
+                    Add(orbitMset, orbmins[num]);
+                od;
+                Sort(orbitMset);
+                countOrbDict.add(orbitMset);
+                node := next_node(node);
+            od;
+
+            bestOrbitMset := countOrbDict.findElement(config.findBestOrbMset);
+        fi;
+
         if config.preFilterByOrbMset then
             minOrbitMset := [infinity];
             node := leftmost_node(depth);
@@ -501,21 +576,26 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                 od;
                 Sort(orbitMset);
                 Info(InfoNSI, 5, "Considering: ", orbitMset, "::",node.selected);
-                if orbitMset < minOrbitMset then
-                    Info(InfoNSI, 4, "New min: ", orbitMset);
-                    minOrbitMset := orbitMset;
-                    node2 := node.prev;
-                    while node2 <> fail do
-                        Info(InfoNSI, 4, "Clean up old big set");
-                        _IMAGES_IncCount(FilterOrbCount);
-                        delete_node(node2);
-                        node2 := node2.prev;
-                    od;
-                elif orbitMset > minOrbitMset then
-                    Info(InfoNSI, 4, "Too big!");
-                    delete_node(node);
+                if IsBound(bestOrbitMset) then
+                    if orbitMset <> bestOrbitMset then
+                        delete_node(node);
+                    fi;
+                else
+                    if orbitMset < minOrbitMset then
+                        Info(InfoNSI, 4, "New min: ", orbitMset);
+                        minOrbitMset := orbitMset;
+                        node2 := node.prev;
+                        while node2 <> fail do
+                            Info(InfoNSI, 4, "Clean up old big set");
+                            _IMAGES_IncCount(FilterOrbCount);
+                            delete_node(node2);
+                            node2 := node2.prev;
+                        od;
+                    elif orbitMset > minOrbitMset then
+                        Info(InfoNSI, 4, "Too big!");
+                        delete_node(node);
+                    fi;
                 fi;
-
 
                 node := next_node(node);
             od;
