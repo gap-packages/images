@@ -316,7 +316,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             elif config_option.orbfilt = "Rare" then
                 config.findBestOrbMset := function(x,y) return x < y; end;
             elif config_option.orbfilt = "Common" then
-                config.findBestOrbtMset := function(x,y) return x > y; end;
+                config.findBestOrbMset := function(x,y) return x > y; end;
             else
                 Error("Invalid 'orbfilt' option");
             fi;
