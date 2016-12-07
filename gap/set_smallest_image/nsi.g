@@ -156,8 +156,8 @@ _countingDict := function(dictexample)
 
         findElement := function(comp)
             local smallval, smalllist, val, i;
-            smallval := infinity;
             smalllist := data.l[1];
+            smallval := LookupDictionary(data.d, smalllist);
             for i in data.l do
                 val := LookupDictionary(data.d, i);
                 if comp(val, smallval) or (val = smallval and i < smalllist) then
