@@ -205,6 +205,20 @@ _IMAGES_COMMON_RATIO_ORBIT := _IMAGES_RATIO(
     end
 );
 
+_IMAGES_RARE_RATIO_ORBIT_FIX := _IMAGES_RATIO(
+    function(i, orbmins, orbitCounts, orbsizes)
+        if(orbsizes[i]) = 1 then return Float(-(2^32)+orbitCounts[i]); fi;
+        return (Log2(Float(orbitCounts[i])))/orbsizes[i];
+    end
+);
+
+_IMAGES_COMMON_RATIO_ORBIT_FIX := _IMAGES_RATIO(
+    function(i, orbmins, orbitCounts, orbsizes)
+        if(orbsizes[i]) = 1 then return Float(-(2^32)-orbitCounts[i]); fi;
+        return -(Log2(Float(orbitCounts[i])))/orbsizes[i];
+    end
+);
+
 _IMAGES_RARE_ORBIT := _IMAGES_RATIO(
     function(i, orbmins, orbitCounts, orbsizes)
         return orbitCounts[i];
@@ -292,7 +306,8 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             else
                 ErrorNoReturn("?");
             fi;
-        elif config_option.order in ["RareOrbit", "CommonOrbit", "RareRatioOrbit", "CommonRatioOrbit"] then
+        elif config_option.order in ["RareOrbit", "CommonOrbit", "RareRatioOrbit", "CommonRatioOrbit",
+                                     "RareRatioOrbitFix", "CommonRatioOrbitFix"] then
             config.getBasePoint := IdFunc;
             config.initial_lastupb := 0;
             config.initial_upb := infinity;
@@ -305,8 +320,12 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                 config.calculateBestOrbit := _IMAGES_COMMON_ORBIT;
             elif config_option.order = "RareRatioOrbit" then
                 config.calculateBestOrbit := _IMAGES_RARE_RATIO_ORBIT;
+            elif config_option.order = "RareRatioOrbitFix" then
+                config.calculateBestOrbit := _IMAGES_RARE_RATIO_ORBIT_FIX;
             elif config_option.order = "CommonRatioOrbit" then
-                config.calcuateBestOrbit := _IMAGES_COMMON_RATIO_ORBIT;
+                config.calculateBestOrbit := _IMAGES_COMMON_RATIO_ORBIT;
+            elif config_option.order = "CommonRatioOrbitFix" then
+                config.calculateBestOrbit := _IMAGES_COMMON_RATIO_ORBIT_FIX;
             else
                 ErrorNoReturn("?");
             fi;

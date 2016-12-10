@@ -81,8 +81,10 @@ CheckMinimalImageTest := function(g, o, action, minList)
     
     rando := action(o, Random(g));
     for order in [CanonicalConfig_Fast, CanonicalConfig_Minimum, CanonicalConfig_MinOrbit, CanonicalConfig_MaxOrbit, CanonicalConfig_SingleMaxOrbit,
-                  CanonicalConfig_RareOrbit, CanonicalConfig_RareRatioOrbit, CanonicalConfig_CommonOrbit,
-                  CanonicalConfig_RareRatioOrbitPlusMin, CanonicalConfig_RareRatioOrbitPlusRare, CanonicalConfig_RareRatioOrbitPlusCommon,
+                  CanonicalConfig_RareOrbit, CanonicalConfig_RareRatioOrbit, CanonicalConfig_CommonOrbit, CanonicalConfig_CommonRatioOrbit,
+                  CanonicalConfig_RareRatioOrbitFix, CanonicalConfig_CommonRatioOrbitFix,
+                  CanonicalConfig_RareRatioOrbitFixPlusMin, CanonicalConfig_RareRatioOrbitFixPlusRare, CanonicalConfig_RareRatioOrbitFixPlusCommon,
+                  CanonicalConfig_RareOrbitPlusMin, CanonicalConfig_RareOrbitPlusRare, CanonicalConfig_RareOrbitPlusCommon,
                   CanonicalConfig_FixedMinOrbit, CanonicalConfig_FixedMaxOrbit ] do
 
         can_orig := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), order := order, result := GetImage));

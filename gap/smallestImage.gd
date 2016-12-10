@@ -127,29 +127,53 @@ BIND_GLOBAL("CanonicalConfig_RareOrbit", rec(
 BIND_GLOBAL("CanonicalConfig_CommonOrbit", rec(
     branch := "dynamic", order := "CommonOrbit"
 ));
+
 BIND_GLOBAL("CanonicalConfig_RareRatioOrbit", rec(
     branch := "dynamic", order := "RareRatioOrbit"
 ));
 BIND_GLOBAL("CanonicalConfig_CommonRatioOrbit", rec(
-    branch := "dynamic", order := "RareRatioOrbit"
+    branch := "dynamic", order := "CommonRatioOrbit"
 ));
 
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbitPlusMin", rec(
-    branch := "dynamic", order := "RareRatioOrbit",
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFix", rec(
+    branch := "dynamic", order := "RareRatioOrbitFix"
+));
+BIND_GLOBAL("CanonicalConfig_CommonRatioOrbitFix", rec(
+    branch := "dynamic", order := "CommonRatioOrbitFix"
+));
+
+
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFixPlusMin", rec(
+    branch := "dynamic", order := "RareRatioOrbitFix",
     orbfilt := "Min"
 ));
 
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbitPlusRare", rec(
-    branch := "dynamic", order := "RareRatioOrbit",
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFixPlusRare", rec(
+    branch := "dynamic", order := "RareRatioOrbitFix",
     orbfilt := "Rare"
 ));
 
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbitPlusCommon", rec(
-    branch := "dynamic", order := "RareRatioOrbit",
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFixPlusCommon", rec(
+    branch := "dynamic", order := "RareRatioOrbitFix",
     orbfilt := "Common"
 ));
 
 
-BIND_GLOBAL("CanonicalConfig_Fast", CanonicalConfig_RareRatioOrbitPlusMin);
+BIND_GLOBAL("CanonicalConfig_RareOrbitPlusMin", rec(
+    branch := "dynamic", order := "RareOrbit",
+    orbfilt := "Min"
+));
+
+BIND_GLOBAL("CanonicalConfig_RareOrbitPlusRare", rec(
+    branch := "dynamic", order := "RareOrbit",
+    orbfilt := "Rare"
+));
+
+BIND_GLOBAL("CanonicalConfig_RareOrbitPlusCommon", rec(
+    branch := "dynamic", order := "RareOrbit",
+    orbfilt := "Common"
+));
+
+BIND_GLOBAL("CanonicalConfig_Fast", CanonicalConfig_RareRatioOrbitFixPlusMin);
 
 #E  files.gd  . . . . . . . . . . . . . . . . . . . . . . . . . . . ends here
