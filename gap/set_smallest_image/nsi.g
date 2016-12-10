@@ -233,7 +233,11 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             countOrbDict,
             bestOrbitMset
             ;
-            
+
+    if IsString(config_option) then
+        config_option := ValueGlobal(config_option);
+    fi;
+    
     if config_option.branch = "static" then
             savedArgs := rec( config_option := config_option, g := g, k := k, set := set );
         if config_option.order = "MinOrbit" then
@@ -553,6 +557,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             od;
 
             bestOrbitMset := countOrbDict.findElement(config.findBestOrbMset);
+            Unbind(countOrbDict); # Free memory
         fi;
 
         if config.preFilterByOrbMset then
