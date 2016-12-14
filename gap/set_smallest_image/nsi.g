@@ -419,13 +419,19 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
 
         seen := BlistList([1..m],[]);
         for c in node.children do
-            x := c.selected[Length(c.selected)];
+            if IsBound(c.selectedbaselength) then
+                x := c.selected[c.selectedbaselength];
+            else
+                x := c.selected[Length(c.selected)];
+            fi;
             if seen[x] then
+                Info(InfoNSI, 5, "Removing ", c, " because ", x);
                 Add(bad,c);
             else
                 q := [x];
                 gens := GeneratorsOfGroup(node.substab);
                 olen := 1;
+                Info(InfoNSI, 5, "Keeping ", c, " because ", x);
                 seen[x] := true;
                 for pt in q do
                     for gen in gens do
@@ -453,6 +459,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
         # so node1 and node2 represnet group elements that map set to the same
         # place in two different ways
         perm1 := PermListList(node1.image, node2.image);
+        Info(InfoNSI, 2, "Can map ",node1.image, " to ", node2.image, " : ", perm1);
         Assert(1, not perm1 in l);
         l := ClosureGroup(l,perm1);
         Info(InfoNSI,2,"Found new stabilizer element. Stab now ",Size(l));
@@ -755,6 +762,9 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             _IMAGES_StartTimer(shortcut);
             node := leftmost_node(depth);
             while node <> fail do
+                if not IsBound(node.selectedbaselength) then
+                    node.selectedbaselength := Length(node.selected);
+                fi;
                 Assert(1, Length(node.validkids)=1);
                 Add(node.selected, node.validkids[1]);
                 node := next_node(node);
