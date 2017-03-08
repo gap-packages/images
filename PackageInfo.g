@@ -30,7 +30,7 @@ Persons := [
   ),
 ],
 
-PackageWWWHome := "http://gap-packages.github.io/images/",
+PackageWWWHome := "https://gap-packages.github.io/images/",
 
 ArchiveURL     := Concatenation("https://github.com/gap-packages/images/",
                                 "releases/download/v", ~.Version,
