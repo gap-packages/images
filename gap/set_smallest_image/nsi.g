@@ -565,9 +565,6 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             while node <> fail do
                 _IMAGES_StartTimer(getcands);
                 cands := Difference([1..m],skip_func(node.selected));
-                if Length(cands) > 1 and not IsTrivial(node.substab) then
-                    cands := simpleOrbitReps(node.substab,cands);
-                fi;
   
                 _IMAGES_StopTimer(getcands);
                 orbitMset := [];
@@ -593,9 +590,6 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                 Info(InfoNSI,4, "CheckNode1");
                 _IMAGES_StartTimer(getcands);
                 cands := Difference([1..m],skip_func(node.selected));
-                if Length(cands) > 1 and not IsTrivial(node.substab) then
-                    cands := simpleOrbitReps(node.substab,cands);
-                fi;
   
                 _IMAGES_StopTimer(getcands);
                 orbitMset := [];

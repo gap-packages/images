@@ -1,5 +1,4 @@
 
-gather := [];
 
 acceptTransform := function(m, sollength)
     local f;
@@ -17,7 +16,7 @@ acceptTransform := function(m, sollength)
         return true;
       end,
         
-      record := function(l)
+      record := function(gather, l)
 #          Print("record:",l);
           
           if Length(l) = sollength then
@@ -49,7 +48,7 @@ acceptPartialPerm := function(m, sollength)
         fi;
         return true;
     end,
-      record := function(l)
+      record := function(gather, l)
         l := _unbooleaniseList(l, m);
         # the 'mod m' is just to turn m into 0.
         if Length(l) = sollength then
@@ -74,7 +73,7 @@ acceptSetOfSize := function(maxpoint, setsize)
             fi;
             return true;#(maxpoint - l[len]) < (setsize - len);
         end,
-        record := function(l)
+        record := function(gather, l)
             if Length(l) = setsize then
                 Add(gather, ShallowCopy(l));
             fi;
@@ -83,8 +82,8 @@ acceptSetOfSize := function(maxpoint, setsize)
     return f;
 end;
 
-recurseMinimalImage := function(baseG, G, l, blockSet, max, accept)
-    local orbmins, i, it, min, orbs, blockSetCpy;
+recurseMinimalImage := function(gather, baseG, G, l, blockSet, max, accept)
+    local orbmins, i, it, min, orbs, blockSetCpy, gather;
     #Print("Considering ", l,"\n");
     if Length(l) = 0 then
         min := 1;
@@ -94,7 +93,7 @@ recurseMinimalImage := function(baseG, G, l, blockSet, max, accept)
             return;
         fi;
         
-        if not(accept.record(l)) then
+        if not(accept.record(gather, l)) then
             #Print("!record rejects: ", l, "\n");
             return;
         fi;
@@ -126,7 +125,7 @@ recurseMinimalImage := function(baseG, G, l, blockSet, max, accept)
         if i >= min and not(i in blockSet) then
             Add(l, i);
             if accept.filter(l) then
-                recurseMinimalImage(baseG, Stabilizer(G,i), l, blockSetCpy, max, accept);
+                recurseMinimalImage(gather, baseG, Stabilizer(G,i), l, blockSetCpy, max, accept);
             else
                 #Print("!filter failed ", l, "\n");
             fi;
@@ -137,14 +136,16 @@ recurseMinimalImage := function(baseG, G, l, blockSet, max, accept)
 end;
 
 AllMinimalSetsFiltered := function(G, max, accept)
+    local gather;
     gather := [];
-    recurseMinimalImage(G, G, [], Set([]), max, accept);
+    recurseMinimalImage(gather, G, G, [], Set([]), max, accept);
     return gather;
 end;
 
 AllMinimalSetsOfSize := function(G, max, size)
+    local gather;
     gather := [];
-    recurseMinimalImage(G, G, [], Set([]),max, acceptSetOfSize(max, size));
+    recurseMinimalImage(gather, G, G, [], Set([]),max, acceptSetOfSize(max, size));
     return gather;
 end;
 
