@@ -69,24 +69,26 @@ end;
 InstallMethod(MinOrbitPerm, [IsPermGroup],
     _minOrbBuilder(
         function(G, vals)
-            local orbs, o, smallOrbSize;
+            local orbs, o, smallOrbSize, first;
             orbs := Orbits(G, vals);
             orbs := List(orbs, Set);
             orbs := Set(orbs);
             smallOrbSize := Minimum(List(orbs, Size));
-            return (First(orbs, x -> Size(x) = smallOrbSize))[1];
+            first := First(orbs, x -> Size(x) = smallOrbSize);
+            return first[1];
         end
 ));
 
 InstallMethod(MaxOrbitPerm, [IsPermGroup],
     _minOrbBuilder(
         function(G, vals)
-            local orbs, o, largeOrbSize;
+            local orbs, o, largeOrbSize, first;
             orbs := Orbits(G, vals);
             orbs := List(orbs, Set);
             orbs := Set(orbs);
             largeOrbSize := Maximum(List(orbs, Size));
-            return (First(orbs, x -> Size(x) = largeOrbSize))[1];
+            first := First(orbs, x -> Size(x) = largeOrbSize);
+            return first[1];
         end
 ));
   
