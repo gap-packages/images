@@ -83,7 +83,7 @@ acceptSetOfSize := function(maxpoint, setsize)
 end;
 
 recurseMinimalImage := function(gather, baseG, G, l, blockSet, max, accept)
-    local orbmins, i, it, min, orbs, blockSetCpy, gather;
+    local orbmins, i, it, min, orbs, blockSetCpy;
     #Print("Considering ", l,"\n");
     if Length(l) = 0 then
         min := 1;
