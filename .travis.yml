@@ -12,6 +12,7 @@ addons:
     packages:
       - gcc-4.8
       - g++-4.8
+      - automake
   apt_packages:
       - libgmp3-dev
       - parallel
