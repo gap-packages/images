@@ -133,6 +133,17 @@ else
 
 fi;
 
+_IMAGES_Get_Hash := function(m)
+    local jenkins_hash;
+    if IsBoundGlobal("JENKINS_HASH") then
+        jenkins_hash := ValueGlobal("JENKINS_HASH");
+         return s->jenkins_hash(s,GAPInfo.BytesPerVariable*m+GAPInfo.BytesPerVariable);
+     else
+       return s->HashKeyBag(s,57,0,GAPInfo.BytesPerVariable*m+GAPInfo.BytesPerVariable);
+    fi;
+end;
+
+
 # GAP dictionaries don't (currently) provide a way of getting the values
 # stored in them, so here we cache them seperately
 _countingDict := function(dictexample) 
@@ -530,11 +541,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
     s := StabChainMutable(g);
     l := Action(k,set);
     m := Length(set);
-    if IsBound(JENKINS_HASH) then
-       hash := s->JENKINS_HASH(s,GAPInfo.BytesPerVariable*m+GAPInfo.BytesPerVariable);
-    else
-       hash := s->HashKeyBag(s,57,0,GAPInfo.BytesPerVariable*m+GAPInfo.BytesPerVariable);
-    fi;
+    hash := _IMAGES_Get_Hash(m);
     lastupb := config.initial_lastupb;
     root := rec(selected := [],
                 image := set,

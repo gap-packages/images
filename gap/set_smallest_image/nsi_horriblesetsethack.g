@@ -219,11 +219,7 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
     s := StabChainMutable(g);
     l := Action(k,set);
     m := Length(set);
-    if IsBound(JENKINS_HASH) then
-       hash := s->JENKINS_HASH(s,GAPInfo.BytesPerVariable*m+GAPInfo.BytesPerVariable);
-    else
-       hash := s->HashKeyBag(s,57,0,GAPInfo.BytesPerVariable*m+GAPInfo.BytesPerVariable);
-    fi;
+    hash := _IMAGES_Get_Hash(m);
     lastupb := 0;
     root := rec(selected := [],
                 image := set,
