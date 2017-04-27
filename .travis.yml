@@ -32,4 +32,4 @@ install:
   - ( cd gap-git/pkg && ../bin/BuildPackages.sh )
 
 script:
-  - gap-git/bin/gap.sh -A gap-git/pkg/images/tst/testall.g
+  - valgrind --trace-children=yes gap-git/bin/gap.sh -A gap-git/pkg/images/tst/testall.g
