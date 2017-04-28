@@ -35,4 +35,5 @@ install:
 #  - ( cd gap-git/pkg/semigroups-2.7.4 && ./autogen.sh && ./configure && make V=1 )
 
 script:
-  - valgrind --trace-children=yes --suppressions=scripts/gap-suppressions.valgrind gap-git/bin/gap.sh -A gap-git/pkg/images/tst/testall.g
+  - gap-git/bin/gap.sh -A gap-git/pkg/images/tst/testall.g
+#  - valgrind --trace-children=yes --suppressions=scripts/gap-suppressions.valgrind gap-git/bin/gap.sh -A gap-git/pkg/images/tst/testall.g
