@@ -96,83 +96,88 @@ BindGlobal("GetImage", 2);
 BindGlobal("GetBool", 3);
 
 
-BIND_GLOBAL("CanonicalConfig_Minimum", rec(
+BIND_GLOBAL("CanonicalConfig_Minimum", MakeImmutable(rec(
     branch := "minimum"
-));
+)));
 
-BIND_GLOBAL("CanonicalConfig_FixedMinOrbit", rec(
+BIND_GLOBAL("CanonicalConfig_FixedMinOrbit", MakeImmutable(rec(
     branch := "static", order := "MinOrbit"
-));
+)));
 
-BIND_GLOBAL("CanonicalConfig_FixedMaxOrbit", rec(
+BIND_GLOBAL("CanonicalConfig_FixedMaxOrbit", MakeImmutable(rec(
     branch := "static", order := "MaxOrbit"
-));
+)));
 
 
 
-BIND_GLOBAL("CanonicalConfig_MinOrbit", rec(
+BIND_GLOBAL("CanonicalConfig_MinOrbit", MakeImmutable(rec(
     branch := "dynamic", order := "MinOrbit"
-));
-BIND_GLOBAL("CanonicalConfig_MaxOrbit", rec(
-    branch := "dynamic", order := "MaxOrbit"));
+)));
+
+BIND_GLOBAL("CanonicalConfig_MaxOrbit", MakeImmutable(rec(
+    branch := "dynamic", order := "MaxOrbit"
+)));
 
 
-BIND_GLOBAL("CanonicalConfig_SingleMaxOrbit",  rec(
+BIND_GLOBAL("CanonicalConfig_SingleMaxOrbit", MakeImmutable(rec(
     branch := "dynamic", order := "SingleMaxOrbit"
-));
-BIND_GLOBAL("CanonicalConfig_RareOrbit", rec(
+)));
+
+BIND_GLOBAL("CanonicalConfig_RareOrbit", MakeImmutable(rec(
     branch := "dynamic", order := "RareOrbit"
-));
+)));
 
-BIND_GLOBAL("CanonicalConfig_CommonOrbit", rec(
+BIND_GLOBAL("CanonicalConfig_CommonOrbit", MakeImmutable(rec(
     branch := "dynamic", order := "CommonOrbit"
-));
+)));
 
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbit", rec(
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbit", MakeImmutable(rec(
     branch := "dynamic", order := "RareRatioOrbit"
-));
-BIND_GLOBAL("CanonicalConfig_CommonRatioOrbit", rec(
+)));
+
+BIND_GLOBAL("CanonicalConfig_CommonRatioOrbit", MakeImmutable(rec(
     branch := "dynamic", order := "CommonRatioOrbit"
-));
+)));
 
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFix", rec(
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFix", MakeImmutable(rec(
     branch := "dynamic", order := "RareRatioOrbitFix"
-));
-BIND_GLOBAL("CanonicalConfig_CommonRatioOrbitFix", rec(
+)));
+
+BIND_GLOBAL("CanonicalConfig_CommonRatioOrbitFix", MakeImmutable(rec(
     branch := "dynamic", order := "CommonRatioOrbitFix"
-));
+)));
 
 
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFixPlusMin", rec(
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFixPlusMin", MakeImmutable(rec(
     branch := "dynamic", order := "RareRatioOrbitFix",
     orbfilt := "Min"
-));
+)));
 
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFixPlusRare", rec(
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFixPlusRare", MakeImmutable(rec(
     branch := "dynamic", order := "RareRatioOrbitFix",
     orbfilt := "Rare"
-));
+)));
 
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFixPlusCommon", rec(
+BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFixPlusCommon", MakeImmutable(rec(
     branch := "dynamic", order := "RareRatioOrbitFix",
     orbfilt := "Common"
-));
+)));
 
 
-BIND_GLOBAL("CanonicalConfig_RareOrbitPlusMin", rec(
+BIND_GLOBAL("CanonicalConfig_RareOrbitPlusMin", MakeImmutable(rec(
     branch := "dynamic", order := "RareOrbit",
     orbfilt := "Min"
-));
+)));
 
-BIND_GLOBAL("CanonicalConfig_RareOrbitPlusRare", rec(
+BIND_GLOBAL("CanonicalConfig_RareOrbitPlusRare", MakeImmutable(rec(
     branch := "dynamic", order := "RareOrbit",
     orbfilt := "Rare"
-));
+)));
 
-BIND_GLOBAL("CanonicalConfig_RareOrbitPlusCommon", rec(
+BIND_GLOBAL("CanonicalConfig_RareOrbitPlusCommon", MakeImmutable(rec(
     branch := "dynamic", order := "RareOrbit",
     orbfilt := "Common"
-));
+)));
 
 BIND_GLOBAL("CanonicalConfig_Fast", CanonicalConfig_RareRatioOrbitFixPlusMin);
 

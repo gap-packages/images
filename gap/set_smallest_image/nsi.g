@@ -58,7 +58,7 @@ _IMAGES_TIME_CLASSES := [];
 
 _IMAGES_DeclareTimeClass := function(name)
     BindGlobal(name, Length(_IMAGES_TIME_CLASSES)+1);
-    Add(_IMAGES_TIME_CLASSES,name);
+    Add(_IMAGES_TIME_CLASSES,MakeImmutable(name));
 end;
 
 
@@ -78,9 +78,12 @@ _IMAGES_DeclareTimeClass("ShallowNode");
 _IMAGES_DeclareTimeClass("DeepNode");
 _IMAGES_DeclareTimeClass("FilterOrbCount");
 
-_IMAGES_nsi_stats := fail;
+_IMAGES_TIME_CLASSES := MakeImmutable(_IMAGES_TIME_CLASSES);
+
+_IMAGES_nsi_stats := ListWithIdenticalEntries(Length(_IMAGES_TIME_CLASSES),0);
 
 _IMAGES_DO_TIMING := true;
+MakeThreadLocal("_IMAGES_DO_TIMING");
 
 if _IMAGES_DO_TIMING then
     _IMAGES_StartTimer := function(cat)
@@ -100,6 +103,7 @@ if _IMAGES_DO_TIMING then
     end;
 
     _IMAGES_ResetStats();
+    MakeThreadLocal("_IMAGES_nsi_stats");
 
     _IMAGES_GetStats := function()
         local   r,  c;
