@@ -83,7 +83,9 @@ _IMAGES_TIME_CLASSES := MakeImmutable(_IMAGES_TIME_CLASSES);
 _IMAGES_nsi_stats := ListWithIdenticalEntries(Length(_IMAGES_TIME_CLASSES),0);
 
 _IMAGES_DO_TIMING := true;
-MakeThreadLocal("_IMAGES_DO_TIMING");
+if IsBound( MakeThreadLocal ) then
+    MakeThreadLocal("_IMAGES_DO_TIMING");
+fi;
 
 if _IMAGES_DO_TIMING then
     _IMAGES_StartTimer := function(cat)
@@ -103,8 +105,10 @@ if _IMAGES_DO_TIMING then
     end;
 
     _IMAGES_ResetStats();
-    MakeThreadLocal("_IMAGES_nsi_stats");
-
+    if IsBound( MakeThreadLocal ) then
+        MakeThreadLocal("_IMAGES_nsi_stats");
+    fi;
+    
     _IMAGES_GetStats := function()
         local   r,  c;
         r := rec();
