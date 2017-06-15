@@ -69,8 +69,8 @@ PackageDoc := rec(
 
 Dependencies := rec(
   GAP := ">= 4.6",
-  NeededOtherPackages := [ [ "GAPDoc", ">= 1.5" ], ["ferret", ">= 0.7.0"] ],
-  SuggestedOtherPackages := [ ],
+  NeededOtherPackages := [ [ "GAPDoc", ">= 1.5" ] ],
+  SuggestedOtherPackages := [ ["ferret", ">= 0.7.0"] ],
   ExternalConditions := [ ],
 ),
 

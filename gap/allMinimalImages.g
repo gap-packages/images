@@ -170,7 +170,7 @@ AllMinimalOrderedPairs := function(G, n, generator)
     
     l := AllMinimalListsFiltered(G, n, generator);
     
-    stabs := List(l, x -> Group(Solve([ConStabilize(x, n), ConInGroup(G)])));
+    stabs := List(l, x -> Stabilizer(G, x, n) );
     stabs_set := Set(stabs);
     inner_images := List(stabs_set, x -> AllMinimalListsFiltered(x, n, generator));
     out := [];

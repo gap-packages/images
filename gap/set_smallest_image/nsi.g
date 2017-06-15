@@ -291,7 +291,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
 
     if config_option.branch = "minimum" then
         config := rec(
-                   skipNewOrbit := -> (upb <= lastupb + 1),
+                   skipNewOrbit := function() return (upb <= lastupb + 1); end,
                    getQuality := pt -> orbmins[pt],
                    getBasePoint := IdFunc,
                    initial_lastupb := 0,
