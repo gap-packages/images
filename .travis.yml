@@ -5,6 +5,13 @@ branches:
   except:
     - gh-pages
 
+env:
+    - BRANCH="master" FERRET="yes"
+    - BRANCH="stable-4.8" FERRET="yes"
+    - BRANCH="master" FERRET="no"
+    - BRANCH="stable-4.8" FERRET="no"
+
+
 addons:
   apt:
     sources:
@@ -22,17 +29,16 @@ install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; export CC=gcc-4.8; fi
   - git clone --depth=2 https://github.com/gap-system/gap.git gap-git
   - pwd
-  - ( cd gap-git && ./autogen.sh && ./configure && make && make bootstrap-pkg-minimal)
+  - ( cd gap-git && ./autogen.sh || echo no autogen)
+  - ( cd gap-git && ./configure && make && make bootstrap-pkg-minimal V=1)
   - ( cd gap-git/pkg && wget http://www.gap-system.org/pub/gap/gap4/tar.bz2/packages/atlasrep1r5p0.tar.bz2 && tar -xf atlasrep*bz2 )
   - ( cd gap-git/pkg && wget http://www.gap-system.org/pub/gap/gap4/tar.bz2/packages/semigroups-2.7.4.tar.bz2 && tar -xf semigroups*bz2 )
   - ( cd gap-git/pkg && git clone --depth=2 https://github.com/gap-packages/io )
   - ( cd gap-git/pkg && git clone --depth=2 https://github.com/gap-packages/orb )
-  - ( cd gap-git/pkg && git clone --depth=2 https://github.com/gap-packages/ferret )
   - ln -s $(pwd) gap-git/pkg/images
   - ( cd gap-git/pkg/io && ./autogen.sh && ./configure && make V=1 )
-  - ( cd gap-git/pkg/ferret && ./autogen.sh && ./configure && make V=1 )
-#  - ( cd gap-git/pkg/orb && ./autogen.sh && ./configure && make V=1 )
-#  - ( cd gap-git/pkg/semigroups-2.7.4 && ./autogen.sh && ./configure && make V=1 )
+  - ( if [ "$FERRET" = "yes" ]; then (cd gap-git/pkg && git clone --depth=2 https://github.com/gap-packages/ferret ); fi)
+  - ( if [ "$FERRET" = "yes" ]; then (cd gap-git/pkg/ferret && ./autogen.sh && ./configure && make V=1 ); fi )
 
 script:
   - gap-git/bin/gap.sh -A gap-git/pkg/images/tst/testall.g
