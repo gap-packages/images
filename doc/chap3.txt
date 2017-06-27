@@ -1,9 +1,8 @@
   
   [1X3 [33X[0;0YInstalling and Loading the Images Package[133X[101X
   
-  [33X[0;0YInstalling  the  Images packages requires installing and building the kernel
-  module  of  the  Ferret package. After this simply place Images into the pkg
-  directory of your GAP installation.[133X
+  [33X[0;0YTo  install the Images package simply place Images into the pkg directory of
+  your GAP installation.[133X
   
   
   [1X3.1 [33X[0;0YLoading the Images Package[133X[101X

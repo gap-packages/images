@@ -10,8 +10,8 @@ SetPackageInfo( rec(
 
 PackageName := "images",
 Subtitle := "Minimal and Canonical images",
-Version := "0.7.0",
-Date := "19/10/2016", # dd/mm/yyyy format
+Version := "1.0.0",
+Date := "27/06/2017", # dd/mm/yyyy format
 
 Persons := [
   rec(
@@ -21,16 +21,45 @@ Persons := [
     LastName := "Jefferson",
     WWWHome := "http://caj.host.cs.st-andrews.ac.uk/",
     Email := "caj21@st-andrews.ac.uk",
-    PostalAddress := Concatenation(
-               "St Andrews\n",
-               "Scotland\n",
-               "UK" ),
     Place := "St Andrews",
     Institution := "University of St Andrews",
   ),
+
+    rec(
+    LastName      := "Pfeiffer",
+    FirstNames    := "Markus",
+    IsAuthor      := true,
+    IsMaintainer  := false,
+    Email         := "markus.pfeiffer@morphism.de",
+    WWWHome       := "http://www.morphism.de/~markusp/",
+    Place         := "St Andrews",
+    Institution   := "University of St Andrews"
+    ),
+
+    rec(
+    LastName := "Waldecker",
+    FirstNames := "Rebecca",
+    IsAuthor := true,
+    IsMaintainer := false,
+    Email := "rebecca.waldecker@mathematik.uni-halle.de",
+    WWWHome := "http://conway1.mathematik.uni-halle.de/~waldecker/",
+    Place := "Halle",
+    Institution := "Martin-Luther-Universität Halle-Wittenberg"
+    ),
+
+    rec(
+    LastName := "Jonauskyte",
+    FirstNames := "Eliza",
+    IsAuthor := true,
+    IsMaintainer := false,
+    Email := "ej31@st-andrews.ac.uk",
+    Place := "St Andrews",
+    Institution := "University of St Andrews"
+    )
+
 ],
 
-PackageWWWHome := "http://gap-packages.github.io/images/",
+PackageWWWHome := "https://gap-packages.github.io/images/",
 
 ArchiveURL     := Concatenation("https://github.com/gap-packages/images/",
                                 "releases/download/v", ~.Version,
@@ -69,8 +98,8 @@ PackageDoc := rec(
 
 Dependencies := rec(
   GAP := ">= 4.6",
-  NeededOtherPackages := [ [ "GAPDoc", ">= 1.5" ], ["ferret", ">= 0.7.0"] ],
-  SuggestedOtherPackages := [ ],
+  NeededOtherPackages := [ [ "GAPDoc", ">= 1.5" ] ],
+  SuggestedOtherPackages := [ ["ferret", ">= 0.8.0"] ],
   ExternalConditions := [ ],
 ),
 

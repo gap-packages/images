@@ -35,7 +35,7 @@
 
 <h4>3.1 <span class="Heading">Loading the Images Package</span></h4>
 
-<p>To use the Images Package you have to request it explicitly. This is done by calling <code class="func">LoadPackage</code> (<a href="https://www.gap-system.org/Manuals/doc/ref/chap76.html#X79B373A77B29D1F5"><span class="RefLink">Reference: LoadPackage</span></a>):</p>
+<p>To use the Images Package you have to request it explicitly. This is done by calling <code class="func">LoadPackage</code> (<a href="../../../doc/ref/chap76.html#X79B373A77B29D1F5"><span class="RefLink">Reference: LoadPackage</span></a>):</p>
 
 
 <div class="example"><pre>
