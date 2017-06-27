@@ -10,8 +10,8 @@ SetPackageInfo( rec(
 
 PackageName := "images",
 Subtitle := "Minimal and Canonical images",
-Version := "0.8.0",
-Date := "19/10/2016", # dd/mm/yyyy format
+Version := "1.0.0",
+Date := "27/06/2017", # dd/mm/yyyy format
 
 Persons := [
   rec(
@@ -99,7 +99,7 @@ PackageDoc := rec(
 Dependencies := rec(
   GAP := ">= 4.6",
   NeededOtherPackages := [ [ "GAPDoc", ">= 1.5" ] ],
-  SuggestedOtherPackages := [ ["ferret", ">= 0.7.0"] ],
+  SuggestedOtherPackages := [ ["ferret", ">= 0.8.0"] ],
   ExternalConditions := [ ],
 ),
 
