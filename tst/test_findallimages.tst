@@ -9,9 +9,7 @@ true
 gap> LoadPackage("semigroups", false);
 true
 gap> dir := DirectoriesPackageLibrary("images","tst");;
-gap> t3 := ReadGenerators(Filename(dir,"trans-3"));;
-gap> t4 := ReadGenerators(Filename(dir,"trans-4"));;
-gap> t5 := ReadGenerators(Filename(dir,"trans-5"));;
+gap> Read(Filename(dir, "trans"));;
 gap> mt3 := AllMinimalTransformations(SymmetricGroup(3), 3);;
 gap> mt4 := AllMinimalTransformations(SymmetricGroup(4), 4);;
 gap> mt5 := AllMinimalTransformations(SymmetricGroup(5), 5);;

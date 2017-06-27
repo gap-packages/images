@@ -1,0 +1,26 @@
+t3 := [ [ Transformation( [ 1, 1, 1 ] ) ], [ Transformation( [ 1, 1, 2 ] ) ], [ Transformation( [ 1, 1 ] ) ],
+  [ IdentityTransformation ], [ Transformation( [ 1, 3, 2 ] ) ], [ Transformation( [ 2, 1, 1 ] ) ],
+  [ Transformation( [ 2, 3, 1 ] ) ] ];;
+t4 := [ [ Transformation( [ 1, 1, 1, 1 ] ) ], [ Transformation( [ 1, 1, 1, 2 ] ) ], [ Transformation( [ 1, 1, 1 ] ) ],
+  [ Transformation( [ 1, 1, 2, 2 ] ) ], [ Transformation( [ 1, 1, 2, 3 ] ) ], [ Transformation( [ 1, 1, 2 ] ) ],
+  [ Transformation( [ 1, 1, 3, 3 ] ) ], [ Transformation( [ 1, 1 ] ) ], [ Transformation( [ 1, 1, 4, 3 ] ) ],
+  [ IdentityTransformation ], [ Transformation( [ 1, 2, 4, 3 ] ) ], [ Transformation( [ 1, 3, 2, 2 ] ) ],
+  [ Transformation( [ 1, 3, 4, 2 ] ) ], [ Transformation( [ 2, 1, 1, 1 ] ) ], [ Transformation( [ 2, 1, 1, 2 ] ) ],
+  [ Transformation( [ 2, 1, 1, 3 ] ) ], [ Transformation( [ 2, 1, 4, 3 ] ) ], [ Transformation( [ 2, 3, 1, 1 ] ) ],
+  [ Transformation( [ 2, 3, 4, 1 ] ) ] ];;
+t5 := [ [ Transformation( [ 1, 1, 1, 1, 1 ] ) ], [ Transformation( [ 1, 1, 1, 1, 2 ] ) ], [ Transformation( [ 1, 1, 1, 1 ] ) ]
+    , [ Transformation( [ 1, 1, 1, 2, 2 ] ) ], [ Transformation( [ 1, 1, 1, 2, 3 ] ) ],
+  [ Transformation( [ 1, 1, 1, 2, 4 ] ) ], [ Transformation( [ 1, 1, 1, 2 ] ) ], [ Transformation( [ 1, 1, 1, 4, 4 ] ) ],
+  [ Transformation( [ 1, 1, 1 ] ) ], [ Transformation( [ 1, 1, 1, 5, 4 ] ) ], [ Transformation( [ 1, 1, 2, 2, 2 ] ) ],
+  [ Transformation( [ 1, 1, 2, 2, 3 ] ) ], [ Transformation( [ 1, 1, 2, 2 ] ) ], [ Transformation( [ 1, 1, 2, 3, 3 ] ) ],
+  [ Transformation( [ 1, 1, 2, 3, 4 ] ) ], [ Transformation( [ 1, 1, 2, 3 ] ) ], [ Transformation( [ 1, 1, 2, 4, 4 ] ) ],
+  [ Transformation( [ 1, 1, 2 ] ) ], [ Transformation( [ 1, 1, 2, 5, 4 ] ) ], [ Transformation( [ 1, 1, 3, 3 ] ) ],
+  [ Transformation( [ 1, 1 ] ) ], [ Transformation( [ 1, 1, 3, 5, 4 ] ) ], [ Transformation( [ 1, 1, 4, 3, 3 ] ) ],
+  [ Transformation( [ 1, 1, 4, 5, 3 ] ) ], [ IdentityTransformation ], [ Transformation( [ 1, 2, 3, 5, 4 ] ) ],
+  [ Transformation( [ 1, 2, 4, 3, 3 ] ) ], [ Transformation( [ 1, 2, 4, 5, 3 ] ) ], [ Transformation( [ 1, 3, 2, 2, 2 ] ) ],
+  [ Transformation( [ 1, 3, 2, 2, 3 ] ) ], [ Transformation( [ 1, 3, 2, 2, 4 ] ) ], [ Transformation( [ 1, 3, 2, 5, 4 ] ) ],
+  [ Transformation( [ 1, 3, 4, 2, 2 ] ) ], [ Transformation( [ 1, 3, 4, 5, 2 ] ) ], [ Transformation( [ 2, 1, 1, 1, 1 ] ) ],
+  [ Transformation( [ 2, 1, 1, 1, 2 ] ) ], [ Transformation( [ 2, 1, 1, 1, 3 ] ) ], [ Transformation( [ 2, 1, 1, 2, 3 ] ) ],
+  [ Transformation( [ 2, 1, 1, 3, 3 ] ) ], [ Transformation( [ 2, 1, 1, 3, 4 ] ) ], [ Transformation( [ 2, 1, 1, 5, 4 ] ) ],
+  [ Transformation( [ 2, 1, 4, 5, 3 ] ) ], [ Transformation( [ 2, 3, 1, 1, 1 ] ) ], [ Transformation( [ 2, 3, 1, 1, 2 ] ) ],
+  [ Transformation( [ 2, 3, 1, 1, 4 ] ) ], [ Transformation( [ 2, 3, 4, 1, 1 ] ) ], [ Transformation( [ 2, 3, 4, 5, 1 ] ) ] ];;
