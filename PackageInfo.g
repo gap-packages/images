@@ -10,7 +10,7 @@ SetPackageInfo( rec(
 
 PackageName := "images",
 Subtitle := "Minimal and Canonical images",
-Version := "0.7.0",
+Version := "0.8.0",
 Date := "19/10/2016", # dd/mm/yyyy format
 
 Persons := [
@@ -21,13 +21,42 @@ Persons := [
     LastName := "Jefferson",
     WWWHome := "http://caj.host.cs.st-andrews.ac.uk/",
     Email := "caj21@st-andrews.ac.uk",
-    PostalAddress := Concatenation(
-               "St Andrews\n",
-               "Scotland\n",
-               "UK" ),
     Place := "St Andrews",
     Institution := "University of St Andrews",
   ),
+
+    rec(
+    LastName      := "Pfeiffer",
+    FirstNames    := "Markus",
+    IsAuthor      := true,
+    IsMaintainer  := false,
+    Email         := "markus.pfeiffer@morphism.de",
+    WWWHome       := "http://www.morphism.de/~markusp/",
+    Place         := "St Andrews",
+    Institution   := "University of St Andrews"
+    ),
+
+    rec(
+    LastName := "Waldecker",
+    FirstNames := "Rebecca",
+    IsAuthor := true,
+    IsMaintainer := false,
+    Email := "rebecca.waldecker@mathematik.uni-halle.de",
+    WWWHome := "http://conway1.mathematik.uni-halle.de/~waldecker/",
+    Place := "Halle",
+    Institution := "Martin-Luther-Universität Halle-Wittenberg"
+    ),
+
+    rec(
+    LastName := "Jonauskyte",
+    FirstNames := "Eliza",
+    IsAuthor := true,
+    IsMaintainer := false,
+    Email := "ej31@st-andrews.ac.uk",
+    Place := "St Andrews",
+    Institution := "University of St Andrews"
+    )
+
 ],
 
 PackageWWWHome := "https://gap-packages.github.io/images/",

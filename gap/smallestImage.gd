@@ -45,7 +45,7 @@ DeclareAttribute( "MaxOrbitPerm", IsPermGroup );
 ##  <A>pnt</A> to its minimal image.
 ##  <P/>
 ##  The option <A>Config</A> defines a number of advanced configuration
-##  options, which are described in 'AdvancedConfig'.
+##  options, which are described in 'ImagesAdvancedConfig'.
 ##  </Description>
 ##  </ManSection>
 ##  <#/GAPDoc>
@@ -72,7 +72,7 @@ DeclareGlobalFunction("MinimalImagePerm");
 ##  By default, these functions use the fasted known algorithm for calculating
 ##  canonical images, which may vary with each version of this package.
 ##  The option <A>Config</A> defines a number of advanced configuration
-##  options, which are described in 'AdvancedConfig'. These include the ability
+##  options, which are described in 'ImagesAdvancedConfig'. These include the ability
 ##  to choose the canonicalising algorithm used.
 ##  </Description>
 ##  </ManSection>
@@ -90,7 +90,45 @@ DeclareOperation( "MinimalImageUnorderedPair", [IsPermGroup, IsObject, IsFunctio
 DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject]);
 DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]);
 
-  
+#############################################################################
+##  <#GAPDoc Label="ImagesAdvancedConfig">
+##  <ManSection>
+##  <Var Name="ImagesAdvancedConfig" />
+##  <Description>
+##  This section describes the advanced configuration options for both
+##  <Ref Func="MinimalImage"/> and <Ref Func="CanonicalImage"/>. Assume
+##  we have called <Ref Func="MinimalImage"/> or <Ref Func="CanonicalImage"/>
+##  with arguments (G,O,A).
+##  <P/>
+##  
+##  <List>
+##    <Mark><C>order</C></Mark>
+##    <Item> The search ordering used while building the image. There are many
+##    configuration options available. We shall list here just the practically
+##    useful ones.
+##    </Item>
+##    <Mark><C>stabilizer</C></Mark>
+##    <Item>The group <Ref Func="Stabilizer"/>(G,O,A), or a subgroup of this
+##    group. If this group is large, it is more efficient to pre-calculate it.
+##    Default behaviour is to calculate the group, pass Group(()) to disable
+##    this behaviour. This is not checked, and passing an incorrect group will
+##    produce incorrect answers.
+##    </Item>
+##    <Mark><C>disableStabilizerCheck</C> (default <K>false</K>)</Mark>
+##    <Item> By default, during search we perform cheap checks to try to find
+##    extra elements of the stabilizer. Pass true to disable this check, this
+##    will make the algorithm MUCh slower if the stabilizer argument is a
+##    subgroup.
+##    </Item>
+##    <Mark><C>getStab</C> (default <K>false</K>)(</Mark>
+##    <Item> Return the calculated value of <Ref Func="Stabilizer"/>(G,O,A).
+##    This may return a subgroup rather than the whole stabilizer.
+##    </Item>
+##  </List>
+##  </Description>
+##  </ManSection>
+##  <#/GAPDoc>
+
 BindGlobal("GetPerm", 1);
 BindGlobal("GetImage", 2);
 BindGlobal("GetBool", 3);

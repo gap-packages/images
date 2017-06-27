@@ -8,8 +8,7 @@
 <Chapter Label="Installing and Loading the Images Package">
 <Heading>Installing and Loading the Images Package</Heading>
 
-Installing the Images packages requires installing and building the kernel
-module of the Ferret package. After this simply place Images into the pkg
+To install the Images package simply place Images into the pkg
 directory of your GAP installation.
 
 
