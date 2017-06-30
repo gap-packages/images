@@ -602,7 +602,6 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             minOrbitMset := [infinity];
             node := leftmost_node(depth);
             while node <> fail do
-                Info(InfoNSI,4, "CheckNode1");
                 _IMAGES_StartTimer(getcands);
                 cands := Difference([1..m],skip_func(node.selected));
   
@@ -644,7 +643,6 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
         if config.countRareOrbits then
             globalOrbitCounts := ListWithIdenticalEntries(Length(orbmins), 0) ;
             node := leftmost_node(depth);
-            Info(InfoNSI,4, "CountRareOrbits");
             while node <> fail do
                 _IMAGES_StartTimer(getcands);
                 cands := Difference([1..m],skip_func(node.selected));
@@ -672,13 +670,11 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
 
             globalBestOrbit := config.calculateBestOrbit(orbmins, globalOrbitCounts, orbsizes);
             upb := orbmins[globalBestOrbit];
-            Info(InfoNSI,4, "Orbit info:", globalOrbitCounts,":", globalBestOrbit, ":", globalOrbitCounts[globalBestOrbit]);
         fi;
 
 
         node := leftmost_node(depth);
         while node <> fail do
-             Info(InfoNSI,4, "MainBranchPass");
 
             _IMAGES_StartTimer(getcands);
             cands := Difference([1..m],skip_func(node.selected));
@@ -696,7 +692,6 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                 x := node.image[y];
                 
                 num := orbnums[x];
-                Info(InfoNSI,4, "Check orbit ", y, ":", x, ":", num);
                 if num = -1 then
                     #
                     # Need a new orbit. Also require the smallest point
@@ -736,16 +731,13 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                 else
                     _IMAGES_IncCount(check2);
                     rep := config.getQuality(num);
-                    Info(InfoNSI,4, "Check2", [num,rep,upb]);
                     if rep = upb then
                         _IMAGES_IncCount(ShallowNode);
                         Add(node.validkids,y);
                     fi;
                 fi;
             od;
-            Info(InfoNSI,4, "ValidKids: ", node.validkids);
             if node.validkids = [] then
-                Info(InfoNSI,4, "Prune!");
                 _IMAGES_StartTimer(prune);
                 delete_node(node);
                 _IMAGES_StopTimer(prune);
