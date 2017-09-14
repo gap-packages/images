@@ -219,6 +219,35 @@ _CanonicalSetSetImage := function(G, S, stab, stepval, settings)
     Error("Invalid value of result");
 end;
 
+_CanonicalTupleSetImage := function(G, S, settings)
+    local i, stab, curperm, curset, L, perm;
+    curperm := ();
+    for i in [1..Length(S)] do
+        curset := OnSets(S[i], curperm);
+        stab := Stabilizer(G, curset, OnSets);
+        L := _NewSmallestImage(G, curset, stab, x->x, false, settings.disableStabilizerCheck, settings.order );
+        perm := RepresentativeAction(G, curset, L[1], OnTuples);
+        curperm := curperm * perm;
+        G := stab^perm;
+    od;
+
+    if settings.result = GetImage then
+        return OnTuplesSets(S, curperm);
+    fi;
+
+    if settings.result = GetBool then
+        return OnTuplesSets(S, curperm) = S;
+    fi;
+
+    if settings.result = GetPerm then
+        return curperm;
+    fi;
+end;
+
+
+
+
+
 
 _MinimalImage_partialFunction := function(l, G, mMax, settings)
   local lresult, set, i, image, imageset, rowcolGroup,
@@ -468,6 +497,10 @@ function(inGroup, inList, op, settings)
       else # GetPerm
           return currentperm;
       fi;
+  fi;
+
+  if op = OnTuplesSets then
+    return _CanonicalTupleSetImage(inGroup, inList, settings);
   fi;
   
   if op = OnSetsSets then

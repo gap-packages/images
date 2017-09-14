@@ -56,6 +56,10 @@ RandomSet:= function(len)
     return Set([1..Random([0..len])], x -> Random([1..len + 5]));
 end;
 
+RandomTupleSet := function(len)
+    return List([1..Random([0..len])], x -> RandomSet(Random([0..len+2])));
+end;
+
 RandomSetSet := function(len)
     return Set([1..Random([0..len])], x -> RandomSet(Random([0..len+2])));
 end;
@@ -189,6 +193,17 @@ CheckMinimalImageSetSet := function()
     for i in [1..FERRET_TEST_LIMIT.count] do
         CheckMinimalImageTest(randomGroup(Random([2..FERRET_TEST_LIMIT.groupSize])),
                               RandomSetSet(Random([1..FERRET_TEST_LIMIT.groupSize + 2])), OnSetsSets, Minimum);
+    od;
+end;;
+
+CheckMinimalImageTupleSet := function()
+    local i;
+    CheckMinimalImageTest(Group(()), [[]], OnTuplesSets, Minimum);
+    CheckMinimalImageTest(Group((1,2,3)), [[]], OnTuplesSets, Minimum);
+    CheckMinimalImageTest(Group(()), [[1,2,3]], OnTuplesSets, Minimum);
+    for i in [1..FERRET_TEST_LIMIT.count] do
+        CheckMinimalImageTest(randomGroup(Random([2..FERRET_TEST_LIMIT.groupSize])),
+                              RandomTupleSet(Random([1..FERRET_TEST_LIMIT.groupSize + 2])), OnTuplesSets, Minimum);
     od;
 end;;
 
