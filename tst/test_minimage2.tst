@@ -5,7 +5,7 @@
 ##
 gap> START_TEST("images package: test_minimage2.tst");
 gap> ReadPackage("images","tst/test_functions.g");;
-gap> if GAPInfo.KernelInfo.BUILD_VERSION <> "v4.8.7" then
+gap> if GAPInfo.KernelInfo.BUILD_VERSION{[1..4}] <> "v4.8" then
 > CheckMinimalImageSet();
 > fi;
 gap> CheckMinimalImageTuple();
