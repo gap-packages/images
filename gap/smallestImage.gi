@@ -219,9 +219,17 @@ _CanonicalSetSetImage := function(G, S, stab, stepval, settings)
     Error("Invalid value of result");
 end;
 
-_CanonicalTupleSetImage := function(G, S, settings)
-    local i, stab, curperm, curset, L, perm;
+_CanonicalTupleSetImage := function(G, origS, settings)
+    local i, stab, curperm, curset, L, perm, S, Slen;
     curperm := ();
+    if settings.order <> CanonicalConfig_Minimum then
+        S := Filtered(origS, x -> Length(x) > 0);
+        Slen := List(S, Length);
+        SortParallel(Slen, S);
+    else
+        S := origS;
+    fi;
+    
     for i in [1..Length(S)] do
         curset := OnSets(S[i], curperm);
         stab := Stabilizer(G, curset, OnSets);
@@ -232,11 +240,11 @@ _CanonicalTupleSetImage := function(G, S, settings)
     od;
 
     if settings.result = GetImage then
-        return OnTuplesSets(S, curperm);
+        return OnTuplesSets(origS, curperm);
     fi;
 
     if settings.result = GetBool then
-        return OnTuplesSets(S, curperm) = S;
+        return OnTuplesSets(origS, curperm) = origS;
     fi;
 
     if settings.result = GetPerm then
