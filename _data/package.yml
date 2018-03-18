@@ -1,7 +1,8 @@
 name: images
 version: 1.0.0
-date: 27/06/2017
-description: Minimal and Canonical images
+date: 2017-06-27
+description: |
+    Minimal and Canonical images
 
 authors:
     - name: Christopher Jefferson
@@ -30,14 +31,14 @@ suggested-pkgs:
       url: "https://gap-packages.github.io/ferret/"
 
 www: https://gap-packages.github.io/images/
-readme: https://gap-packages.github.io/images/README
+readme: README
 packageinfo: https://gap-packages.github.io/images/PackageInfo.g
 
 downloads:
     - name: .tar.gz
       url: https://github.com/gap-packages/images/releases/download/v1.0.0/images-1.0.0.tar.gz
 
-abstract: 
+abstract: |
 
 status: dev
 doc-html: doc/chap0.html
