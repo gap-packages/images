@@ -10,8 +10,8 @@ SetPackageInfo( rec(
 
 PackageName := "images",
 Subtitle := "Minimal and Canonical images",
-Version := "1.0.0",
-Date := "27/06/2017", # dd/mm/yyyy format
+Version := "1.1.0",
+Date := "29/03/2018", # dd/mm/yyyy format
 
 Persons := [
   rec(
