@@ -6,10 +6,10 @@
                          [1X Minimal and Canonical images [101X
   
   
-                                     1.0.0
+                                     1.1.0
   
   
-                                   27/06/2017
+                                 29 March 2018
   
   
                              Christopher Jefferson

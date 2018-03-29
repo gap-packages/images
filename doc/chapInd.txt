@@ -2,14 +2,14 @@
   
   [1XIndex[101X
   
-  [2XCanonicalImage[102X  2.1-2
-  [2XCanonicalImagePerm[102X  2.1-2
-  Images package  1.
-  [2XImagesAdvancedConfig[102X  2.1-3
-  [2XIsCanonicalImage[102X  2.1-2
-  [2XIsMinimalImage[102X  2.1-1
-  [2XMinimalImage[102X  2.1-1
-  [2XMinimalImagePerm[102X  2.1-1
+  [2XCanonicalImage[102X 2.1-2 
+  [2XCanonicalImagePerm[102X 2.1-2 
+  Images package 1. 
+  [2XImagesAdvancedConfig[102X 2.1-3 
+  [2XIsCanonicalImage[102X 2.1-2 
+  [2XIsMinimalImage[102X 2.1-1 
+  [2XMinimalImage[102X 2.1-1 
+  [2XMinimalImagePerm[102X 2.1-1 
   
   
   -------------------------------------------------------
