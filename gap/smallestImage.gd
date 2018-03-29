@@ -69,8 +69,8 @@ DeclareGlobalFunction("MinimalImagePerm");
 ##  <Ref Func="CanonicalImagePerm"/> returns the permutation which maps
 ##  <A>pnt</A> to its minimal image.
 ##  <P/>
-##  By default, these functions use the fasted known algorithm for calculating
-##  canonical images, which may vary with each version of this package.
+##  By default, these functions use the fastest algorithm for calculating
+##  canonical images, which is often changed in new versions of the package.
 ##  The option <A>Config</A> defines a number of advanced configuration
 ##  options, which are described in 'ImagesAdvancedConfig'. These include the ability
 ##  to choose the canonicalising algorithm used.

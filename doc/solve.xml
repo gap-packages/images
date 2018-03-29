@@ -7,11 +7,11 @@
 <Chapter Label="MinimalChapter">
 <Heading>Minimal and Canonical Images</Heading>
 
-Given a group G and action A, we can define the minimal image of an object O as the smallest image
+Given a group G and action A, the minimal image of an object O is the smallest image
 of O under any element of G, under the action A.
-
+<P/>
 As a more concrete example, let us consider the minimal image of the set [2,3,5,7] under a group G.
-
+<P/>
 We can calculate all the images of our set under G, then choose the smallest one.
 
 <Example><![CDATA[
@@ -34,7 +34,7 @@ gap> MinimalImage(G, [2,3,5,7], OnSets);
 [ 1, 2, 4, 9 ]
 ]]></Example>
 
-The most common use of MinimalImage is to categorise objects into equivalence classes.This next example shows [2,3,5,7] and [1,6,7,8] are in the same orbit, while [3,5,7,8] is in a different orbit.
+The most common use of MinimalImage is to categorise objects into equivalence classes. This next example shows [2,3,5,7] and [1,6,7,8] are in the same orbit, while [3,5,7,8] is in a different orbit.
 
 <Example><![CDATA[
 gap> MinimalImage(G, [2,3,5,7], OnSets);
@@ -45,8 +45,10 @@ gap> MinimalImage(G, [3,5,7,8], OnSets);
 [ 1, 2, 6, 8 ]
 ]]></Example>
 
-Motivated by this, we can define CanonicalImage. CanonicalImage(G,O,A) returns an image of O by an element of G under the action A, guarantteeing that if two objects O1 and O2 are in the same orbit of G then CanonicalImage(G,O1,A) = CanonicalImage(G,O2,A). However, the value returned is not "minimal" under any sensible ordering. In general, CanonicalImage is much faster than MinimalImage, often by orders of magnitude.
-
+In this situation, we do not really need the minimal image, just a method of telling if two sets are in the same equivalence class.
+<P/>
+Motivated by this, this package provides CanonicalImage. CanonicalImage(G,O,A) returns some image of O by an element of G under the action A, guaranteeing that if two objects O1 and O2 are in the same orbit of G then CanonicalImage(G,O1,A) = CanonicalImage(G,O2,A). However, the canonical image is not "minimal" under any sensible ordering. The advantage of CanonicalImage is that it is much faster than MinimalImage, often by orders of magnitude.
+<P/>
 <B>WARNING:</B> The value of MinimalImage will remain identical between versions of GAP and the Images package, unless bugs are discovered. This is NOT true for CanonicalImage.
 
 <Section Label="Function Documentation">
