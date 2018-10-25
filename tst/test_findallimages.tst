@@ -6,8 +6,6 @@
 gap> START_TEST("images package: test_findallimages.tst");
 gap> LoadPackage("images",false);
 true
-gap> LoadPackage("semigroups", false);
-true
 gap> dir := DirectoriesPackageLibrary("images","tst");;
 gap> Read(Filename(dir, "trans"));;
 gap> mt3 := AllMinimalTransformations(SymmetricGroup(3), 3);;
