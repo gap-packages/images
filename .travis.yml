@@ -5,16 +5,24 @@ branches:
   except:
     - gh-pages
 
-env:
-    - CC=gcc-5 CXX=g++-5 BRANCH="master" FERRET="yes"
-    - CC=clang CXX=clang++ BRANCH="master" FERRET="yes"
-    - CC=gcc-5 CXX=g++-5 BRANCH="stable-4.10" FERRET="yes"
-    - CC=clang CXX=clang++ BRANCH="stable-4.10" FERRET="yes"
-    - CC=gcc-5 CXX=g++-5 BRANCH="master" FERRET="no"
-    - CC=clang CXX=clang++ BRANCH="master" FERRET="no"
-    - CC=gcc-5 CXX=g++-5 BRANCH="stable-4.10" FERRET="no"
-    - CC=clang CXX=clang++ BRANCH="stable-4.10" FERRET="no"
-
+matrix:
+  include:
+    - env: CC=gcc-5 CXX=g++-5 BRANCH="master" FERRET="yes"
+      compiler: gcc-5
+    - env: CC=clang CXX=clang++ BRANCH="master" FERRET="yes"
+      compiler: clang
+    - env: CC=gcc-5 CXX=g++-5 BRANCH="stable-4.10" FERRET="yes"
+      compiler: gcc-5
+    - env: CC=clang CXX=clang++ BRANCH="stable-4.10" FERRET="yes"
+      compiler: clang
+    - env: CC=gcc-5 CXX=g++-5 BRANCH="master" FERRET="no"
+      compiler: gcc-5
+    - env: CC=clang CXX=clang++ BRANCH="master" FERRET="no"
+      compiler: clang
+    - env: CC=gcc-5 CXX=g++-5 BRANCH="stable-4.10" FERRET="no"
+      compiler: gcc-5
+    - env: CC=clang CXX=clang++ BRANCH="stable-4.10" FERRET="no"
+      compiler: clang
 
 addons:
   apt:
