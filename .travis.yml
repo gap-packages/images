@@ -30,7 +30,6 @@ addons:
       - valgrind
 
 install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; export CC=gcc-4.8; fi
   - git clone -b $BRANCH --depth=2 https://github.com/gap-system/gap.git gap-git
   - pwd
   - ( cd gap-git && ./autogen.sh || echo no autogen)
