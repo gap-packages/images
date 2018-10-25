@@ -6,10 +6,14 @@ branches:
     - gh-pages
 
 env:
-    - BRANCH="master" FERRET="yes"
-    - BRANCH="stable-4.10" FERRET="yes"
-    - BRANCH="master" FERRET="no"
-    - BRANCH="stable-4.10" FERRET="no"
+    - CC=gcc-5 CXX=g++-5 BRANCH="master" FERRET="yes"
+    - CC=clang CXX=clang++ BRANCH="master" FERRET="yes"
+    - CC=gcc-5 CXX=g++-5 BRANCH="stable-4.10" FERRET="yes"
+    - CC=clang CXX=clang++ BRANCH="stable-4.10" FERRET="yes"
+    - CC=gcc-5 CXX=g++-5 BRANCH="master" FERRET="no"
+    - CC=clang CXX=clang++ BRANCH="master" FERRET="no"
+    - CC=gcc-5 CXX=g++-5 BRANCH="stable-4.10" FERRET="no"
+    - CC=clang CXX=clang++ BRANCH="stable-4.10" FERRET="no"
 
 
 addons:
