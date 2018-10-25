@@ -45,8 +45,9 @@ addons:
 
 before_script:
   - export GAPROOT="$HOME/gap"
-  - (cd $GAPROOT/pkg && git clone --depth=2 https://github.com/gap-packages/ferret )
   - scripts/build_gap.sh
+  - (cd $GAPROOT/pkg && git clone --depth=2 https://github.com/gap-packages/ferret )
+  - (cd $GAPROOT/pkg/ferret && sh autogen.sh && ./configure && make )
 script:
   - scripts/build_pkg.sh
   - scripts/run_tests.sh
