@@ -1,45 +1,57 @@
-language: cpp
+language: c
 sudo: false
+
+env:
+  global:
+    - GAPROOT=gaproot
+    - COVDIR=coverage
+    - GAP_PKGS_TO_BUILD="json io profiling orb ferret"
 
 branches:
   except:
     - gh-pages
 
-env:
-    - BRANCH="master" FERRET="yes"
-    - BRANCH="stable-4.8" FERRET="yes"
-    - BRANCH="master" FERRET="no"
-    - BRANCH="stable-4.8" FERRET="no"
-
+matrix:
+  include:
+    - env: CC=gcc-5 CXX=g++-5 BRANCH="master" FERRET="yes"
+      compiler: gcc-5
+    - env: CC=clang CXX=clang++ BRANCH="master" FERRET="yes"
+      compiler: clang
+    - env: CC=gcc-5 CXX=g++-5 BRANCH="stable-4.10" FERRET="yes"
+      compiler: gcc-5
+    - env: CC=clang CXX=clang++ BRANCH="stable-4.10" FERRET="yes"
+      compiler: clang
+    - env: CC=gcc-5 CXX=g++-5 BRANCH="master" FERRET="no"
+      compiler: gcc-5
+    - env: CC=clang CXX=clang++ BRANCH="master" FERRET="no"
+      compiler: clang
+    - env: CC=gcc-5 CXX=g++-5 BRANCH="stable-4.10" FERRET="no"
+      compiler: gcc-5
+    - env: CC=clang CXX=clang++ BRANCH="stable-4.10" FERRET="no"
+      compiler: clang
 
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - gcc-4.8
-      - g++-4.8
+      - gcc-5
+      - g++-5
       - automake
   apt_packages:
       - libgmp3-dev
       - parallel
       - valgrind
 
-install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; export CC=gcc-4.8; fi
-  - git clone -b $BRANCH --depth=2 https://github.com/gap-system/gap.git gap-git
-  - pwd
-  - ( cd gap-git && ./autogen.sh || echo no autogen)
-  - ( cd gap-git && ./configure && make && make bootstrap-pkg-minimal V=1)
-  - ( cd gap-git/pkg && wget http://www.gap-system.org/pub/gap/gap4/tar.bz2/packages/atlasrep1r5p0.tar.bz2 && tar -xf atlasrep*bz2 )
-  - ( cd gap-git/pkg && wget http://www.gap-system.org/pub/gap/gap4/tar.bz2/packages/semigroups-2.7.4.tar.bz2 && tar -xf semigroups*bz2 )
-  - ( cd gap-git/pkg && git clone --depth=2 https://github.com/gap-packages/io )
-  - ( cd gap-git/pkg && git clone --depth=2 https://github.com/gap-packages/orb )
-  - ln -s $(pwd) gap-git/pkg/images
-  - ( cd gap-git/pkg/io && ./autogen.sh && ./configure && make V=1 )
-  - ( if [ "$FERRET" = "yes" ]; then (cd gap-git/pkg && git clone --depth=2 https://github.com/gap-packages/ferret ); fi)
-  - ( if [ "$FERRET" = "yes" ]; then (cd gap-git/pkg/ferret && ./autogen.sh && ./configure && make V=1 ); fi )
-
+before_script:
+  - export GAPROOT="$HOME/gap"
+  - scripts/build_gap.sh
+  - (cd $GAPROOT/pkg && git clone --depth=2 https://github.com/gap-packages/ferret )
+  - (cd $GAPROOT/pkg/ferret && sh autogen.sh && ./configure && make )
 script:
-  - gap-git/bin/gap.sh -A gap-git/pkg/images/tst/testall.g
-#  - valgrind --trace-children=yes --suppressions=scripts/gap-suppressions.valgrind gap-git/bin/gap.sh -A gap-git/pkg/images/tst/testall.g
+  - scripts/build_pkg.sh
+  - scripts/run_tests.sh
+after_script:
+  - bash scripts/gather-coverage.sh
+  - bash <(curl -s https://codecov.io/bash)
+ 
