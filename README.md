@@ -26,5 +26,5 @@ Please submit bug reports and feature requests via our GitHub issue tracker:
 images is free software; you can redistribute it and/or modify it under
 the terms of the GPLv2 or later.
 
-For details see the files COPYRIGHT.md and LICENSE.
+
 
