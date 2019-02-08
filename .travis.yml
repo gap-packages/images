@@ -1,56 +1,48 @@
+dist: xenial
 language: c
-sudo: false
-
 env:
   global:
     - GAPROOT=gaproot
     - COVDIR=coverage
+    - GAP_PKGS_TO_CLONE="ferret"
     - GAP_PKGS_TO_BUILD="json io profiling orb ferret"
 
-branches:
-  except:
-    - gh-pages
+addons:
+  apt_packages:
+    - libgmp-dev
+    - libreadline-dev
+    - parallel
+    - valgrind
 
 matrix:
   include:
-    - env: CC=gcc-5 CXX=g++-5 BRANCH="master" FERRET="yes"
-      compiler: gcc-5
+    - env: CC=gcc CXX=g++ BRANCH="master" FERRET="yes"
+      compiler: gcc
     - env: CC=clang CXX=clang++ BRANCH="master" FERRET="yes"
       compiler: clang
-    - env: CC=gcc-5 CXX=g++-5 BRANCH="stable-4.10" FERRET="yes"
-      compiler: gcc-5
+    - env: CC=gcc CXX=g++ BRANCH="stable-4.10" FERRET="yes"
+      compiler: gcc
     - env: CC=clang CXX=clang++ BRANCH="stable-4.10" FERRET="yes"
       compiler: clang
-    - env: CC=gcc-5 CXX=g++-5 BRANCH="master" FERRET="no"
-      compiler: gcc-5
+    - env: CC=gcc CXX=g++ BRANCH="master" FERRET="no"
+      compiler: gcc
     - env: CC=clang CXX=clang++ BRANCH="master" FERRET="no"
       compiler: clang
-    - env: CC=gcc-5 CXX=g++-5 BRANCH="stable-4.10" FERRET="no"
-      compiler: gcc-5
+    - env: CC=gcc CXX=g++ BRANCH="stable-4.10" FERRET="no"
+      compiler: gcc
     - env: CC=clang CXX=clang++ BRANCH="stable-4.10" FERRET="no"
       compiler: clang
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-5
-      - g++-5
-      - automake
-  apt_packages:
-      - libgmp3-dev
-      - parallel
-      - valgrind
+branches:
+  only:
+    - master
 
 before_script:
   - export GAPROOT="$HOME/gap"
+  - git clone https://github.com/gap-system/pkg-ci-scripts.git scripts
   - scripts/build_gap.sh
-  - (cd $GAPROOT/pkg && git clone --depth=2 https://github.com/gap-packages/ferret )
-  - (cd $GAPROOT/pkg/ferret && sh autogen.sh && ./configure && make )
 script:
-  - scripts/build_pkg.sh
-  - scripts/run_tests.sh
+  - scripts/build_pkg.sh && scripts/run_tests.sh
 after_script:
   - bash scripts/gather-coverage.sh
   - bash <(curl -s https://codecov.io/bash)
