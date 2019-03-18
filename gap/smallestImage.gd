@@ -104,8 +104,24 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##  <List>
 ##    <Mark><C>order</C></Mark>
 ##    <Item> The search ordering used while building the image. There are many
-##    configuration options available. We shall list here just the practically
-##    useful ones.
+##    configuration options available. We shall list here just the three
+##    most useful ones. A full list is in the paper "Minimal and Canonical Images" by
+##    the authors of this package.
+##      <List>
+##         <Mark><C>CanonicalConfig_Minimum</C></Mark>
+##       <Item>
+##         Lexicographically smallest set -- same as using MinimalImage.
+##       </Item>
+##         <Mark><C>"CanonicalConfig_FixedMinOrbit</C></Mark>
+##       <Item>
+##         Lexicographically smallest set under the ordering of the integers
+##         given by the MinOrbitPerm function.
+##       </Item>
+##         <Mark><C>CanonicalConfig_RareRatioOrbitFixPlusMin</C></Mark>
+##       <Item>
+##         The current best algorithm (default)
+##       </Item>
+##      </List>
 ##    </Item>
 ##    <Mark><C>stabilizer</C></Mark>
 ##    <Item>The group <Ref Func="Stabilizer"/>(G,O,A), or a subgroup of this
