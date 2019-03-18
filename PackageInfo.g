@@ -12,7 +12,7 @@ PackageName := "images",
 Subtitle := "Minimal and Canonical images",
 Version := "1.1.0",
 Date := "29/03/2018", # dd/mm/yyyy format
-
+License := "MPL-2.0",
 Persons := [
   rec(
     IsAuthor := true,
