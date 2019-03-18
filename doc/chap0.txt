@@ -6,10 +6,10 @@
                          [1X Minimal and Canonical images [101X
   
   
-                                     1.1.0
+                                     1.2.0
   
   
-                                 29 March 2018
+                                 18 March 2019
   
   
                              Christopher Jefferson
@@ -36,13 +36,7 @@
   
   -------------------------------------------------------
   [1XCopyright[101X
-  [33X[0;0Y© 2013-2016 by Christopher Jefferson[133X
-  
-  [33X[0;0YThe  Images  package is free software; you can redistribute it and/or modify
-  it    under    the    terms    of    the    GNU   General   Public   License
-  ([7Xhttp://www.fsf.org/licenses/gpl.html[107X)  as  published  by  the Free Software
-  Foundation;  either  version 2 of the License, or (at your option) any later
-  version.[133X
+  [33X[0;0Y© 2013-2019[133X
   
   
   -------------------------------------------------------

@@ -118,8 +118,23 @@ true
 
 <dl>
 <dt><strong class="Mark"><code class="code">order</code></strong></dt>
-<dd><p>The search ordering used while building the image. There are many configuration options available. We shall list here just the practically useful ones.</p>
+<dd><p>The search ordering used while building the image. There are many configuration options available. We shall list here just the three most useful ones. A full list is in the paper "Minimal and Canonical Images" by the authors of this package.</p>
 
+
+<dl>
+<dt><strong class="Mark"><code class="code">CanonicalConfig_Minimum</code></strong></dt>
+<dd><p>Lexicographically smallest set -- same as using MinimalImage.</p>
+
+</dd>
+<dt><strong class="Mark"><code class="code">"CanonicalConfig_FixedMinOrbit</code></strong></dt>
+<dd><p>Lexicographically smallest set under the ordering of the integers given by the MinOrbitPerm function.</p>
+
+</dd>
+<dt><strong class="Mark"><code class="code">CanonicalConfig_RareRatioOrbitFixPlusMin</code></strong></dt>
+<dd><p>The current best algorithm (default)</p>
+
+</dd>
+</dl>
 </dd>
 <dt><strong class="Mark"><code class="code">stabilizer</code></strong></dt>
 <dd><p>The group <code class="func">Stabilizer</code> (<span class="RefLink">???</span>)(G,O,A), or a subgroup of this group. If this group is large, it is more efficient to pre-calculate it. Default behaviour is to calculate the group, pass Group(()) to disable this behaviour. This is not checked, and passing an incorrect group will produce incorrect answers.</p>

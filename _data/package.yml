@@ -1,6 +1,6 @@
 name: images
-version: 1.1.0
-date: 2018-03-29
+version: 1.2.0
+date: 2019-03-18
 description: |
     Minimal and Canonical images
 
@@ -18,7 +18,7 @@ maintainers:
     - name: Christopher Jefferson
       url: http://caj.host.cs.st-andrews.ac.uk/
 
-GAP: ">= 4.6"
+GAP: ">= 4.10"
 
 needed-pkgs:
     - name: "GAPDoc"
@@ -31,12 +31,12 @@ suggested-pkgs:
       url: "https://gap-packages.github.io/ferret/"
 
 www: https://gap-packages.github.io/images/
-readme: README
+readme: README.md
 packageinfo: https://gap-packages.github.io/images/PackageInfo.g
 
 downloads:
     - name: .tar.gz
-      url: https://github.com/gap-packages/images/releases/download/v1.1.0/images-1.1.0.tar.gz
+      url: https://github.com/gap-packages/images/releases/download/v1.2.0/images-1.2.0.tar.gz
 
 abstract: |
 

@@ -107,8 +107,19 @@
   
   [8X[10Xorder[110X[8X[108X
         [33X[0;6YThe  search  ordering  used  while  building the image. There are many
-        configuration   options   available.  We  shall  list  here  just  the
-        practically useful ones.[133X
+        configuration  options  available.  We  shall list here just the three
+        most  useful  ones. A full list is in the paper "Minimal and Canonical
+        Images" by the authors of this package.[133X
+  
+        [8X[10XCanonicalConfig_Minimum[110X[8X[108X
+              [33X[0;12YLexicographically smallest set -- same as using MinimalImage.[133X
+  
+        [8X[10X"CanonicalConfig_FixedMinOrbit[110X[8X[108X
+              [33X[0;12YLexicographically   smallest  set  under  the  ordering  of  the
+              integers given by the MinOrbitPerm function.[133X
+  
+        [8X[10XCanonicalConfig_RareRatioOrbitFixPlusMin[110X[8X[108X
+              [33X[0;12YThe current best algorithm (default)[133X
   
   [8X[10Xstabilizer[110X[8X[108X
         [33X[0;6YThe  group [2XStabilizer[102X ([14X???Stabilizer???[114X)(G,O,A), or a subgroup of this

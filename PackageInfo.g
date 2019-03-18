@@ -10,9 +10,9 @@ SetPackageInfo( rec(
 
 PackageName := "images",
 Subtitle := "Minimal and Canonical images",
-Version := "1.1.0",
-Date := "29/03/2018", # dd/mm/yyyy format
-
+Version := "1.2.0",
+Date := "18/03/2019", # dd/mm/yyyy format
+License := "MPL-2.0",
 Persons := [
   rec(
     IsAuthor := true,
@@ -64,7 +64,7 @@ PackageWWWHome := "https://gap-packages.github.io/images/",
 ArchiveURL     := Concatenation("https://github.com/gap-packages/images/",
                                 "releases/download/v", ~.Version,
                                 "/images-", ~.Version),
-README_URL     := Concatenation( ~.PackageWWWHome, "README" ),
+README_URL     := Concatenation( ~.PackageWWWHome, "README.md" ),
 PackageInfoURL := Concatenation( ~.PackageWWWHome, "PackageInfo.g" ),
 
 ArchiveFormats := ".tar.gz",
@@ -97,7 +97,7 @@ PackageDoc := rec(
 ),
 
 Dependencies := rec(
-  GAP := ">= 4.6",
+  GAP := ">= 4.10",
   NeededOtherPackages := [ [ "GAPDoc", ">= 1.5" ] ],
   SuggestedOtherPackages := [ ["ferret", ">= 0.8.0"] ],
   ExternalConditions := [ ],
@@ -109,17 +109,12 @@ end,
 
 TestFile := "tst/testall.g",
 
-#Keywords := [ "TODO" ],
+Keywords := [  ],
 
 AutoDoc := rec(
     TitlePage := rec(
         Copyright := """
-&copyright; 2013-2016 by Christopher Jefferson<P/>
-The Images package is free software;
-you can redistribute it and/or modify it under the terms of the
-<URL Text="GNU General Public License">http://www.fsf.org/licenses/gpl.html</URL>
-as published by the Free Software Foundation; either version 2 of the License,
-or (at your option) any later version.
+&copyright; 2013-2019
 """
     )
 )
