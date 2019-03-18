@@ -10,8 +10,8 @@ SetPackageInfo( rec(
 
 PackageName := "images",
 Subtitle := "Minimal and Canonical images",
-Version := "1.1.0",
-Date := "29/03/2018", # dd/mm/yyyy format
+Version := "1.2.0",
+Date := "18/03/2019", # dd/mm/yyyy format
 License := "MPL-2.0",
 Persons := [
   rec(
@@ -64,7 +64,7 @@ PackageWWWHome := "https://gap-packages.github.io/images/",
 ArchiveURL     := Concatenation("https://github.com/gap-packages/images/",
                                 "releases/download/v", ~.Version,
                                 "/images-", ~.Version),
-README_URL     := Concatenation( ~.PackageWWWHome, "README" ),
+README_URL     := Concatenation( ~.PackageWWWHome, "README.md" ),
 PackageInfoURL := Concatenation( ~.PackageWWWHome, "PackageInfo.g" ),
 
 ArchiveFormats := ".tar.gz",
@@ -85,7 +85,7 @@ SourceRepository := rec(
 ),
 IssueTrackerURL := Concatenation( ~.SourceRepository.URL, "/issues" ),
 
-AbstractHTML   :=  "",
+AbstractHTML   :=  "A package for finding minimal and canonical images in permutation groups",
 
 PackageDoc := rec(
   BookName  := "images",
