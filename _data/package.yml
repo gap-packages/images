@@ -39,6 +39,7 @@ downloads:
       url: https://github.com/gap-packages/images/releases/download/v1.2.0/images-1.2.0.tar.gz
 
 abstract: |
+    A package for finding minimal and canonical images in permutation groups
 
 status: dev
 doc-html: doc/chap0.html

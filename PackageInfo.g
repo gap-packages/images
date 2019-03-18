@@ -85,7 +85,7 @@ SourceRepository := rec(
 ),
 IssueTrackerURL := Concatenation( ~.SourceRepository.URL, "/issues" ),
 
-AbstractHTML   :=  "",
+AbstractHTML   :=  "A package for finding minimal and canonical images in permutation groups",
 
 PackageDoc := rec(
   BookName  := "images",
