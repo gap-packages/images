@@ -97,7 +97,7 @@ PackageDoc := rec(
 ),
 
 Dependencies := rec(
-  GAP := ">= 4.6",
+  GAP := ">= 4.10",
   NeededOtherPackages := [ [ "GAPDoc", ">= 1.5" ] ],
   SuggestedOtherPackages := [ ["ferret", ">= 0.8.0"] ],
   ExternalConditions := [ ],
@@ -109,12 +109,12 @@ end,
 
 TestFile := "tst/testall.g",
 
-#Keywords := [ "TODO" ],
+Keywords := [  ],
 
 AutoDoc := rec(
     TitlePage := rec(
         Copyright := """
-&copyright; 2013-2019 by Christopher Jefferson<P/>
+&copyright; 2013-2019
 """
     )
 )
