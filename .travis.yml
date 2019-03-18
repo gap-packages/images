@@ -34,8 +34,8 @@ matrix:
       compiler: clang
 
 branches:
-  only:
-    - master
+  except:
+    - gh-pages
 
 before_script:
   - export GAPROOT="$HOME/gap"
