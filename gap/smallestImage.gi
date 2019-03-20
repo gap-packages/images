@@ -174,7 +174,7 @@ _CanonicalSetImage := function(G, S, stab, settings)
         earlyskip := false;
     fi;
     
-    L := _NewSmallestImage(G, S, stab, x -> x, earlyskip, settings.disableStabilizerCheck, settings.order );
+    L := _NewSmallestImage(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order );
     
     if settings.getStab then
         settings.original.stab := L[2];
@@ -189,7 +189,11 @@ _CanonicalSetImage := function(G, S, stab, settings)
     fi;
     
     if settings.result = GetBool then
-        return Set(L[1]) = Set(S);
+        if L[1] = MinImage.Smaller or L[1] = MinImage.Larger then
+            return false;
+        else
+            return Set(L[1]) = Set(S);
+        fi;
     fi;
     
     if settings.result = GetPerm then
@@ -198,6 +202,31 @@ _CanonicalSetImage := function(G, S, stab, settings)
     
     Error("Invalid value of result");
 end;
+
+
+InstallGlobalFunction("IsMinimalImageLessThan", 
+    function(G, A, B, extra...)
+        local ret;
+        B := Set(B);
+        if Length(extra) <> 1 or extra[1] <> OnSets then
+            ErrorNoReturn("IsMinimalImageLessThan only supports 'OnSets' are present");
+        fi;
+        if Length(A) <> Length(B) then
+            ErrorNoReturn("IsMinimalImageLessThan only supports equal sized sets are present");
+        fi;
+        ret := _NewSmallestImage(G, A, Stabilizer(G, A, OnSets), x -> x, [true, Set(B)], false, CanonicalConfig_Minimum);
+        if ret[1] = MinImage.Smaller or ret[1] = MinImage.Larger then
+            return ret[1];
+        fi;
+        ret[1] := Set(ret[1]);
+        if ret[1] < B then
+            return MinImage.Smaller;
+        elif ret[1] > B then
+            return MinImage.Larger;
+        else
+            return MinImage.Equal;
+        fi;
+end);
 
 _CanonicalSetSetImage := function(G, S, stab, stepval, settings)
     local L;
@@ -233,7 +262,7 @@ _CanonicalTupleSetImage := function(G, origS, settings)
     for i in [1..Length(S)] do
         curset := OnSets(S[i], curperm);
         stab := Stabilizer(G, curset, OnSets);
-        L := _NewSmallestImage(G, curset, stab, x->x, false, settings.disableStabilizerCheck, settings.order );
+        L := _NewSmallestImage(G, curset, stab, x->x, [false], settings.disableStabilizerCheck, settings.order );
         perm := RepresentativeAction(G, curset, L[1], OnTuples);
         curperm := curperm * perm;
         G := stab^perm;

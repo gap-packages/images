@@ -32,9 +32,9 @@ DeclareAttribute( "MaxOrbitPerm", IsPermGroup );
 #############################################################################
 ##  <#GAPDoc Label="MinimalImage">
 ##  <ManSection>
-##  <Func Name="MinimalImage" Arg="G[, pnt][, act][, Config]"/>
-##  <Func Name="IsMinimalImage" Arg="G[, pnt][, act][, Config]"/>
-##  <Func Name="MinimalImagePerm" Arg="G, [, pnt][, act][, Config]"/>
+##  <Func Name="MinimalImage" Arg="G, pnt[, act][, Config]"/>
+##  <Func Name="IsMinimalImage" Arg="G, pnt[, act][, Config]"/>
+##  <Func Name="MinimalImagePerm" Arg="G, pnt[, act][, Config]"/>
 ##  <Description>
 ##  <Ref Func="MinimalImage"/> returns the minimal image of <A>pnt</A> under
 ##  the group <A>G</A>. <Ref Func="IsMinimalImage"/> returns a boolean which
@@ -52,6 +52,21 @@ DeclareAttribute( "MaxOrbitPerm", IsPermGroup );
 DeclareGlobalFunction("MinimalImage");
 DeclareGlobalFunction("IsMinimalImage");
 DeclareGlobalFunction("MinimalImagePerm");
+
+#############################################################################
+##  <#GAPDoc Label="IsMinimalImageLessThan">
+##  <ManSection>
+##  <Func Name="IsMinimalImageLessThan" Arg="G, A, B[, act][, config]"/>
+##  <Description>
+##  <Ref Func="IsMinimalImageLessThan"/> checks if the minimal image of 
+##  <A>A</A> under the group <A>G</A> is smaller than <A>B</A>.
+##  <P/>
+##  The option <A>Config</A> defines a number of advanced configuration
+##  options, which are described in 'ImagesAdvancedConfig'.
+##  </Description>
+##  </ManSection>
+##  <#/GAPDoc>
+DeclareGlobalFunction("IsMinimalImageLessThan");
 
 #############################################################################
 ##  <#GAPDoc Label="CanonicalImage">
@@ -133,7 +148,7 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    <Mark><C>disableStabilizerCheck</C> (default <K>false</K>)</Mark>
 ##    <Item> By default, during search we perform cheap checks to try to find
 ##    extra elements of the stabilizer. Pass true to disable this check, this
-##    will make the algorithm MUCh slower if the stabilizer argument is a
+##    will make the algorithm MUCH slower if the stabilizer argument is a
 ##    subgroup.
 ##    </Item>
 ##    <Mark><C>getStab</C> (default <K>false</K>)(</Mark>
@@ -148,6 +163,8 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 BindGlobal("GetPerm", 1);
 BindGlobal("GetImage", 2);
 BindGlobal("GetBool", 3);
+
+BindGlobal("MinImage", rec(Smaller := -1, Equal := 0, Larger := 1));
 
 
 BIND_GLOBAL("CanonicalConfig_Minimum", MakeImmutable(rec(

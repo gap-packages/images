@@ -56,6 +56,8 @@ Motivated by this, this package provides CanonicalImage. CanonicalImage(G,O,A) r
 
 <#Include Label="MinimalImage" />
 
+<#Include Label="IsMinimalImageLessThan"/>
+
 <#Include Label="CanonicalImage" />
 
 <#Include Label="ImagesAdvancedConfig" />

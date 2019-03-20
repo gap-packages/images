@@ -65,7 +65,7 @@ RandomSetSet := function(len)
 end;
 
 CheckMinimalImageTest := function(g, o, action, minList)
-    local good_min, nostab_min, slow_min, cpyg, rando, can_orig, can_rand, perm_orig, perm_rand, order, gp, can_nostab;
+    local good_min, nostab_min, slow_min, cpyg, rando, can_orig, can_rand, perm_orig, perm_rand, order, gp, can_nostab, small_list;
     cpyg := Group(GeneratorsOfGroup(g), ());
     good_min := MinimalImage(g, o, action);
     nostab_min := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), result := GetImage, order := CanonicalConfig_Minimum));
@@ -81,6 +81,24 @@ CheckMinimalImageTest := function(g, o, action, minList)
 
     if good_min <> action(o,MinimalImagePerm(g, o, action)) then
         Print(GeneratorsOfGroup(g), " ",o, " failure of GetPerm\n");
+    fi;
+
+    if action = OnSets and Length(good_min) > 0 then
+        if IsMinimalImageLessThan(g, o, good_min, OnSets) <> MinImage.Equal then
+            Print("IsMinimalImageLessThan = error", g, o, good_min,"\n");
+        fi;
+        small_list := List(good_min);
+        small_list[Random([1..Length(good_min)])] := 999;
+        small_list := Set(small_list);
+        if IsMinimalImageLessThan(g, o, small_list, OnSets) <> MinImage.Smaller then
+            Print("IsMinimalImageLessThan < error", g, o, small_list, "\n");
+        fi;
+        small_list := List(good_min);
+        small_list[Random([1..Length(good_min)])] := -3;
+        small_list := Set(small_list);
+        if IsMinimalImageLessThan(g, o, small_list, OnSets) <> MinImage.Larger then
+            Print("IsMinimalImageLessThan > error", g, o, small_list, "\n");
+        fi;
     fi;
     
     rando := action(o, Random(g));

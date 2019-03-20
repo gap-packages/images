@@ -713,8 +713,8 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                         _IMAGES_StartTimer(improve);
                         ### CAJ - Support bailing out early when a smaller
                         # set is found
-                        if early_exit and rep < set[depth] then
-                            return [false, l^(savedArgs.perminv)];
+                        if early_exit[1] and rep < early_exit[2][depth] then
+                            return [MinImage.Smaller, l^(savedArgs.perminv)];
                         fi;
                         ### END of bailing out early
                         upb := rep;
@@ -744,6 +744,11 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             fi;
             node := next_node(node);
         od;
+        ### CAJ - Support bailing out early when a larger set is found
+        if early_exit[1] and upb > early_exit[2][depth] then
+            return [MinImage.Larger, l^(savedArgs.perminv)];
+        fi;
+        ###
         Info(InfoNSI,2,"Layer ",depth," pass 1 complete. Best is ",upb);
         _IMAGES_StopTimer(pass1);
         #
