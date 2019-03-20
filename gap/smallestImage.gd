@@ -61,6 +61,9 @@ DeclareGlobalFunction("MinimalImagePerm");
 ##  <Ref Func="IsMinimalImageLessThan"/> checks if the minimal image of 
 ##  <A>A</A> under the group <A>G</A> is smaller than <A>B</A>.
 ##  <P/>
+##  It returns MinImage.Smaller, MinImage.Equal or MinImage.Larger, if the
+##  minimal image of <A>A</A> is smaller, equal or larger than <A>B</A>.
+##  <P/>
 ##  The option <A>Config</A> defines a number of advanced configuration
 ##  options, which are described in 'ImagesAdvancedConfig'.
 ##  </Description>
