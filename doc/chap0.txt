@@ -6,10 +6,10 @@
                          [1X Minimal and Canonical images [101X
   
   
-                                     1.2.0
+                                     1.3.0
   
   
-                                 18 March 2019
+                                 21 March 2019
   
   
                              Christopher Jefferson
@@ -48,8 +48,9 @@
   2 [33X[0;0YMinimal and Canonical Images[133X
     2.1 [33X[0;0YFunction documentation[133X
       2.1-1 MinimalImage
-      2.1-2 CanonicalImage
-      2.1-3 ImagesAdvancedConfig
+      2.1-2 IsMinimalImageLessThan
+      2.1-3 CanonicalImage
+      2.1-4 ImagesAdvancedConfig
   3 [33X[0;0YInstalling and Loading the Images Package[133X
     3.1 [33X[0;0YLoading the Images Package[133X
   
