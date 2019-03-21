@@ -24,7 +24,30 @@ Please submit bug reports and feature requests via our GitHub issue tracker:
 # License
 
 images is free software; you can redistribute it and/or modify it under
-the terms of the GPLv2 or later.
+the terms of the Mozilla Public Licence, Version 2.
 
+# History
+
+1.3.0
+-----
+
+* Add IsMinimalImageLessThan
+
+1.2.0
+-----
+
+* Improve testing (no new bugs found)
+* Change license to MPL-v2
+
+
+1.1.0
+-----
+
+* Add OnTuplesSets support
+
+1.0.0
+-----
+
+* First Stable Release
 
 
