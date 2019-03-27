@@ -37,11 +37,6 @@ randomGroup := function(size)
     fi;
 end;;
 
-
-allTinyPrimitiveGroups := function(size)
-    return Union(List([1..size], x -> List([1..NrPrimitiveGroups(x)], y -> PrimitiveGroup(x,y))));
-end;;
-
 if not IsBound(FERRET_TEST_LIMIT) then
     FERRET_TEST_LIMIT := rec(count := 100, groupSize := 8);
 fi;
