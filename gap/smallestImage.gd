@@ -116,7 +116,7 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##  This section describes the advanced configuration options for both
 ##  <Ref Func="MinimalImage"/> and <Ref Func="CanonicalImage"/>. Assume
 ##  we have called <Ref Func="MinimalImage"/> or <Ref Func="CanonicalImage"/>
-##  with arguments (G,O,A).
+##  with arguments <C>(<A>G</A>,<A>O</A>,<A>A</A>)</C>.
 ##  <P/>
 ##  
 ##  <List>
@@ -130,7 +130,7 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##       <Item>
 ##         Lexicographically smallest set -- same as using MinimalImage.
 ##       </Item>
-##         <Mark><C>"CanonicalConfig_FixedMinOrbit</C></Mark>
+##         <Mark><C>CanonicalConfig_FixedMinOrbit</C></Mark>
 ##       <Item>
 ##         Lexicographically smallest set under the ordering of the integers
 ##         given by the MinOrbitPerm function.
@@ -142,9 +142,10 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##      </List>
 ##    </Item>
 ##    <Mark><C>stabilizer</C></Mark>
-##    <Item>The group <Ref Func="Stabilizer"/>(G,O,A), or a subgroup of this
-##    group. If this group is large, it is more efficient to pre-calculate it.
-##    Default behaviour is to calculate the group, pass Group(()) to disable
+##    <Item>The group <C>Stabilizer(<A>G</A>,<A>O</A>,<A>A</A>)</C>,
+##    or a subgroup of this group; see <Ref Func="Stabilizer" BookName="ref"/>.
+##    If this group is large, it is more efficient to pre-calculate it.
+##    Default behaviour is to calculate the group, pass <C>Group(())</C> to disable
 ##    this behaviour. This is not checked, and passing an incorrect group will
 ##    produce incorrect answers.
 ##    </Item>
@@ -154,8 +155,8 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    will make the algorithm MUCH slower if the stabilizer argument is a
 ##    subgroup.
 ##    </Item>
-##    <Mark><C>getStab</C> (default <K>false</K>)(</Mark>
-##    <Item> Return the calculated value of <Ref Func="Stabilizer"/>(G,O,A).
+##    <Mark><C>getStab</C> (default <K>false</K>)</Mark>
+##    <Item> Return the calculated value of <C>Stabilizer(<A>G</A>,<A>O</A>,<A>A</A>)</C>.
 ##    This may return a subgroup rather than the whole stabilizer.
 ##    </Item>
 ##  </List>
