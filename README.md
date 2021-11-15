@@ -28,6 +28,11 @@ the terms of the Mozilla Public Licence, Version 2.
 
 # History
 
+1.3.1
+-----
+
+* Minor cleanups (including removing global variables with names like 'orbit')
+
 1.3.0
 -----
 
