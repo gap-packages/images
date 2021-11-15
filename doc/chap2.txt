@@ -112,11 +112,11 @@
   
   [1X2.1-4 ImagesAdvancedConfig[101X
   
-  [33X[1;0Y[29X[2XImagesAdvancedConfig[102X[32X global variable[133X
+  [33X[1;0Y[29X[2XImagesAdvancedConfig[102X [32X global variable[133X
   
   [33X[0;0YThis   section   describes  the  advanced  configuration  options  for  both
   [2XMinimalImage[102X  ([14X2.1-1[114X)  and  [2XCanonicalImage[102X  ([14X2.1-3[114X).  Assume  we have called
-  [2XMinimalImage[102X ([14X2.1-1[114X) or [2XCanonicalImage[102X ([14X2.1-3[114X) with arguments (G,O,A).[133X
+  [2XMinimalImage[102X ([14X2.1-1[114X) or [2XCanonicalImage[102X ([14X2.1-3[114X) with arguments [10X([3XG[103X[10X,[3XO[103X[10X,[3XA[103X[10X)[110X.[133X
   
   [8X[10Xorder[110X[8X[108X
         [33X[0;6YThe  search  ordering  used  while  building the image. There are many
@@ -127,7 +127,7 @@
         [8X[10XCanonicalConfig_Minimum[110X[8X[108X
               [33X[0;12YLexicographically smallest set -- same as using MinimalImage.[133X
   
-        [8X[10X"CanonicalConfig_FixedMinOrbit[110X[8X[108X
+        [8X[10XCanonicalConfig_FixedMinOrbit[110X[8X[108X
               [33X[0;12YLexicographically   smallest  set  under  the  ordering  of  the
               integers given by the MinOrbitPerm function.[133X
   
@@ -135,11 +135,11 @@
               [33X[0;12YThe current best algorithm (default)[133X
   
   [8X[10Xstabilizer[110X[8X[108X
-        [33X[0;6YThe  group [2XStabilizer[102X ([14X???Stabilizer???[114X)(G,O,A), or a subgroup of this
-        group.  If  this group is large, it is more efficient to pre-calculate
-        it.  Default  behaviour  is  to calculate the group, pass Group(()) to
-        disable  this behaviour. This is not checked, and passing an incorrect
-        group will produce incorrect answers.[133X
+        [33X[0;6YThe  group  [10XStabilizer([3XG[103X[10X,[3XO[103X[10X,[3XA[103X[10X)[110X,  or  a  subgroup  of  this  group;  see
+        [2XStabilizer[102X ([14XReference: Stabilizer[114X). If this group is large, it is more
+        efficient  to  pre-calculate it. Default behaviour is to calculate the
+        group,  pass [10XGroup(())[110X to disable this behaviour. This is not checked,
+        and passing an incorrect group will produce incorrect answers.[133X
   
   [8X[10XdisableStabilizerCheck[110X[8X (default [9Xfalse[109X)[108X
         [33X[0;6YBy default, during search we perform cheap checks to try to find extra
@@ -147,7 +147,7 @@
         make  the  algorithm  MUCH  slower  if  the  stabilizer  argument is a
         subgroup.[133X
   
-  [8X[10XgetStab[110X[8X (default [9Xfalse[109X)([108X
-        [33X[0;6YReturn  the  calculated value of [2XStabilizer[102X ([14X???Stabilizer???[114X)(G,O,A).
-        This may return a subgroup rather than the whole stabilizer.[133X
+  [8X[10XgetStab[110X[8X (default [9Xfalse[109X)[108X
+        [33X[0;6YReturn  the  calculated  value of [10XStabilizer([3XG[103X[10X,[3XO[103X[10X,[3XA[103X[10X)[110X. This may return a
+        subgroup rather than the whole stabilizer.[133X
   

@@ -128,7 +128,7 @@ true
 <h5>2.1-4 ImagesAdvancedConfig</h5>
 
 <div class="func"><table class="func" width="100%"><tr><td class="tdleft"><code class="func">&#8227; ImagesAdvancedConfig</code></td><td class="tdright">(&nbsp;global variable&nbsp;)</td></tr></table></div>
-<p>This section describes the advanced configuration options for both <code class="func">MinimalImage</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.1-1</span></a>) and <code class="func">CanonicalImage</code> (<a href="chap2_mj.html#X780189E3873B7A42"><span class="RefLink">2.1-3</span></a>). Assume we have called <code class="func">MinimalImage</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.1-1</span></a>) or <code class="func">CanonicalImage</code> (<a href="chap2_mj.html#X780189E3873B7A42"><span class="RefLink">2.1-3</span></a>) with arguments (G,O,A).</p>
+<p>This section describes the advanced configuration options for both <code class="func">MinimalImage</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.1-1</span></a>) and <code class="func">CanonicalImage</code> (<a href="chap2_mj.html#X780189E3873B7A42"><span class="RefLink">2.1-3</span></a>). Assume we have called <code class="func">MinimalImage</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.1-1</span></a>) or <code class="func">CanonicalImage</code> (<a href="chap2_mj.html#X780189E3873B7A42"><span class="RefLink">2.1-3</span></a>) with arguments <code class="code">(<var class="Arg">G</var>,<var class="Arg">O</var>,<var class="Arg">A</var>)</code>.</p>
 
 
 <dl>
@@ -141,7 +141,7 @@ true
 <dd><p>Lexicographically smallest set -- same as using MinimalImage.</p>
 
 </dd>
-<dt><strong class="Mark"><code class="code">"CanonicalConfig_FixedMinOrbit</code></strong></dt>
+<dt><strong class="Mark"><code class="code">CanonicalConfig_FixedMinOrbit</code></strong></dt>
 <dd><p>Lexicographically smallest set under the ordering of the integers given by the MinOrbitPerm function.</p>
 
 </dd>
@@ -152,15 +152,15 @@ true
 </dl>
 </dd>
 <dt><strong class="Mark"><code class="code">stabilizer</code></strong></dt>
-<dd><p>The group <code class="func">Stabilizer</code> (<span class="RefLink">???</span>)(G,O,A), or a subgroup of this group. If this group is large, it is more efficient to pre-calculate it. Default behaviour is to calculate the group, pass Group(()) to disable this behaviour. This is not checked, and passing an incorrect group will produce incorrect answers.</p>
+<dd><p>The group <code class="code">Stabilizer(<var class="Arg">G</var>,<var class="Arg">O</var>,<var class="Arg">A</var>)</code>, or a subgroup of this group; see <code class="func">Stabilizer</code> (<a href="https://www.gap-system.org/Manuals/doc/ref/chap41_mj.html#X86FB962786397E02"><span class="RefLink">Reference: Stabilizer</span></a>). If this group is large, it is more efficient to pre-calculate it. Default behaviour is to calculate the group, pass <code class="code">Group(())</code> to disable this behaviour. This is not checked, and passing an incorrect group will produce incorrect answers.</p>
 
 </dd>
 <dt><strong class="Mark"><code class="code">disableStabilizerCheck</code> (default <code class="keyw">false</code>)</strong></dt>
 <dd><p>By default, during search we perform cheap checks to try to find extra elements of the stabilizer. Pass true to disable this check, this will make the algorithm MUCH slower if the stabilizer argument is a subgroup.</p>
 
 </dd>
-<dt><strong class="Mark"><code class="code">getStab</code> (default <code class="keyw">false</code>)(</strong></dt>
-<dd><p>Return the calculated value of <code class="func">Stabilizer</code> (<span class="RefLink">???</span>)(G,O,A). This may return a subgroup rather than the whole stabilizer.</p>
+<dt><strong class="Mark"><code class="code">getStab</code> (default <code class="keyw">false</code>)</strong></dt>
+<dd><p>Return the calculated value of <code class="code">Stabilizer(<var class="Arg">G</var>,<var class="Arg">O</var>,<var class="Arg">A</var>)</code>. This may return a subgroup rather than the whole stabilizer.</p>
 
 </dd>
 </dl>
