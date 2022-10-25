@@ -171,89 +171,89 @@ BindGlobal("GetBool", 3);
 BindGlobal("MinImage", rec(Smaller := -1, Equal := 0, Larger := 1));
 
 
-BIND_GLOBAL("CanonicalConfig_Minimum", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_Minimum", MakeImmutable(rec(
     branch := "minimum"
 )));
 
-BIND_GLOBAL("CanonicalConfig_FixedMinOrbit", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_FixedMinOrbit", MakeImmutable(rec(
     branch := "static", order := "MinOrbit"
 )));
 
-BIND_GLOBAL("CanonicalConfig_FixedMaxOrbit", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_FixedMaxOrbit", MakeImmutable(rec(
     branch := "static", order := "MaxOrbit"
 )));
 
 
 
-BIND_GLOBAL("CanonicalConfig_MinOrbit", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_MinOrbit", MakeImmutable(rec(
     branch := "dynamic", order := "MinOrbit"
 )));
 
-BIND_GLOBAL("CanonicalConfig_MaxOrbit", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_MaxOrbit", MakeImmutable(rec(
     branch := "dynamic", order := "MaxOrbit"
 )));
 
 
-BIND_GLOBAL("CanonicalConfig_SingleMaxOrbit", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_SingleMaxOrbit", MakeImmutable(rec(
     branch := "dynamic", order := "SingleMaxOrbit"
 )));
 
-BIND_GLOBAL("CanonicalConfig_RareOrbit", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_RareOrbit", MakeImmutable(rec(
     branch := "dynamic", order := "RareOrbit"
 )));
 
-BIND_GLOBAL("CanonicalConfig_CommonOrbit", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_CommonOrbit", MakeImmutable(rec(
     branch := "dynamic", order := "CommonOrbit"
 )));
 
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbit", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_RareRatioOrbit", MakeImmutable(rec(
     branch := "dynamic", order := "RareRatioOrbit"
 )));
 
-BIND_GLOBAL("CanonicalConfig_CommonRatioOrbit", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_CommonRatioOrbit", MakeImmutable(rec(
     branch := "dynamic", order := "CommonRatioOrbit"
 )));
 
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFix", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_RareRatioOrbitFix", MakeImmutable(rec(
     branch := "dynamic", order := "RareRatioOrbitFix"
 )));
 
-BIND_GLOBAL("CanonicalConfig_CommonRatioOrbitFix", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_CommonRatioOrbitFix", MakeImmutable(rec(
     branch := "dynamic", order := "CommonRatioOrbitFix"
 )));
 
 
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFixPlusMin", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_RareRatioOrbitFixPlusMin", MakeImmutable(rec(
     branch := "dynamic", order := "RareRatioOrbitFix",
     orbfilt := "Min"
 )));
 
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFixPlusRare", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_RareRatioOrbitFixPlusRare", MakeImmutable(rec(
     branch := "dynamic", order := "RareRatioOrbitFix",
     orbfilt := "Rare"
 )));
 
-BIND_GLOBAL("CanonicalConfig_RareRatioOrbitFixPlusCommon", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_RareRatioOrbitFixPlusCommon", MakeImmutable(rec(
     branch := "dynamic", order := "RareRatioOrbitFix",
     orbfilt := "Common"
 )));
 
 
-BIND_GLOBAL("CanonicalConfig_RareOrbitPlusMin", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_RareOrbitPlusMin", MakeImmutable(rec(
     branch := "dynamic", order := "RareOrbit",
     orbfilt := "Min"
 )));
 
-BIND_GLOBAL("CanonicalConfig_RareOrbitPlusRare", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_RareOrbitPlusRare", MakeImmutable(rec(
     branch := "dynamic", order := "RareOrbit",
     orbfilt := "Rare"
 )));
 
-BIND_GLOBAL("CanonicalConfig_RareOrbitPlusCommon", MakeImmutable(rec(
+BindGlobal("CanonicalConfig_RareOrbitPlusCommon", MakeImmutable(rec(
     branch := "dynamic", order := "RareOrbit",
     orbfilt := "Common"
 )));
 
-BIND_GLOBAL("CanonicalConfig_Fast", CanonicalConfig_RareRatioOrbitFixPlusMin);
+BindGlobal("CanonicalConfig_Fast", CanonicalConfig_RareRatioOrbitFixPlusMin);
 
 #E  files.gd  . . . . . . . . . . . . . . . . . . . . . . . . . . . ends here
