@@ -153,7 +153,7 @@ end;
 
 
 # GAP dictionaries don't (currently) provide a way of getting the values
-# stored in them, so here we cache them seperately
+# stored in them, so here we cache them separately
 _countingDict := function(dictexample) 
     local data;
     data := rec(
@@ -354,7 +354,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
 
         if IsBound(config_option.orbfilt) then
             if config_option.orbfilt = "Min" then
-                # This space intensionally blank
+                # This space intentionally blank
             elif config_option.orbfilt = "Rare" then
                 config.findBestOrbMset := function(x,y) return x < y; end;
             elif config_option.orbfilt = "Common" then
@@ -475,7 +475,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
     # clean_subtree to remove any new subtrees.
     handle_new_stabilizer_element := function(node1,node2)
         local   perm1,  i;
-        # so node1 and node2 represnet group elements that map set to the same
+        # so node1 and node2 represent group elements that map set to the same
         # place in two different ways
         perm1 := PermListList(node1.image, node2.image);
         Info(InfoNSI, 2, "Can map ",node1.image, " to ", node2.image, " : ", perm1);
@@ -514,7 +514,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
         return reps;
     end;
     
-    # Make orbit of x, updating orbnums, orbmins and orbsizes as approriate.
+    # Make orbit of x, updating orbnums, orbmins and orbsizes as appropriate.
     make_orbit := function(x)
         local   q,  rep,  num,  pt,  gen,  img;
         if orbnums[x] <> -1 then

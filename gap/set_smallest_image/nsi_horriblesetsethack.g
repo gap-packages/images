@@ -154,7 +154,7 @@ _NewSmallestImage_SetSet := function(g,set,k,skip_func, block_distance)
 
     handle_new_stabilizer_element := function(node1,node2)
         local   perm1,  i;
-        # so node1 and node2 represnet group elements that map set to the same
+        # so node1 and node2 represent group elements that map set to the same
         # place in two different ways
         perm1 := PermListList(node1.image, node2.image);
         Assert(1, not perm1 in l);
