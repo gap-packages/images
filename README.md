@@ -28,6 +28,12 @@ the terms of the Mozilla Public Licence, Version 2.
 
 # History
 
+1.3.2
+-----
+
+* Internal improvements (improving CI and compatibility with future GAP versions)
+
+
 1.3.1
 -----
 

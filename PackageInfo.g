@@ -10,8 +10,8 @@ SetPackageInfo( rec(
 
 PackageName := "images",
 Subtitle := "Minimal and Canonical images",
-Version := "1.3.1",
-Date := "16/11/2021", # dd/mm/yyyy format
+Version := "1.3.2",
+Date := "22/01/2024", # dd/mm/yyyy format
 License := "MPL-2.0",
 Persons := [
   rec(
@@ -79,8 +79,8 @@ ArchiveFormats := ".tar.gz",
 ##
 Status := "deposited",
 
-SourceRepository := rec( 
-  Type := "git", 
+SourceRepository := rec(
+  Type := "git",
   URL := "https://github.com/gap-packages/images"
 ),
 IssueTrackerURL := Concatenation( ~.SourceRepository.URL, "/issues" ),
