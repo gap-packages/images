@@ -12,7 +12,7 @@ Full information and documentation can be found in the manual, available
 as PDF `doc/manual.pdf` or as HTML `doc/chap0_mj.html`, or on the package
 homepage at
 
-  <http://gap-packages.github.io/images/>
+  <https://gap-packages.github.io/images/>
 
 ## Bug reports and feature requests
 
@@ -27,6 +27,12 @@ images is free software; you can redistribute it and/or modify it under
 the terms of the Mozilla Public Licence, Version 2.
 
 # History
+
+1.3.2
+-----
+
+* Internal improvements (improving CI and compatibility with future GAP versions)
+
 
 1.3.1
 -----
