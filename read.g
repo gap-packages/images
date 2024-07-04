@@ -3,7 +3,6 @@
 #
 # Reading the implementation part of the package.
 #
-ReadPackage( "images", "gap/helper_functions.g" );
 ReadPackage( "images", "gap/set_smallest_image/nsi.g" );
 ReadPackage( "images", "gap/set_smallest_image/nsi_horriblesetsethack.g" );
 ReadPackage( "images", "gap/smallestImage.gi" );
