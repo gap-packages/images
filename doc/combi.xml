@@ -1,0 +1,38 @@
+<Chapter Label="FundamentalAndCombinatorialStructures">
+<Heading>Fundamental and Combinatorial Structures and Associated Graph Algorithms</Heading>
+
+This section details the <C>Fundamental</C> and <C>Combinatorial</C> records, which are used for creating and manipulating structured data representations within GAP. It also covers functions for converting these structures into graphs and for computing their stabilizers and canonical forms.
+
+<Section Label="Function Documentation">
+<Heading>Function documentation</Heading>
+
+<#Include Label="Fundamental" />
+
+The <C>Fundamental</C> record provides the basic building blocks such as atoms, collections, and tuples. Building upon these, the <C>Combinatorial</C> record offers convenient constructors for common mathematical objects.
+
+<#Include Label="Combinatorial" />
+
+The following functions operate on these fundamental structures:
+
+<#Include Label="OnFundamental" />
+This function describes how permutations act on fundamental structures.
+
+<#Include Label="GraphOfFundamentalStructure" />
+This function explains the conversion of a fundamental structure into a graph representation, which is essential for the subsequent algorithms.
+
+The stabilizer of these structures can be computed, either over the full symmetric group or within a user-specified group:
+
+<#Include Label="StabilizerOfFundamentalStructure" />
+<#Include Label="StabilizerOfFundamentalStructureWithGroup" />
+
+Similarly, canonical permutations can be found:
+
+<#Include Label="CanonicalPermOfFundamentalStructure" />
+<#Include Label="CanonicalPermOfFundamentalStructureWithGroup" />
+
+Finally, a utility function for refining canonical labellings with respect to colorings is provided:
+
+<#Include Label="MakeCanonicalLabellingRespectColors" />
+
+</Section>
+</Chapter>

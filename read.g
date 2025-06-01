@@ -7,3 +7,4 @@ ReadPackage( "images", "gap/set_smallest_image/nsi.g" );
 ReadPackage( "images", "gap/set_smallest_image/nsi_horriblesetsethack.g" );
 ReadPackage( "images", "gap/smallestImage.gi" );
 ReadPackage( "images", "gap/allMinimalImages.g" );
+ReadPackage( "images", "gap/combi.gi" );

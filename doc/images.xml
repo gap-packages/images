@@ -18,6 +18,8 @@
 
 <#Include SYSTEM "solve.xml">
 
+<#Include SYSTEM "combi.xml">
+
 <#Include SYSTEM "install.xml">
 
 </Body>
@@ -27,4 +29,3 @@
 </Book>
 
 <!-- ==================================================================== -->
-
