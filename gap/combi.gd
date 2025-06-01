@@ -104,6 +104,10 @@ BindGlobal("FundamentalStructureType", NewType(FundamentalStructureFamily, IsFun
 ##  <#/GAPDoc>
 DeclareGlobalName("OnFundamental");
 
+
+# Get all atoms of a fundamental structure
+DeclareGlobalName("AtomsOfFundamentalStructure");
+
 #############################################################################
 ##  <#GAPDoc Label="GraphOfFundamentalStructure">
 ##  <ManSection>
@@ -231,3 +235,7 @@ DeclareGlobalName("CanonicalPermOfFundamentalStructure");
 ##  </ManSection>
 ##  <#/GAPDoc>
 DeclareGlobalName("MakeCanonicalLabellingRespectColors");
+
+
+
+_PermGroupIsDirectProdSymmetricGroups := fail;

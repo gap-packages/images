@@ -6,3 +6,4 @@
 
 ReadPackage( "images", "gap/smallestImage.gd" );
 ReadPackage( "images", "gap/combi.gd" );
+ReadPackage( "images", "gap/colorfix.gd" );
