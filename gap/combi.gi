@@ -15,7 +15,7 @@ _STR_TUPLE_DASH := Immutable("tuple-");
 
 _CollectionTuple := function(l, type)
     return Fundamental.CollectionOfWithType(
-        List(l, x -> Fundamental.TupleOfWithType(List(x, y -> Fundamental.AtomOf(y)))), type
+        List(l, x -> Fundamental.TupleOf(List(x, y -> Fundamental.AtomOf(y)))), type
     );
 end;
 
@@ -152,9 +152,13 @@ BindGlobal("OnFundamental", function(f,p)
     return ret;
 end);
 
+InstallOtherMethod(\^, [IsFundamentalStructureRep, IsPerm],
+ {fs,p} -> OnFundamental(fs,p)
+);
+
 BindGlobal("AtomsOfFundamentalStructure", function(input_fs)
     local a, func;
-    a := Set();
+    a := [];
 
     func := function(f)
         local i;
@@ -428,14 +432,31 @@ end;
 
 InstallMethod(CanonicalImageOp, [IsPermGroup, IsFundamentalStructureRep, IsFunction, IsObject],
     function(inGroup, fs, op, settings)
-    local parts;
+    local parts, atoms, dg, perm;
     if op <> OnPoints and op <> OnFundamental then
         ErrorNoReturn("Fundamental Structures only support default action or OnFundamental");
     fi;
 
+    atoms := Union(AtomsOfFundamentalStructure(fs), MovedPoints(inGroup));
+
     if _PermGroupIsDirectProdSymmetricGroups(inGroup) then
-        parts := Orbits(inGroup);
+        parts := Set(Orbits(inGroup, atoms), Set);
+        dg := _convertToDigraph(fs, atoms, parts);
+        perm := BlissCanonicalLabelling(dg.graph, dg.colours);
+        perm := MakeCanonicalLabellingRespectColors(MaximumList(atoms, 0), perm, parts);
+    else
+        perm := CanonicalPermOfFundamentalStructureWithGroup(fs, atoms, inGroup);
     fi;
-# TODO: COMPLETE
+
+    perm := Permutation(perm, atoms);
+
+    if settings.result = GetImage then
+        return OnFundamental(fs, perm);
+    elif settings.result = GetBool then
+        return OnFundamental(fs, perm) = fs;
+    else
+        return perm;
+    fi;
+
 
 end);
