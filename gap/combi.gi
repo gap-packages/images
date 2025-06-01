@@ -152,6 +152,28 @@ BindGlobal("OnFundamental", function(f,p)
     return ret;
 end);
 
+BindGlobal("AtomsOfFundamentalStructure", function(input_fs)
+    local a, func;
+    a := Set();
+
+    func := function(f)
+        local i;
+        if IsInt(f) then
+            AddSet(a, f);
+        elif f!.kind = Fundamental.AtomType then
+            AddSet(a, f!.contents);
+        else
+            for i in f!.contents do
+                func(i);
+            od;
+        fi;
+    end;
+
+    func(input_fs);
+
+    return a;
+end);
+
 InstallMethod(\=, [IsFundamentalStructureRep, IsFundamentalStructureRep],
 function(l,r)
     local x,y;
@@ -401,36 +423,19 @@ CanonicalPermOfFundamentalStructure := function(fs, omega)
 end;
 
 
-MakeCanonicalLabellingRespectColors :=
-function(n, p, colours)
-    local colmap, i, j, listperm, colnext, newperm, val, col;
 
-    # Sort the members of each colour class.
-    colours := List(colours, Set);
 
-    colmap := ListWithIdenticalEntries(n, 0);
 
-    for i in [1..Length(colours)] do
-        for j in colours[i] do
-            colmap[j] := i;
-        od;
-    od;
+InstallMethod(CanonicalImageOp, [IsPermGroup, IsFundamentalStructureRep, IsFunction, IsObject],
+    function(inGroup, fs, op, settings)
+    local parts;
+    if op <> OnPoints and op <> OnFundamental then
+        ErrorNoReturn("Fundamental Structures only support default action or OnFundamental");
+    fi;
 
-    listperm := ListPerm(p^-1, n);
-    
-    colnext := ListWithIdenticalEntries(Length(colours), 1);
-    
-    newperm := ListWithIdenticalEntries(n, 0);
+    if _PermGroupIsDirectProdSymmetricGroups(inGroup) then
+        parts := Orbits(inGroup);
+    fi;
+# TODO: COMPLETE
 
-    for i in [1..n] do
-        val := listperm[i];
-        # Get the colour of the ith vertex
-        col := colmap[val];
-        
-        # That vertex goes to the next free space in it's colour class
-        newperm[val] := colours[col][colnext[col]];
-        colnext[col] := colnext[col] + 1;
-    od;
-
-    return PermList(newperm);
-end;
+end);
