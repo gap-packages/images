@@ -2,7 +2,7 @@ MakeCanonicalLabellingRespectColors :=
 function(n, p, colours)
     local colmap, i, j, listperm, colnext, newperm, val, col, inputcols, unusedcols;
 
-    n := Maximum(n, LargestMovedPoint(p), MaximumList(Flat(colours)), 0);
+    n := Maximum(n, LargestMovedPoint(p), MaximumList(Flat(colours), 0), 0);
 
     inputcols := MakeImmutable(Set(Flat(colours)));
     unusedcols := Filtered([1..n], x -> not(x in inputcols));

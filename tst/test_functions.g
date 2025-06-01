@@ -124,6 +124,27 @@ CheckMinimalImageTest := function(g, o, action, minList)
 
 end;;
 
+CheckCanonicalImageTest := function(g, o, action)
+    local cpyg, rando, can_orig, can_rand, perm_orig, perm_rand;
+    cpyg := Group(GeneratorsOfGroup(g), ());
+    
+    rando := action(o, Random(g));
+
+    can_orig := CanonicalImage(cpyg, o, action);
+    can_rand := CanonicalImage(cpyg, rando, action);
+    perm_orig := CanonicalImagePerm(cpyg, o, action);
+    perm_rand := CanonicalImagePerm(cpyg, rando, action);
+
+    if not(perm_orig in g and perm_rand in g and
+            action(o, perm_orig) = can_orig and action(rando, perm_rand) = can_rand and
+            can_orig = can_rand) then
+        Print(perm_orig, ":", perm_rand, "\n");
+        Print(GeneratorsOfGroup(g), ":", ViewString(o), ":", ViewString(rando), ":", ViewString(can_orig), ":", ViewString(can_rand), "\n");
+    fi;
+
+end;;
+
+
 CheckMinimalImageTransformations := function()
     local i;
     CheckMinimalImageTest(Group(()), Transformation([]), OnPoints, Minimum);
@@ -243,5 +264,52 @@ CheckFindAllMinimalImages := function()
         if min1 <> min2 then
             Print(grp, ":", size, "::\n", min1, "\n", min2, "\n");
         fi;
+    od;
+end;
+
+checkCanonicalImageAtoms := function()
+    local i;
+    CheckCanonicalImageTest(Group(()), 1, OnFundamental);
+    CheckCanonicalImageTest(Group((1,2,3)), 3, OnFundamental);
+    CheckCanonicalImageTest(Group(()), 7, OnFundamental);
+    for i in [1..FERRET_TEST_LIMIT.count] do
+        CheckCanonicalImageTest(randomGroup(Random([2..FERRET_TEST_LIMIT.groupSize])), 
+                              Random([1..FERRET_TEST_LIMIT.groupSize + 2]), OnFundamental);
+    od;
+end;
+
+checkCanonicalImageMultiset := function()
+    local i, f;
+    f := Combinatorial.Multiset;
+    CheckCanonicalImageTest(Group(()), f([1]), OnFundamental);
+    CheckCanonicalImageTest(Group((1,2,3)), f([2,3]), OnFundamental);
+    CheckCanonicalImageTest(Group(()), f([7]), OnFundamental);
+    for i in [1..FERRET_TEST_LIMIT.count] do
+        CheckCanonicalImageTest(randomGroup(Random([2..FERRET_TEST_LIMIT.groupSize])), 
+                              Random([1..FERRET_TEST_LIMIT.groupSize + 2]), OnFundamental);
+    od;
+end;
+
+checkCanonicalImageTuple := function()
+    local i, f;
+    f := Combinatorial.Tuple;
+    CheckCanonicalImageTest(Group(()), f([1]), OnFundamental);
+    CheckCanonicalImageTest(Group((1,2,3)), f([2,3]), OnFundamental);
+    CheckCanonicalImageTest(Group(()), f([7]), OnFundamental);
+    for i in [1..FERRET_TEST_LIMIT.count] do
+        CheckCanonicalImageTest(randomGroup(Random([2..FERRET_TEST_LIMIT.groupSize])), 
+                              f(List([1..FERRET_TEST_LIMIT.groupSize], x -> Random([1..FERRET_TEST_LIMIT.groupSize + 2]))), OnFundamental);
+    od;
+end;
+
+checkCanonicalImagePermutation := function()
+    local i, f;
+    f := Combinatorial.Permutation;
+    CheckCanonicalImageTest(Group(()), f( () ), OnFundamental);
+    CheckCanonicalImageTest(Group((1,2,3)), f( (1,2) ), OnFundamental);
+    CheckCanonicalImageTest(Group(()), f( (1,7) ), OnFundamental);
+    for i in [1..FERRET_TEST_LIMIT.count] do
+        CheckCanonicalImageTest(randomGroup(Random([2..FERRET_TEST_LIMIT.groupSize])), 
+                              f(Random(SymmetricGroup(FERRET_TEST_LIMIT.groupSize))), OnFundamental);
     od;
 end;
