@@ -5,3 +5,4 @@
 #
 
 ReadPackage( "images", "gap/smallestImage.gd" );
+ReadPackage( "images", "gap/combi.gd" );
