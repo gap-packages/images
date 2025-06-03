@@ -36,6 +36,12 @@ BindGlobal("Combinatorial", rec(
         return Fundamental.TupleOfWithType(l, _STR_TUPLE);
     end,
 
+    OrderedPartition := function(p)
+        return Fundamental.TupleOfWithType(
+            List(p, x -> Fundamental.CollectionOfWithType(x, "part")),
+            "orderedpartition");
+    end,
+
     Matrix := function(vals, index)
         local l, i;
         Assert(1, Length(vals) = Length(index));
@@ -75,6 +81,12 @@ BindGlobal("Combinatorial", rec(
         local moved;
         moved := List(MovedPoints(p), x -> [x,x^p]);
         return _CollectionTuple(moved, "partialpermutation");
+    end,
+
+    WithColoring := function(f, cols)
+        local part;
+        part := Combinatorial.OrderedPartition(cols);
+        return Fundamental.TupleOfWithType([f, part], "coloring");
     end,
 
 ));

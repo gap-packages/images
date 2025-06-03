@@ -5,14 +5,14 @@ gap> C := Combinatorial;;
 gap> row := [n+1..2*n];;
 gap> col := [2*n+1..3*n];;
 gap> mat := [[1,2,3,4],[1,4,3,2], [1,2,4,3], [4,2,1,3]];;
-gap> m := [];;
 gap> comb_m := Combinatorial.Matrix2D(mat, row, col);;
+gap> comb_m := Combinatorial.WithColoring(comb_m, [[1..n],[n+1..2*n],[2*n+1..3*n]]);;
 gap> StabilizerOfFundamentalStructure(comb_m, [1..3*n]) = Group([ (1,2)(5,7)(6,8)(9,10)(11,12) ]);
 true
 gap> StabilizerOfFundamentalStructure(comb_m, [1..3*n],[[1..n],[n+1..2*n],[2*n+1..3*n]]) = Group([ (1,2)(5,7)(6,8)(9,10)(11,12) ]);
 true
 gap> CanonicalImagePerm(SymmetricGroup(3*n), comb_m);
-(1,12,6,2,9,8,3,10,5)(4,11,7)
+(1,8,11,3,6,10)(2,5,9,4,7,12)
 
 # If we would like a permutation which preserves the row/column/value structure, we can place a group restriction.
 gap> p := CanonicalImagePerm(DirectProduct(SymmetricGroup(n),SymmetricGroup(n),SymmetricGroup(n)), comb_m);
@@ -21,6 +21,7 @@ gap> p := CanonicalImagePerm(DirectProduct(SymmetricGroup(n),SymmetricGroup(n),S
 # Let's check if another latin square is isomorphic to the one we have:
 gap> othermat := [[1,3,2,4], [4,3,1,2], [1,4,2,3], [1,3,4,2] ];;
 gap> comb_o := Combinatorial.Matrix2D(othermat, row, col);;
+gap> comb_o := Combinatorial.WithColoring(comb_o, [[1..n],[n+1..2*n],[2*n+1..3*n]]);;
 gap> q := CanonicalImagePerm(DirectProduct(SymmetricGroup(n),SymmetricGroup(n),SymmetricGroup(n)), comb_o);
 (1,4,3,2)(6,7)(9,12)
 gap> comb_m^p = comb_o^q;
