@@ -1,6 +1,6 @@
 # The GAP 4 package `images'
 
-[![Build Status](https://github.com/gap-packages/images/workflows/CI/badge.svg?branch=master)](https://github.com/gap-packages/images/actions?query=workflow%3ACI+branch%3Amaster)
+[![CI](https://github.com/gap-packages/images/actions/workflows/CI.yml/badge.svg)](https://github.com/gap-packages/images/actions/workflows/CI.yml)
 [![Code Coverage](https://codecov.io/github/gap-packages/images/coverage.svg?branch=master&token=)](https://codecov.io/gh/gap-packages/images)
 
 This package provides functionality to compute canonical representatives under
