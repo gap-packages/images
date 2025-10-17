@@ -36,8 +36,8 @@ jobs:
       - uses: actions/checkout@v5
       - uses: gap-actions/setup-gap@v2
         with:
-          GAP_PKGS_TO_CLONE: "${{ matrix.ferret }}"
-          GAP_PKGS_TO_BUILD: "json io profiling orb ${{ matrix.ferret }}"
+          GAP_PKGS_TO_CLONE: "https://github.com/peal/vole ${{ matrix.ferret }}"
+          GAP_PKGS_TO_BUILD: "json io profiling orb digraphs datastructures vole ${{ matrix.ferret }}"
           GAPBRANCH: ${{ matrix.gap-branch }}
       - uses: gap-actions/build-pkg@v1
       - uses: gap-actions/run-pkg-tests@v3
