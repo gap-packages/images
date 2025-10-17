@@ -9,3 +9,4 @@ gap> tc := Combinatorial.WithColoring(t, [[1,2,3],[4,5,6]]);;
 gap> CanonicalImage(SymmetricGroup(6), sc) = CanonicalImage(SymmetricGroup(6), tc);
 false
 gap> CanonicalImagePerm(SymmetricGroup(6), sc);
+(1,2,5,6,3)
