@@ -51,7 +51,7 @@ Motivated by this, this package provides CanonicalImage. CanonicalImage(G,O,A) r
 <P/>
 <B>WARNING:</B> The value of MinimalImage will remain identical between versions of GAP and the Images package, unless bugs are discovered. This is NOT true for CanonicalImage.
 
-<Section Label="Function Documentation">
+<Section Label="Function Documentation solve">
 <Heading>Function documentation</Heading>
 
 <#Include Label="MinimalImage" />

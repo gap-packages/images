@@ -3,7 +3,7 @@
 
 This section details the <C>Fundamental</C> and <C>Combinatorial</C> records, which are used for creating and manipulating structured data representations within GAP. It also covers functions for converting these structures into graphs and for computing their stabilizers and canonical forms.
 
-<Section Label="Function Documentation">
+<Section Label="Function Documentation combi">
 <Heading>Function documentation</Heading>
 
 <#Include Label="Fundamental" />
