@@ -45,7 +45,7 @@ DeclareAttribute( "MaxOrbitPerm", IsPermGroup );
 ##  <A>pnt</A> to its minimal image.
 ##  <P/>
 ##  The option <A>Config</A> defines a number of advanced configuration
-##  options, which are described in 'ImagesAdvancedConfig'.
+##  options, which are described in 'ImagesAdvancedConfig'.
 ##  </Description>
 ##  </ManSection>
 ##  <#/GAPDoc>
@@ -65,7 +65,7 @@ DeclareGlobalFunction("MinimalImagePerm");
 ##  minimal image of <A>A</A> is smaller, equal or larger than <A>B</A>.
 ##  <P/>
 ##  The option <A>Config</A> defines a number of advanced configuration
-##  options, which are described in 'ImagesAdvancedConfig'.
+##  options, which are described in 'ImagesAdvancedConfig'.
 ##  </Description>
 ##  </ManSection>
 ##  <#/GAPDoc>
@@ -90,7 +90,7 @@ DeclareGlobalFunction("IsMinimalImageLessThan");
 ##  By default, these functions use the fastest algorithm for calculating
 ##  canonical images, which is often changed in new versions of the package.
 ##  The option <A>Config</A> defines a number of advanced configuration
-##  options, which are described in 'ImagesAdvancedConfig'. These include the ability
+##  options, which are described in 'ImagesAdvancedConfig'. These include the ability
 ##  to choose the canonicalising algorithm used.
 ##  </Description>
 ##  </ManSection>
