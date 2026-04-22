@@ -5,6 +5,15 @@ if fail = LoadPackage("AutoDoc", ">= 2016.01.21") then
 fi;
 
 AutoDoc(rec(
-    scaffold := rec( MainPage := false ),
+    autodoc := true,
+    scaffold := rec(
+        includes := [
+            "example.xml",
+            "solve.xml",
+            "combi.xml",
+            "install.xml",
+        ],
+        bib := "images.bib",
+    ),
     extract_examples := true,
 ));

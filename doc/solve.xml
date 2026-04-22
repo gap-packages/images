@@ -7,12 +7,12 @@
 <Chapter Label="MinimalChapter">
 <Heading>Minimal and Canonical Images</Heading>
 
-Given a group G and action A, the minimal image of an object O is the smallest image
-of O under any element of G, under the action A.
+Given a group <M>G</M> and action <M>A</M>, the minimal image of an object <M>O</M> is the smallest image
+of <M>O</M> under any element of <M>G</M>, under the action <M>A</M>.
 <P/>
-As a more concrete example, let us consider the minimal image of the set [2,3,5,7] under a group G.
+As a more concrete example, let us consider the minimal image of the set <C>[2,3,5,7]</C> under a group <M>G</M>.
 <P/>
-We can calculate all the images of our set under G, then choose the smallest one.
+We can calculate all the images of our set under <M>G</M>, then choose the smallest one.
 
 <Example><![CDATA[
 gap> G := Group((1,2,3)(4,5,6)(7,8,9),(1,4,7)(2,5,8)(3,6,9));;
@@ -24,8 +24,8 @@ gap> Minimum(List(G, g -> OnSets([2,3,5,7], g) ) );
 [ 1, 2, 4, 9 ]
 ]]></Example>
 
-This is very inefficient, as it requires enumerating all members of G.
-The images package produces a function MinimalImage, which performs this same operation more efficiently.
+This is very inefficient, as it requires enumerating all members of <M>G</M>.
+The images package produces a function <Ref Func="MinimalImage"/>, which performs this same operation more efficiently.
 
 <Example><![CDATA[
 gap> LoadPackage("images", false);
@@ -34,7 +34,7 @@ gap> MinimalImage(G, [2,3,5,7], OnSets);
 [ 1, 2, 4, 9 ]
 ]]></Example>
 
-The most common use of MinimalImage is to categorise objects into equivalence classes. This next example shows [2,3,5,7] and [1,6,7,8] are in the same orbit, while [3,5,7,8] is in a different orbit.
+The most common use of <C>MinimalImage</C> is to categorise objects into equivalence classes. This next example shows <C>[2,3,5,7]</C> and <C>[1,6,7,8]</C> are in the same orbit, while <C>[3,5,7,8]</C> is in a different orbit.
 
 <Example><![CDATA[
 gap> MinimalImage(G, [2,3,5,7], OnSets);
@@ -47,9 +47,10 @@ gap> MinimalImage(G, [3,5,7,8], OnSets);
 
 In this situation, we do not really need the minimal image, just a method of telling if two sets are in the same equivalence class.
 <P/>
-Motivated by this, this package provides CanonicalImage. CanonicalImage(G,O,A) returns some image of O by an element of G under the action A, guaranteeing that if two objects O1 and O2 are in the same orbit of G then CanonicalImage(G,O1,A) = CanonicalImage(G,O2,A). However, the canonical image is not "minimal" under any sensible ordering. The advantage of CanonicalImage is that it is much faster than MinimalImage, often by orders of magnitude.
+Motivated by this, this package provides <Ref Func="CanonicalImage"/>.
+<C>CanonicalImage(G,O,A)</C> returns some image of <M>O</M> by an element of <M>G</M> under the action <M>A</M>, guaranteeing that if two objects O1 and O2 are in the same orbit of <M>G</M> then <C>CanonicalImage(G,O1,A) = CanonicalImage(G,O2,A)</C>. However, the canonical image is not "minimal" under any sensible ordering. The advantage of <C>CanonicalImage</C> is that it is much faster than <C>MinimalImage</C>, often by orders of magnitude.
 <P/>
-<B>WARNING:</B> The value of MinimalImage will remain identical between versions of GAP and the Images package, unless bugs are discovered. This is NOT true for CanonicalImage.
+<B>WARNING:</B> The value of <C>MinimalImage</C> will remain identical between versions of &GAP; and the &Images; package, unless bugs are discovered. This is <E>not</E> true for <C>CanonicalImage</C>.
 
 <Section Label="Function Documentation solve">
 <Heading>Function documentation</Heading>
@@ -65,9 +66,3 @@ Motivated by this, this package provides CanonicalImage. CanonicalImage(G,O,A) r
 </Section>
 
 </Chapter>
-
-
-<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
-<!-- %% -->
-<!-- %E -->
-

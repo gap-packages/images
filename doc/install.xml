@@ -6,17 +6,17 @@
 
 <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
 <Chapter Label="Installing and Loading the Images Package">
-<Heading>Installing and Loading the Images Package</Heading>
+<Heading>Installing and Loading the &Images; Package</Heading>
 
-To install the Images package simply place Images into the pkg
-directory of your GAP installation.
+To install the &Images; package simply place &Images; into the pkg
+directory of your &GAP; installation.
 
 
 <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
 <Section Label="Loading the Images Package">
-<Heading>Loading the Images Package</Heading>
+<Heading>Loading the &Images; Package</Heading>
 
-To use the Images Package you have to request it explicitly. This  is
+To use the &Images; Package you have to request it explicitly. This  is
 done by calling <Ref Func="LoadPackage" BookName="ref"/>:
 <P/>
 <Example><![CDATA[
@@ -27,8 +27,3 @@ true
 
 </Section>
 </Chapter>
-
-<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
-<!-- %% -->
-<!-- %E -->
-
