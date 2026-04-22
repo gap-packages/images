@@ -121,7 +121,10 @@ AutoDoc := rec(
         Copyright := """
 &copyright; 2013-2019
 """
-    )
+    ),
+    entities := rec(
+        Images := "<Package>Images</Package>",
+    ),
 )
 ));
 
