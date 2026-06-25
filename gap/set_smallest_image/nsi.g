@@ -256,11 +256,12 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             clean_subtree,  handle_new_stabilizer_element,
             simpleOrbitReps,  make_orbit,  n,  s,  l,  m,  hash,
             lastupb,  root,  depth,  gens,  orbnums,  orbmins,
-            orbsizes,  upb,  imsets,  imsetnodes,  node,  cands,  y,
+            orbsizes,  orbseen,  upb,  imsets,  imsetnodes,  node,  cands,  y,
             x,  num,  rep,  node2,  prevnode,  nodect,  changed,
             newnode,  image,  dict,  seen,  he,  bestim,  bestnode,
             imset,  p, 
             config,
+            basepoint, fixedbase,
             globalOrbitCounts, globalBestOrbit, minOrbitMset, orbitMset,
             savedArgs,
             countOrbDict,
@@ -524,11 +525,13 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
         rep := x;
         num := Length(orbmins)+1;
         orbnums[x] := num;
+        Add(orbseen,x);
         for pt in q do
             for gen in gens do
                 img := pt^gen;
                 if orbnums[img] = -1 then
                     orbnums[img] := num;
+                    Add(orbseen,img);
                     Add(q,img);
                     if img < rep then
                         rep := img;
@@ -551,6 +554,10 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
     m := Length(set);
     hash := _IMAGES_Get_Hash(m);
     lastupb := config.initial_lastupb;
+    # This table can be very large for matrix actions. Reuse it between
+    # depths and clear only entries which were assigned an orbit number.
+    orbnums := ListWithIdenticalEntries(n,-1);
+    orbseen := [];
     root := rec(selected := [],
                 image := set,
                 imset := Immutable(Set(set)),
@@ -562,7 +569,10 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
     for depth in [1..m] do
         Info(InfoNSI, 3, "Stabilizer is :", s.generators);
         gens := s.generators;
-        orbnums := ListWithIdenticalEntries(n,-1);
+        for x in orbseen do
+            orbnums[x] := -1;
+        od;
+        orbseen := [];
         orbmins := [];
         orbsizes := [];
         upb := config.initial_upb;
@@ -756,10 +766,18 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
         #
         lastupb := upb;
         Info(InfoNSI, 2, "Branch on ", upb);
-        _IMAGES_StartTimer(_IMAGES_changeStabChain);
-        ChangeStabChain(s,[config.getBasePoint(upb)],false);
-        _IMAGES_StopTimer(_IMAGES_changeStabChain);
-        if Length(s.orbit) = 1 then
+        basepoint := config.getBasePoint(upb);
+        fixedbase := ForAll(s.generators,
+                            gen -> basepoint^gen = basepoint);
+        # ChangeStabChain inserts a redundant stabilizer level when the
+        # base point is already fixed.  Besides being unnecessary, its
+        # sparse transversal lists can be huge for large-degree actions.
+        if not fixedbase then
+            _IMAGES_StartTimer(_IMAGES_changeStabChain);
+            ChangeStabChain(s,[basepoint],false);
+            _IMAGES_StopTimer(_IMAGES_changeStabChain);
+        fi;
+        if fixedbase or Length(s.orbit) = 1 then
             #
             # In this case nothing much can happen. Each surviving node will have exactly one child
             # and none of the imsets will change
@@ -776,7 +794,9 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                 node := next_node(node);
             od;
             Info(InfoNSI,2,"Nothing can happen, short-cutting");
-            s := s.stabilizer;
+            if not fixedbase then
+                s := s.stabilizer;
+            fi;
             _IMAGES_StopTimer(_IMAGES_shortcut);
             if Size(skip_func(leftmost_node(depth+1).selected)) = m then
                 Info(InfoNSI,2,"Skip would skip all remaining points");
@@ -899,8 +919,3 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
     od;
     return [OnTuples(leftmost_node(depth+1).image,savedArgs.perminv),l^savedArgs.perminv];
 end;
-
-
-
-
-
