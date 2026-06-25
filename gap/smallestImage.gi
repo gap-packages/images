@@ -71,7 +71,9 @@ _rowColGen := function( inGroup, x )
     Add(generators, PermList(l));
   od;
 
-  return Group(generators,());
+  temp:= Group(generators,());
+  SetSize(temp, Size(inGroup));
+  return temp;
 end;
 
 _minOrbBuilder := function(select)
