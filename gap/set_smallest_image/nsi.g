@@ -910,6 +910,24 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             fi;
         else
             s := s.stabilizer;
+            if Length(s.generators) = 0 then
+                # The remaining points cannot move, so no deeper search can
+                # improve any surviving node.
+                Info(InfoNSI,2,"Run out of group, return best image");
+                node := leftmost_node(depth+1);
+                bestim := node.imset;
+                bestnode := node;
+                node := next_node(node);
+                while node <> fail do
+                    if node.imset < bestim then
+                        bestim := node.imset;
+                        bestnode := node;
+                    fi;
+                    node := next_node(node);
+                od;
+                _IMAGES_StopTimer(_IMAGES_pass3);
+                return [OnTuples(bestnode.image,savedArgs.perminv),l^savedArgs.perminv];
+            fi;
         fi;
         _IMAGES_StopTimer(_IMAGES_pass3);
         if Size(skip_func(leftmost_node(depth+1).selected)) = m then
