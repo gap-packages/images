@@ -210,6 +210,46 @@ CheckMinimalImagePerm := function()
     od;
 end;;
 
+CheckCompactPairAction := function()
+    local g, p, stab, result, expected;
+    g := Group((1,2,3)(101,102,103),
+               (1,101)(2,102)(3,103));
+    p := (1,101)(2,102)(3,103);
+    stab := Stabilizer(g, p, OnPoints);
+    expected := Minimum(Orbit(g, p, OnPoints));
+    result := _TryMinimalImageCompactPairAction(ListPerm(p, 103), g, 103,
+                                                rec(result := GetImage,
+                                                    stabilizer := stab,
+                                                    order := CanonicalConfig_Minimum,
+                                                    getStab := false,
+                                                    disableStabilizerCheck := false));
+    if result = fail or PermList(result) <> expected then
+        Error("compact pair action failed");
+    fi;
+end;;
+
+CheckCompactPairActionFast := function()
+    local g, p, stab, result, expected;
+    g := Group((1,2,3)(101,102,103),
+               (1,101)(2,102)(3,103));
+    p := (1,101)(2,102)(3,103);
+    stab := Stabilizer(g, p, OnPoints);
+    expected := CanonicalImage(g, p, OnPoints,
+                               rec(stabilizer := stab,
+                                   order := CanonicalConfig_Fast,
+                                   result := GetImage,
+                                   disableStabilizerCheck := false));
+    result := _TryMinimalImageCompactPairAction(ListPerm(p, 103), g, 103,
+                                                rec(result := GetImage,
+                                                    stabilizer := stab,
+                                                    order := CanonicalConfig_Fast,
+                                                    getStab := false,
+                                                    disableStabilizerCheck := false));
+    if result = fail or PermList(result) <> expected then
+        Error("compact pair action for fast canonical image failed");
+    fi;
+end;;
+
 
 CheckMinimalImageSet := function()
     local i;
