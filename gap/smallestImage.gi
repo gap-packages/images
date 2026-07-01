@@ -599,6 +599,50 @@ function(inGroup, inList, op, settings)
 
 end);
 
+# Vole is an optional dependency. This loads it on demand (raising a clear error
+# if it is unavailable) and returns its globals via ValueGlobal, so that reading
+# this file when vole is absent produces no "unbound global variable" warnings.
+_ImagesVoleGlobals := function()
+  if not IsPackageMarkedForLoading("vole", "") then
+    if LoadPackage("vole", false) <> true then
+      ErrorNoReturn("this feature requires the 'vole' package, which could not be ",
+                    "loaded; please install vole (https://github.com/peal/vole)");
+    fi;
+  fi;
+  return rec(find := ValueGlobal("VoleFind"),
+             constraint := ValueGlobal("Constraint"));
+end;
+
+# Compute a canonical image using Vole (via VoleFind.Canonical) instead of the
+# native algorithm. Vole finds *a* canonical image; it cannot produce the
+# lexicographically minimal image, so this rejects minimal-image requests.
+_VoleCanonicalImage := function(G, obj, action, settings)
+  local vole, ret;
+
+  if IsBound(settings.order) and IsRecord(settings.order)
+     and IsBound(settings.order.branch) and settings.order.branch = "minimum" then
+    Error("The 'vole' engine cannot compute minimal images (only canonical images)");
+  fi;
+
+  vole := _ImagesVoleGlobals();
+  ret := vole.find.Canonical(G, vole.constraint.Stabilize(obj, action));
+
+  if settings.getStab then
+    settings.original.stab := ret.group;
+  fi;
+
+  if settings.result = GetPerm then
+    return ret.canonical;
+  elif settings.result = GetImage then
+    return action(obj, ret.canonical);
+  elif settings.result = GetBool then
+    # obj is its own canonical image iff applying the canonical perm is a no-op.
+    return action(obj, ret.canonical) = obj;
+  fi;
+
+  Error("Invalid value of result");
+end;
+
 InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, imagearg )
   local G,        # Group
         obj,      # object
@@ -628,18 +672,24 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   fi;
    
   settings := rec(result := resultarg, stabilizer := fail, order := imagearg, getStab := false,
-                  disableStabilizerCheck := false);
-  
+                  disableStabilizerCheck := false, engine := "native");
+
   if Length(arglist) >= index and IsRecord(arglist[index]) then
     settings := _ImageHelperFuncs.fillUserValues(settings, arglist[index]);
     settings.original := arglist[index];
     index := index + 1;
   fi;
-  
+
   if index <= Length(arglist) then
     Error("Failed to understand argument ",index, ", which was ", arglist[index]);
   fi;
-  
+
+  if settings.engine = "vole" then
+    return _VoleCanonicalImage(G, obj, action, settings);
+  elif settings.engine <> "native" then
+    Error("Unknown engine '", settings.engine, "': must be \"native\" or \"vole\"");
+  fi;
+
   return CanonicalImageOp(G, obj, action, settings);
 end);
 

@@ -390,29 +390,22 @@ StabilizerOfFundamentalStructure := function(fs, omega, parts...)
 
     g := _convertToDigraph(fs, omega, parts);
 
-
-       if false then
-        group := VoleFind.Group(SymmetricGroup(DigraphVertices(g.graph)),
-        [
-            Constraint.Stabilize(g.graph, OnDigraphs),
-            Constraint.Stabilize(g.colours, OnTuplesSets)
-        ]);
-    else
-        group := BlissAutomorphismGroup(g.graph, g.colours);
-    fi;
+    # VoleFind.Group could be used here instead, but by default we use bliss.
+    group := BlissAutomorphismGroup(g.graph, g.colours);
 
     group := Group(List(GeneratorsOfGroup(group), x -> RestrictedPerm(x, [1..Length(omega)])));
     return group;
 end;
 
 StabilizerOfFundamentalStructureWithGroup := function(fs, omega, grp)
-    local g, group, cangroup;
+    local g, group, cangroup, vole;
+    vole := _ImagesVoleGlobals();
     g := _convertToDigraph(fs, omega, [omega]);
     cangroup := Group(Concatenation(GeneratorsOfGroup(grp), GeneratorsOfGroup(SymmetricGroup([Length(omega)+1..DigraphNrVertices(g.graph)]))));
-    group := VoleFind.Group(cangroup,
+    group := vole.find.Group(cangroup,
         [
-        Constraint.Stabilize(g.graph, OnDigraphs),
-        Constraint.Stabilize(g.colours, OnTuplesSets)
+        vole.constraint.Stabilize(g.graph, OnDigraphs),
+        vole.constraint.Stabilize(g.colours, OnTuplesSets)
         ]
     );
 
@@ -422,13 +415,14 @@ end;
 
 
 CanonicalPermOfFundamentalStructureWithGroup := function(fs, omega, grp)
-    local g, perm, cangroup;
+    local g, perm, cangroup, vole;
+    vole := _ImagesVoleGlobals();
     g := _convertToDigraph(fs, omega, [omega]);
     cangroup := Group(Concatenation(GeneratorsOfGroup(grp), GeneratorsOfGroup(SymmetricGroup([Length(omega)+1..DigraphNrVertices(g.graph)]))));
-    perm := VoleFind.CanonicalPerm(cangroup,
+    perm := vole.find.CanonicalPerm(cangroup,
         [
-        Constraint.Stabilize(g.graph, OnDigraphs),
-        Constraint.Stabilize(g.colours, OnTuplesSets)
+        vole.constraint.Stabilize(g.graph, OnDigraphs),
+        vole.constraint.Stabilize(g.colours, OnTuplesSets)
         ]
     );
     return RestrictedPerm(perm, [1..Length(omega)]);

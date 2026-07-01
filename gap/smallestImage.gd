@@ -159,6 +159,18 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    <Item> Return the calculated value of <C>Stabilizer(<A>G</A>,<A>O</A>,<A>A</A>)</C>.
 ##    This may return a subgroup rather than the whole stabilizer.
 ##    </Item>
+##    <Mark><C>engine</C> (default <C>"native"</C>)</Mark>
+##    <Item> Which algorithm to use to compute the canonical image. The default
+##    <C>"native"</C> uses this package's own algorithm. Passing <C>"vole"</C>
+##    instead computes the canonical image using the <Package>vole</Package>
+##    package (via <C>VoleFind.Canonical</C>), which supports the same actions.
+##    <Package>vole</Package> is an optional dependency, loaded on demand; an
+##    error is raised if it is requested but not available.
+##    Note that <Package>vole</Package> produces a different (but equally valid)
+##    canonical representative, so the two engines must not be mixed for a given
+##    computation. The <C>"vole"</C> engine only applies to <Ref Func="CanonicalImage"/>;
+##    it cannot compute minimal images and will raise an error if requested to.
+##    </Item>
 ##  </List>
 ##  </Description>
 ##  </ManSection>

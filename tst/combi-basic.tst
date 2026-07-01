@@ -41,6 +41,7 @@ true
 gap> ss := C.Set([s1,s2]);;
 gap> checkStabilizer(ss, [1..5], Group((1,5),(2,3)));
 true
+#@if Filename(DirectoriesPackageLibrary("vole", "rust/target/release"), "vole") <> fail
 gap> p1 := CanonicalPermOfFundamentalStructure(s1, [1..5]);;
 gap> p2 := CanonicalPermOfFundamentalStructure(s2, [1..5]);;
 gap> OnFundamental(s1, p1) = OnFundamental(s2, p2);
@@ -55,6 +56,7 @@ gap> p1 := CanonicalPermOfFundamentalStructureWithGroup(s1, [1..5], g);;
 gap> p2 := CanonicalPermOfFundamentalStructureWithGroup(s2, [1..5], g);;
 gap> OnFundamental(s1, p1) = OnFundamental(s2, p2);
 true
+#@fi
 gap> OnFundamental(2, (2,4));
 4
 gap> checkStabilizer(2, [1..5], SymmetricGroup([1,3,4,5]));
