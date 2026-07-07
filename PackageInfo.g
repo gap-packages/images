@@ -119,7 +119,7 @@ Keywords := [  ],
 AutoDoc := rec(
     TitlePage := rec(
         Copyright := """
-&copyright; 2013-2019
+&copyright; 2013-2026
 """
     ),
     entities := rec(
