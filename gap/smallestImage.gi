@@ -30,7 +30,7 @@ _ImageHelperFuncs := MakeImmutable(rec(
 fillUserValues := function(options, useroptions)
   local name, ret;
   ret := rec();
-  
+
   useroptions := ShallowCopy(useroptions);
 
   for name in RecNames(options) do
@@ -54,11 +54,11 @@ fillUserValues := function(options, useroptions)
 # columns i&j and rows i&j simultaneously.
 _rowColGen := function( inGroup, x )
   local i,j,l,p, generators, temp;
-  
+
   if IsTrivial(inGroup) then
      return inGroup;
   fi;
-  
+
   generators := [];
   for p in GeneratorsOfGroup(inGroup) do
     l := [];
@@ -126,7 +126,7 @@ InstallMethod(MaxOrbitPerm, [IsPermGroup],
             return first[1];
         end
 ));
-  
+
 # Install the two most common cases of rowColGen
 # as an attribute
 InstallMethod(rowcolsquareGroup, [IsPermGroup],
@@ -167,15 +167,15 @@ end;
 
 _CanonicalSetImage := function(G, S, stab, settings)
     local L, earlyskip;
-    
+
     if settings.result = GetBool then
         earlyskip := true;
     else
         earlyskip := false;
     fi;
-    
+
     L := _NewSmallestImage(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order );
-    
+
     if settings.getStab then
         settings.original.stab := L[2];
     fi;
@@ -183,11 +183,11 @@ _CanonicalSetImage := function(G, S, stab, settings)
     if L[1] = false then
         return false;
     fi;
-    
+
     if settings.result = GetImage then
         return L[1];
     fi;
-    
+
     if settings.result = GetBool then
         if L[1] = MinImage.Smaller or L[1] = MinImage.Larger then
             return false;
@@ -195,16 +195,16 @@ _CanonicalSetImage := function(G, S, stab, settings)
             return Set(L[1]) = Set(S);
         fi;
     fi;
-    
+
     if settings.result = GetPerm then
         return RepresentativeAction(G, S, L[1], OnTuples);
     fi;
-    
+
     Error("Invalid value of result");
 end;
 
 
-InstallGlobalFunction("IsMinimalImageLessThan", 
+InstallGlobalFunction("IsMinimalImageLessThan",
     function(G, A, B, extra...)
         local ret;
         B := Set(B);
@@ -230,21 +230,21 @@ end);
 
 _CanonicalSetSetImage := function(G, S, stab, stepval, settings)
     local L;
-    
+
     L := _NewSmallestImage_SetSet(G, S, stab, x -> x, stepval );
-    
+
     if settings.result = GetImage then
         return L[1];
     fi;
-    
+
     if settings.result = GetBool then
         return Set(L[1]) = Set(S);
     fi;
-    
+
     if settings.result = GetPerm then
         return RepresentativeAction(G, S, L[1], OnTuples);
     fi;
-    
+
     Error("Invalid value of result");
 end;
 
@@ -258,7 +258,7 @@ _CanonicalTupleSetImage := function(G, origS, settings)
     else
         S := origS;
     fi;
-    
+
     for i in [1..Length(S)] do
         curset := OnSets(S[i], curperm);
         stab := Stabilizer(G, curset, OnSets);
@@ -289,7 +289,7 @@ end;
 _MinimalImage_partialFunction := function(l, G, mMax, settings)
   local lresult, set, i, image, imageset, rowcolGroup,
         stab, img, dom, perm;
-  
+
   # Turn partial function into a subset of a 2D matrix,
   # which contains (i,j) if i^trans = j.
   set := _booleaniseList(l, mMax);
@@ -302,27 +302,27 @@ _MinimalImage_partialFunction := function(l, G, mMax, settings)
   else
     rowcolGroup := _rowColGen(G, mMax);
   fi;
-  
+
   if settings.stabilizer <> fail then
      stab := _rowColGen(settings.stabilizer, mMax);
   else
       # Find minimal image of set
       stab := Stabilizer(rowcolGroup, set, OnSets);
   fi;
-  
+
   image := _CanonicalSetImage(rowcolGroup, set, stab, settings);
-  
+
   if settings.result = GetBool then
       return image;
   elif settings.result = GetImage then
       return _unbooleaniseList(image, mMax);
   elif settings.result = GetPerm then
       # This horrible equation picks out the row permutation from our matrix
-      perm := List([1..mMax], 
+      perm := List([1..mMax],
                    x -> ((((mMax+1)*x-mMax)^image)+mMax)/(mMax+1));
       return PermList(perm);
   fi;
-  
+
 end;
 
 # This function just encapsulates what we have to return in the case
@@ -339,8 +339,8 @@ _trivialReturn := function(object, result)
     fi;
 end;
 
-        
-    
+
+
 # Returns the minimum image of a transformation
 InstallMethod(CanonicalImageOp, [IsPermGroup, IsTransformation, IsFunction, IsObject],
 function(inGroup, trans, action, settings)
@@ -350,7 +350,7 @@ function(inGroup, trans, action, settings)
   if action <> OnPoints then
     Error("Can only act on transformations with OnPoints");
   fi;
-  
+
   # Return in trivial cases
   if Maximum(LargestMovedPoint(trans),LargestImageOfMovedPoint(trans)) = 0 or
      LargestMovedPoint(inGroup) = 0 then
@@ -368,15 +368,15 @@ function(inGroup, trans, action, settings)
   # Turn transformation into function and pass to general case
   l := ListTransformation(trans, matrixMax);
   lresult := _MinimalImage_partialFunction(l, inGroup, matrixMax, settings);
-  
+
   #Print(":",settings.,":",GetImage,":",settings.image = GetImage,"\n");
-  
+
   if settings.result = GetImage then
       return Transformation(lresult);
   else
       return lresult;
   fi;
-  
+
 end);
 
 # Returns the minimum image of a transformation
@@ -388,7 +388,7 @@ function(inGroup, trans, action, settings)
   if action <> OnPoints then
     Error("Can only act on permutations with OnPoints");
   fi;
-  
+
   # Return in trivial cases
   if LargestMovedPoint(trans) = 0 or LargestMovedPoint(inGroup) = 0 then
       return _trivialReturn(trans, settings.result);
@@ -404,21 +404,21 @@ function(inGroup, trans, action, settings)
   # Turn transformation into function and pass to general case
   l := ListPerm(trans, matrixMax);
   lresult := _MinimalImage_partialFunction(l, inGroup, matrixMax, settings);
-  
+
   if settings.result = GetImage then
       return PermList(lresult);
   else
       return lresult;
   fi;
-  
+
 end);
 
 InstallMethod(CanonicalImageOp, [IsPermGroup, IsPosInt, IsFunction, IsObject],
         function(inGroup, i, action, settings)
     local min;
-    
+
     min := Minimum(Orbit(inGroup, i, action));
-    
+
     if settings.result = GetImage then
         return min;
     elif settings.result = GetBool then
@@ -435,7 +435,7 @@ function(inGroup, pp, action, settings)
   if action <> OnPoints then
     Error("Can only act on partial perms with OnPoints");
   fi;
-  
+
   # First find the largest integer of interest
   max := Maximum(DegreeOfPartialPerm(pp),
                  CodegreeOfPartialPerm(pp));
@@ -446,13 +446,13 @@ function(inGroup, pp, action, settings)
   fi;
 
   matrixMax := Maximum(max, LargestMovedPoint(inGroup)) + 1;
-  
+
   minTrans := CanonicalImage(inGroup, AsTransformation(pp, matrixMax), settings);
-  
+
   if settings.result = GetPerm or settings.result = GetBool then
       return minTrans;
   fi;
-  
+
   # TODO: Ask how to avoid having to do this to get a PartialPermBack
   # the mod is there as a quick(ish) way to turn 'matrixMax' into '0'.
   return PartialPerm(List(ListTransformation(minTrans, matrixMax), x -> x mod matrixMax));
@@ -496,7 +496,7 @@ end;
 InstallMethod(CanonicalImageOp, [IsPermGroup, IsList, IsFunction, IsObject],
 function(inGroup, inList, op, settings)
   local stab, bigGroup, maxIn, setImage, imageperm, currentperm, i, outset, inner, outer, fList;
-  
+
   # Bail out in global trivial case:
   if LargestMovedPoint(inGroup) = 0 then
     return _trivialReturn(inList, settings.result);
@@ -508,16 +508,16 @@ function(inGroup, inList, op, settings)
       else
           stab := Stabilizer(inGroup, inList, OnSets);
       fi;
-      
+
       imageperm := _CanonicalSetImage(inGroup, inList, stab, settings);
       if settings.result = GetImage then
          return Set(imageperm);
       else
          return imageperm;
       fi;
-      
+
   fi;
-  
+
   if op = OnTuples then
       fList := [];
       currentperm := ();
@@ -539,7 +539,7 @@ function(inGroup, inList, op, settings)
   if op = OnTuplesSets then
     return _CanonicalTupleSetImage(inGroup, inList, settings);
   fi;
-  
+
   if op = OnSetsSets then
     # Our code is not happy with empty lists, so let's get them filtered out first
     # (we will add them back at the end)
@@ -567,18 +567,18 @@ function(inGroup, inList, op, settings)
     else
         stab := Stabilizer(bigGroup, setImage, OnSets);
     fi;
-    
+
     imageperm := _CanonicalSetSetImage(bigGroup, setImage, stab, maxIn, settings);
-    
+
     if settings.result = GetBool then
         return imageperm;
     fi;
-    
+
     if settings.result = GetPerm then
         # This perm is a wreath product perm, we want to project it down onto the first set
         return PermList(List([1..maxIn], x -> (x^imageperm - 1) mod maxIn + 1));
     fi;
-    
+
     outset := List([1..Length(fList)], x -> []);
 
     for i in imageperm do
@@ -600,14 +600,12 @@ function(inGroup, inList, op, settings)
 end);
 
 # Vole is an optional dependency. This loads it on demand (raising a clear error
-# if it is unavailable) and returns its globals via ValueGlobal, so that reading
-# this file when vole is absent produces no "unbound global variable" warnings.
+# if it is unavailable)
 _ImagesVoleGlobals := function()
-  if not IsPackageMarkedForLoading("vole", "") then
-    if LoadPackage("vole", false) <> true then
-      ErrorNoReturn("this feature requires the 'vole' package, which could not be ",
-                    "loaded; please install vole (https://github.com/peal/vole)");
-    fi;
+  if not IsBoundGlobal("VoleFind") then
+    ErrorNoReturn("this feature requires the 'vole' package, which could not be ",
+                "loaded; please install vole (https://github.com/peal/vole), then ",
+                "load it with LoadPackage(\"vole\")");
   fi;
   return rec(find := ValueGlobal("VoleFind"),
              constraint := ValueGlobal("Constraint"));
@@ -649,28 +647,28 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
         action,   # action
         settings, # settings
         index;    # index
-      
+
   if Length(arglist) < 2 or Length(arglist) > 4 then
     Error("MinimalImage(G, obj [, action] [,config])");
   fi;
 
   G := arglist[1];
-  
+
   if not(IsGroup(G)) then
     Error("First argument must be a group");
   fi;
-  
+
   obj := arglist[2];
-  
+
   index := 3;
-  
+
   if Length(arglist) >= index and IsFunction(arglist[index]) then
     action := arglist[3];
     index := index + 1;
   else
     action := OnPoints;
   fi;
-   
+
   settings := rec(result := resultarg, stabilizer := fail, order := imagearg, getStab := false,
                   disableStabilizerCheck := false, engine := "native");
 
@@ -732,34 +730,34 @@ end);
 InstallMethod(MinimalImageUnorderedPair, [IsPermGroup, IsList, IsFunction],
   function(G, O, F)
     local fperm, sperm, first, second, act1, act2;
-    
+
     fperm := MinimalImagePerm(G, O[1], F);
     sperm := MinimalImagePerm(G, O[2], F);
-    
+
     act1 := F(O[1], fperm);
     act2 := F(O[2], sperm);
-    
+
     if act1 < act2 then
         second := MinimalImage(Stabilizer(G, F(O[1], fperm)), F(O[2], fperm), F);
         return [F(O[1], fperm), second];
     fi;
-    
+
     if act1 > act2 then
         first := MinimalImage(Stabilizer(G, F(O[2], sperm)), F(O[1], sperm), F);
         return [F(O[2], sperm), first];
     fi;
-    
+
      second := MinimalImage(Stabilizer(G, F(O[1], fperm)), F(O[2], fperm), F);
      first := MinimalImage(Stabilizer(G, F(O[2], sperm)), F(O[1], sperm), F);
-     
+
      if first < second then
          return [act1, first];
      else
          return [act1, second];
      fi;
  end);
- 
 
-## CanonicalImage(Group, Obj, rec(action:=OnSets, 
+
+## CanonicalImage(Group, Obj, rec(action:=OnSets,
 ##                                image:="Minimal",
 ##                                result := GetBool/GetBool/GetImage));
