@@ -205,7 +205,11 @@ _CanonicalSetImage := function(G, S, stab, settings)
     fi;
 
     if settings.result = GetPerm then
-        return RepresentativeAction(G, S, L[1], OnTuples);
+        if IsPermGroup(G) then
+            return RepresentativeAction(G, S, L[1], OnTuples);
+        fi;
+        # G is a group interface record
+        return G.repAction(S, L[1]);
     fi;
 
     Error("Invalid value of result");
@@ -294,14 +298,38 @@ end;
 
 
 
-_MinimalImage_partialFunction := function(l, G, mMax, settings)
-  local lresult, set, i, image, imageset, rowcolGroup,
-        stab, img, dom, perm;
+# Ferret is an optional dependency which can compute the stabilizer of a
+# set of pairs directly in the natural action of G
+_ImagesFerretGlobals := function()
+  if IsBoundGlobal("Solve") and IsBoundGlobal("ConInGroup")
+     and IsBoundGlobal("ConStabilize") then
+    return rec(solve := ValueGlobal("Solve"),
+               conInGroup := ValueGlobal("ConInGroup"),
+               conStabilize := ValueGlobal("ConStabilize"));
+  fi;
+  return fail;
+end;
 
-  # Turn partial function into a subset of a 2D matrix,
-  # which contains (i,j) if i^trans = j.
-  set := _booleaniseList(l, mMax);
+# The stabilizer in G of a set of encoded pairs, returned as a subgroup of G
+# in its natural action (the pair action is faithful, so this is
+# well-defined).
+_IMAGES_PairSetStabilizer := function(G, set, mMax)
+  local ferret, pairs, rowcolGroup, bigstab, gens, result;
 
+  ferret := _ImagesFerretGlobals();
+  if ferret <> fail then
+    pairs := Set(set, function(p)
+        local r;
+        r := (p - 1) mod mMax + 1;
+        return [r, (p - r)/mMax + 1];
+    end);
+    return ferret.solve([ferret.conInGroup(G),
+                         ferret.conStabilize(pairs, OnSetsTuples)]);
+  fi;
+
+  # Without ferret, fall back on a backtrack search in the explicit
+  # row-column group on mMax^2 points, and project the result back to G.
+  # This is far slower for large mMax; loading ferret avoids it.
   # Cache only the most common group
   if mMax = LargestMovedPoint(G) then
     rowcolGroup := rowcolsquareGroup(G);
@@ -310,25 +338,51 @@ _MinimalImage_partialFunction := function(l, G, mMax, settings)
   else
     rowcolGroup := _rowColGen(G, mMax);
   fi;
+  bigstab := Stabilizer(rowcolGroup, set, OnSets);
+  # The image of the diagonal cell (x,x) under the row-column permutation
+  # of g is (x^g, x^g), from which we read off g itself
+  gens := List(GeneratorsOfGroup(bigstab),
+               b -> PermList(List([1..mMax],
+                                  x -> ((x + (x-1)*mMax)^b - 1) mod mMax + 1)));
+  result := Group(gens, ());
+  SetSize(result, Size(bigstab));
+  return result;
+end;
 
-  if settings.stabilizer <> fail then
-     stab := _rowColGen(settings.stabilizer, mMax);
-  else
-      # Find minimal image of set
-      stab := Stabilizer(rowcolGroup, set, OnSets);
+_MinimalImage_partialFunction := function(l, G, mMax, settings)
+  local set, order, pairGroup, stab, image;
+
+  # Turn partial function into a subset of a 2D matrix,
+  # which contains (i,j) if i^trans = j.
+  set := _booleaniseList(l, mMax);
+
+  order := settings.order;
+  if IsString(order) then
+      order := ValueGlobal(order);
+  fi;
+  if IsRecord(order) and IsBound(order.branch) and order.branch = "static" then
+      ErrorNoReturn("static branch orderings (such as CanonicalConfig_FixedMinOrbit) ",
+                    "are not supported for transformations, permutations ",
+                    "or partial permutations");
   fi;
 
-  image := _CanonicalSetImage(rowcolGroup, set, stab, settings);
+  pairGroup := _IMAGES_PairActionIface(G, mMax);
+
+  if settings.stabilizer <> fail then
+     stab := settings.stabilizer;
+  else
+     stab := _IMAGES_PairSetStabilizer(G, set, mMax);
+  fi;
+
+  image := _CanonicalSetImage(pairGroup, set, stab, settings);
 
   if settings.result = GetBool then
       return image;
   elif settings.result = GetImage then
       return _unbooleaniseList(image, mMax);
   elif settings.result = GetPerm then
-      # This horrible equation picks out the row permutation from our matrix
-      perm := List([1..mMax],
-                   x -> ((((mMax+1)*x-mMax)^image)+mMax)/(mMax+1));
-      return PermList(perm);
+      # repAction already projected the answer into the natural action of G
+      return image;
   fi;
 
 end;
@@ -408,6 +462,13 @@ function(inGroup, trans, action, settings)
   # TODO: This could be reduced but not all the way down to
   # LargestMovedPoint(inGroup) in general.
   matrixMax := Maximum(transformMax, LargestMovedPoint(inGroup));
+
+  # The stabilizer of the graph of a permutation is its centralizer,
+  # which GAP can compute directly in the natural action
+  if settings.stabilizer = fail then
+      settings := ShallowCopy(settings);
+      settings.stabilizer := Centralizer(inGroup, trans);
+  fi;
 
   # Turn transformation into function and pass to general case
   l := ListPerm(trans, matrixMax);

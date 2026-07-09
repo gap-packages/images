@@ -251,10 +251,289 @@ _IMAGES_COMMON_ORBIT := _IMAGES_RATIO(
 );
 
 
+# _NewSmallestImage touches the group it searches over only through a small
+# interface: orbits of points under the current stabilizer, base changes,
+# transversal walks, descending the stabilizer chain, and the action of a
+# given stabilizer subgroup on the set. The two constructors below build that
+# interface, so the same search code runs either over an explicit permutation
+# group, or over the "row-column" action of G on encoded pairs
+# (pt = i + (j-1)*mMax <-> pair (i,j)) without ever constructing the
+# mMax^2-point group which _rowColGen builds.
+
+# The interface record contains:
+#   nPoints              largest point of the domain
+#   levelGens()          generators of the current stabilizer chain level
+#   makeOrbit(x, gens, orbnums, orbmins, orbsizes, orbseen)
+#                        extend the orbit tables with the orbit of x, return
+#                        its orbit number
+#   isBaseFixed(pt)      is pt fixed by the current level?
+#   baseChange(pt)       make pt the next base point; returns true if pt's
+#                        orbit under the current level is trivial
+#   walkToBase(image, x, basepoint)
+#                        apply group elements to the list image until
+#                        image[x] = basepoint (only called when they differ,
+#                        and image[x] is in basepoint's orbit)
+#   descend()            move to the stabilizer of the last base point
+#   isTrivial()          is the current level the trivial group?
+#   positionAction(k, set)
+#                        the action of the subgroup k on the positions of set
+#   repAction(S, T)      a group element mapping the list S to T pointwise
+
+_IMAGES_NativeGroupIface := function(g)
+    local s;
+    s := StabChainMutable(g);
+    return rec(
+        isNative := true,
+        nPoints := LargestMovedPoint(g),
+        startDepth := function() end,
+        levelGens := function() return s.generators; end,
+        makeOrbit := function(x, gens, orbnums, orbmins, orbsizes, orbseen)
+            local q, rep, num, pt, gen, img;
+            if orbnums[x] <> -1 then
+                return orbnums[x];
+            fi;
+            q := [x];
+            rep := x;
+            num := Length(orbmins)+1;
+            orbnums[x] := num;
+            Add(orbseen,x);
+            for pt in q do
+                for gen in gens do
+                    img := pt^gen;
+                    if orbnums[img] = -1 then
+                        orbnums[img] := num;
+                        Add(orbseen,img);
+                        Add(q,img);
+                        if img < rep then
+                            rep := img;
+                        fi;
+                    fi;
+                od;
+            od;
+            Add(orbmins,rep);
+            Add(orbsizes,Length(q));
+            return num;
+        end,
+        isBaseFixed := function(pt)
+            return ForAll(s.generators, gen -> pt^gen = pt);
+        end,
+        baseChange := function(pt)
+            ChangeStabChain(s,[pt],false);
+            return Length(s.orbit) = 1;
+        end,
+        walkToBase := function(image, x, basepoint)
+            repeat
+                image := OnTuples(image, s.transversal[image[x]]);
+            until image[x] = basepoint;
+            return image;
+        end,
+        descend := function()
+            s := s.stabilizer;
+        end,
+        isTrivial := function()
+            return Length(s.generators) = 0;
+        end,
+        positionAction := function(k, set)
+            return Action(k, set);
+        end,
+        repAction := function(S, T)
+            return RepresentativeAction(g, S, T, OnTuples);
+        end);
+end;
+
+# The row-column action of G on encoded pairs, without building the explicit
+# group on mMax^2 points. G acts diagonally: (i,j)^g = (i^g, j^g), so fixing
+# the encoded pair (i,j) is the same as fixing both i and j, and the whole
+# stabilizer chain lives on [1..mMax]. The action is faithful (diagonal pairs
+# pin every point), so chain levels correspond exactly to those of the
+# explicit group.
+_IMAGES_PairActionIface := function(G, mMax)
+    local chain, descendLevels, pairImage, liftGen,
+          liftedGens, liftedInvs, svGen, basePath;
+
+    Assert(1, LargestMovedPoint(G) <= mMax);
+
+    pairImage := function(pt, gen)
+        local r, c;
+        r := (pt - 1) mod mMax + 1;
+        c := (pt - r)/mMax + 1;
+        return r^gen + (c^gen - 1)*mMax;
+    end;
+
+    # Lift a generator of G to the explicit permutation of the mMax^2
+    # encoded pairs. Built blockwise with kernel list arithmetic, so this
+    # costs far less than an interpreted loop over all cells. The lifted
+    # generators of the current level restore kernel-speed orbit sweeps
+    # and image walks; crucially we lift only the generators, never a
+    # stabilizer chain or transversals on the big domain.
+    liftGen := function(gen)
+        local row, l, j;
+        row := ListPerm(gen, mMax);
+        l := EmptyPlist(mMax*mMax);
+        for j in [1..mMax] do
+            Append(l, row + (j^gen - 1)*mMax);
+        od;
+        return PermList(l);
+    end;
+
+    # A private copy: base changes below would otherwise rebase G's cached
+    # chain and pollute it with the trivial levels 'reduced := false' inserts.
+    chain := CopyStabChain(StabChainMutable(G));
+    descendLevels := 0;
+    liftedGens := fail;
+    liftedInvs := fail;
+    # svGen[pt] is the index of the lifted generator by which makeOrbit's
+    # breadth-first search first reached pt (0 at the orbit's seed). The
+    # walks in walkToBase reuse it, so no separate Schreier tree is built.
+    svGen := [];
+    basePath := fail;
+
+    return rec(
+        isNative := false,
+        nPoints := mMax * mMax,
+        startDepth := function()
+            svGen := [];
+            basePath := fail;
+        end,
+        levelGens := function()
+            if liftedGens = fail then
+                liftedGens := List(chain.generators, liftGen);
+                liftedInvs := List(liftedGens, x -> x^-1);
+            fi;
+            return liftedGens;
+        end,
+        makeOrbit := function(x, gens, orbnums, orbmins, orbsizes, orbseen)
+            local q, rep, num, pt, img, i;
+            if orbnums[x] <> -1 then
+                return orbnums[x];
+            fi;
+            q := [x];
+            rep := x;
+            num := Length(orbmins)+1;
+            orbnums[x] := num;
+            svGen[x] := 0;
+            Add(orbseen,x);
+            for pt in q do
+                for i in [1..Length(gens)] do
+                    img := pt^gens[i];
+                    if orbnums[img] = -1 then
+                        orbnums[img] := num;
+                        svGen[img] := i;
+                        Add(orbseen,img);
+                        Add(q,img);
+                        if img < rep then
+                            rep := img;
+                        fi;
+                    fi;
+                od;
+            od;
+            Add(orbmins,rep);
+            Add(orbsizes,Length(q));
+            return num;
+        end,
+        isBaseFixed := function(pt)
+            local r, c;
+            r := (pt - 1) mod mMax + 1;
+            c := (pt - r)/mMax + 1;
+            return ForAll(chain.generators, gen -> r^gen = r and c^gen = c);
+        end,
+        baseChange := function(pt)
+            local r, c;
+            r := (pt - 1) mod mMax + 1;
+            c := (pt - r)/mMax + 1;
+            if r = c then
+                ChangeStabChain(chain, [r], false);
+                descendLevels := 1;
+            else
+                ChangeStabChain(chain, [r, c], false);
+                descendLevels := 2;
+            fi;
+            basePath := fail;
+            # only called when pt is not fixed, so its orbit is non-trivial
+            return false;
+        end,
+        walkToBase := function(image, x, basepoint)
+            local gi, i, p;
+            # basePath applied at the orbit's breadth-first seed leads to
+            # basepoint; it is the same for every node of this depth.
+            if basePath = fail then
+                basePath := [];
+                p := basepoint;
+                gi := svGen[p];
+                while gi <> 0 do
+                    Add(basePath, gi);
+                    p := p^liftedInvs[gi];
+                    gi := svGen[p];
+                od;
+                basePath := Reversed(basePath);
+            fi;
+            # walk image[x] up to the seed, then down to basepoint
+            gi := svGen[image[x]];
+            while gi <> 0 do
+                image := OnTuples(image, liftedInvs[gi]);
+                gi := svGen[image[x]];
+            od;
+            for i in basePath do
+                image := OnTuples(image, liftedGens[i]);
+            od;
+            if image[x] <> basepoint then
+                ErrorNoReturn("panic: walk did not reach the base point");
+            fi;
+            return image;
+        end,
+        descend := function()
+            Assert(1, descendLevels > 0);
+            while descendLevels > 0 do
+                chain := chain.stabilizer;
+                descendLevels := descendLevels - 1;
+            od;
+            liftedGens := fail;
+            liftedInvs := fail;
+        end,
+        isTrivial := function()
+            return Length(chain.generators) = 0;
+        end,
+        positionAction := function(k, set)
+            local perms, gen, pos, img, i, perm;
+            perms := [];
+            for gen in GeneratorsOfGroup(k) do
+                perm := [];
+                for i in [1..Length(set)] do
+                    img := pairImage(set[i], gen);
+                    pos := PositionSorted(set, img);
+                    if pos > Length(set) or set[pos] <> img then
+                        ErrorNoReturn("the given <stabilizer> does not stabilize the object");
+                    fi;
+                    perm[i] := pos;
+                od;
+                Add(perms, PermList(perm));
+            od;
+            return Group(perms, ());
+        end,
+        repAction := function(S, T)
+            local tup1, tup2, i, r, perm;
+            tup1 := [];
+            tup2 := [];
+            for i in [1..Length(S)] do
+                r := (S[i] - 1) mod mMax + 1;
+                Add(tup1, r);
+                Add(tup1, (S[i] - r)/mMax + 1);
+                r := (T[i] - 1) mod mMax + 1;
+                Add(tup2, r);
+                Add(tup2, (T[i] - r)/mMax + 1);
+            od;
+            perm := RepresentativeAction(G, tup1, tup2, OnTuples);
+            if perm = fail then
+                ErrorNoReturn("panic: no group element maps the object to its computed image");
+            fi;
+            return perm;
+        end);
+end;
+
 _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCheck_in, config_option)
     local   leftmost_node,  next_node,  delete_node,  delete_nodes,
             clean_subtree,  handle_new_stabilizer_element,
-            simpleOrbitReps,  make_orbit,  n,  s,  l,  m,  hash,
+            simpleOrbitReps,  make_orbit,  n,  iface,  orbtrivial,  l,  m,  hash,
             lastupb,  root,  depth,  gens,  orbnums,  orbmins,
             orbsizes,  orbseen,  upb,  imsets,  imsetnodes,  node,  cands,  y,
             x,  num,  rep,  node2,  prevnode,  nodect,  changed,
@@ -273,6 +552,11 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
     fi;
     
     if config_option.branch = "static" then
+        # Static orderings relabel the whole domain by an arbitrary
+        # permutation, which cannot be expressed through a pair action.
+        if not IsPermGroup(g) then
+            ErrorNoReturn("static branch orderings require an explicit permutation group");
+        fi;
             savedArgs := rec( config_option := config_option, g := g, k := k, set := set );
         if config_option.order = "MinOrbit" then
             savedArgs.perm := MinOrbitPerm(g);
@@ -371,6 +655,13 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
 
     if disableStabilizerCheck_in = true then
         config.tryImproveStabilizer := false;
+    fi;
+
+    if IsPermGroup(g) then
+        iface := _IMAGES_NativeGroupIface(g);
+    else
+        # g is already a group interface record, e.g. from _IMAGES_PairActionIface
+        iface := g;
     fi;
 
     ## Node exploration functions
@@ -517,40 +808,21 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
     
     # Make orbit of x, updating orbnums, orbmins and orbsizes as appropriate.
     make_orbit := function(x)
-        local   q,  rep,  num,  pt,  gen,  img;
         if orbnums[x] <> -1 then
             return orbnums[x];
         fi;
-        q := [x];
-        rep := x;
-        num := Length(orbmins)+1;
-        orbnums[x] := num;
-        Add(orbseen,x);
-        for pt in q do
-            for gen in gens do
-                img := pt^gen;
-                if orbnums[img] = -1 then
-                    orbnums[img] := num;
-                    Add(orbseen,img);
-                    Add(q,img);
-                    if img < rep then
-                        rep := img;
-                    fi;
-                fi;
-            od;
-        od;
-        Add(orbmins,rep);
-        Add(orbsizes,Length(q));
-        return num;
+        return iface.makeOrbit(x, gens, orbnums, orbmins, orbsizes, orbseen);
     end;
 
     if set = [] then
+      if not IsPermGroup(g) then
+        ErrorNoReturn("the pair action interface does not support empty sets");
+      fi;
       return [ [], k^(savedArgs.perminv)];
     fi;
 
-    n := Maximum(LargestMovedPoint(g), Maximum(set));
-    s := StabChainMutable(g);
-    l := Action(k,set);
+    n := Maximum(iface.nPoints, Maximum(set));
+    l := iface.positionAction(k, set);
     m := Length(set);
     hash := _IMAGES_Get_Hash(m);
     lastupb := config.initial_lastupb;
@@ -567,8 +839,9 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                 prev := fail,
                 parent := fail);
     for depth in [1..m] do
-        Info(InfoNSI, 3, "Stabilizer is :", s.generators);
-        gens := s.generators;
+        iface.startDepth();
+        gens := iface.levelGens();
+        Info(InfoNSI, 3, "Stabilizer is :", gens);
         for x in orbseen do
             orbnums[x] := -1;
         od;
@@ -767,17 +1040,18 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
         lastupb := upb;
         Info(InfoNSI, 2, "Branch on ", upb);
         basepoint := config.getBasePoint(upb);
-        fixedbase := ForAll(s.generators,
-                            gen -> basepoint^gen = basepoint);
-        # ChangeStabChain inserts a redundant stabilizer level when the
+        fixedbase := iface.isBaseFixed(basepoint);
+        # A base change inserts a redundant stabilizer level when the
         # base point is already fixed.  Besides being unnecessary, its
         # sparse transversal lists can be huge for large-degree actions.
         if not fixedbase then
             _IMAGES_StartTimer(_IMAGES_changeStabChain);
-            ChangeStabChain(s,[basepoint],false);
+            orbtrivial := iface.baseChange(basepoint);
             _IMAGES_StopTimer(_IMAGES_changeStabChain);
+        else
+            orbtrivial := true;
         fi;
-        if fixedbase or Length(s.orbit) = 1 then
+        if orbtrivial then
             #
             # In this case nothing much can happen. Each surviving node will have exactly one child
             # and none of the imsets will change
@@ -795,7 +1069,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             od;
             Info(InfoNSI,2,"Nothing can happen, short-cutting");
             if not fixedbase then
-                s := s.stabilizer;
+                iface.descend();
             fi;
             _IMAGES_StopTimer(_IMAGES_shortcut);
             if Size(skip_func(leftmost_node(depth+1).selected)) = m then
@@ -829,10 +1103,8 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                 Add(node.children,newnode);
                 
                 image := node.image;
-                if image[x] <> config.getBasePoint(upb) then
-                    repeat
-                        image := OnTuples(image, s.transversal[image[x]]);
-                    until image[x] = config.getBasePoint(upb);
+                if image[x] <> basepoint then
+                    image := iface.walkToBase(image, x, basepoint);
                     newnode.image := image;
                     newnode.imset := Set(image);
                     MakeImmutable(newnode.imset);
@@ -871,8 +1143,8 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                     node := next_node(node);
                 od;
                 Info(InfoNSI,2,"Layer ",depth," pass 3 complete. Used hash table");
-                s := s.stabilizer;
-                if Length(s.generators) = 0 then
+                iface.descend();
+                if iface.isTrivial() then
                     Info(InfoNSI,2,"Run out of group, return best image");
                     node := leftmost_node(depth+1);
                     bestim := node.imset;
@@ -901,16 +1173,16 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                     node := next_node(node);
                 od;
                 Info(InfoNSI,2,"Layer ",depth," pass 3 complete. ",Length(imsets)," images");
-                s := s.stabilizer;
-                if Length(s.generators) = 0 then
+                iface.descend();
+                if iface.isTrivial() then
                     Info(InfoNSI,2,"Run out of group, return best image");
                     _IMAGES_StopTimer(_IMAGES_pass3);
                     return [OnTuples(imsetnodes[1].image,savedArgs.perminv),l^savedArgs.perminv];
                 fi;
             fi;
         else
-            s := s.stabilizer;
-            if Length(s.generators) = 0 then
+            iface.descend();
+            if iface.isTrivial() then
                 # The remaining points cannot move, so no deeper search can
                 # improve any surviving node.
                 Info(InfoNSI,2,"Run out of group, return best image");

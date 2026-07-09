@@ -109,6 +109,13 @@ CheckMinimalImageTest := function(g, o, action, minList)
                   CanonicalConfig_RareOrbitPlusMin, CanonicalConfig_RareOrbitPlusRare, CanonicalConfig_RareOrbitPlusCommon,
                   CanonicalConfig_FixedMinOrbit, CanonicalConfig_FixedMaxOrbit ] do
 
+        # Static branch orderings are not supported for the pair action used
+        # by transformations, permutations and partial permutations
+        if order.branch = "static" and action = OnPoints and
+           (IsTransformation(o) or IsPerm(o) or IsPartialPerm(o)) then
+            continue;
+        fi;
+
         can_orig := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), order := order, result := GetImage));
         can_rand := CanonicalImage(cpyg, rando, action, rec(stabilizer := Group(()), order := order, result := GetImage));
         can_nostab :=  CanonicalImage(cpyg, rando, action, rec(stabilizer := Group(()), order := order, result := GetImage, disableStabilizerCheck := true));
