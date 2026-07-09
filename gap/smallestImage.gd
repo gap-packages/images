@@ -133,7 +133,10 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##         <Mark><C>CanonicalConfig_FixedMinOrbit</C></Mark>
 ##       <Item>
 ##         Lexicographically smallest set under the ordering of the integers
-##         given by the MinOrbitPerm function.
+##         given by the MinOrbitPerm function. This ordering (and
+##         <C>CanonicalConfig_FixedMaxOrbit</C>) is not supported when
+##         canonicalising transformations, permutations or partial
+##         permutations, and will raise an error there.
 ##       </Item>
 ##         <Mark><C>CanonicalConfig_RareRatioOrbitFixPlusMin</C></Mark>
 ##       <Item>
@@ -148,6 +151,11 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    Default behaviour is to calculate the group, pass <C>Group(())</C> to disable
 ##    this behaviour. This is not checked, and passing an incorrect group will
 ##    produce incorrect answers.
+##    <P/>
+##    When canonicalising transformations or partial permutations, the
+##    default stabilizer is computed with the <Package>ferret</Package>
+##    package when it is loaded, which is much faster for groups of large
+##    degree; without <Package>ferret</Package> a slower fallback is used.
 ##    </Item>
 ##    <Mark><C>disableStabilizerCheck</C> (default <K>false</K>)</Mark>
 ##    <Item> By default, during search we perform cheap checks to try to find
