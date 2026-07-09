@@ -120,6 +120,17 @@ CheckMinimalImageTest := function(g, o, action, minList)
                can_orig = can_rand and can_orig = can_nostab) then
             Print(GeneratorsOfGroup(g), ":", order, ":", o, ":", rando, ":", can_orig, ":", can_rand, ":", can_nostab, "\n");
         fi;
+
+        # GetBool must agree with GetImage: the canonical image is its own
+        # canonical image and anything else is not. (Regression check: the
+        # early-exit comparisons used to assume the minimum ordering and
+        # returned spurious 'false' for the dynamic orderings.)
+        if not CanonicalImage(cpyg, can_orig, action, rec(stabilizer := Group(()), order := order, result := GetBool)) then
+            Print(GeneratorsOfGroup(g), ":", order, ":", o, " GetBool false on canonical image\n");
+        fi;
+        if can_orig <> o and CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), order := order, result := GetBool)) then
+            Print(GeneratorsOfGroup(g), ":", order, ":", o, " GetBool true on non-canonical object\n");
+        fi;
     od;
 
 end;;
