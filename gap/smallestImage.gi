@@ -168,13 +168,20 @@ _unbooleaniseList := function(s, matrixMax)
 end;
 
 _CanonicalSetImage := function(G, S, stab, settings)
-    local L, earlyskip;
+    local L, earlyskip, order;
 
-    if settings.result = GetBool then
-        earlyskip := true;
-    else
-        earlyskip := false;
+    # The early-exit tests inside _NewSmallestImage compare the point
+    # branched on at depth d against the d-th smallest element of S, which
+    # assumes the image is selected in increasing order. That only holds
+    # for the "minimum" ordering: the dynamic orderings deliberately branch
+    # on rare orbits first, so a GetBool query there must compute the full
+    # image and compare at the end.
+    order := settings.order;
+    if IsString(order) then
+        order := ValueGlobal(order);
     fi;
+    earlyskip := settings.result = GetBool and IsRecord(order)
+                 and IsBound(order.branch) and order.branch = "minimum";
 
     L := _NewSmallestImage(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order );
 
