@@ -13,7 +13,7 @@
 ##
 ##  The tests are skipped if the vole executable is not available.
 ##
-#@if Filename(DirectoriesPackageLibrary("vole", "rust/target/release"), "vole") <> fail
+#@if LoadPackage("vole", false) = true
 gap> START_TEST("images package: test_vole_engine.tst");
 gap> LoadPackage("images", false);
 true

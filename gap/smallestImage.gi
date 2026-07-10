@@ -180,8 +180,7 @@ _CanonicalSetImage := function(G, S, stab, settings)
     if IsString(order) then
         order := ValueGlobal(order);
     fi;
-    earlyskip := settings.result = GetBool and IsRecord(order)
-                 and IsBound(order.branch) and order.branch = "minimum";
+    earlyskip := settings.result = GetBool and order.branch = "minimum";
 
     L := _NewSmallestImage(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order );
 
@@ -610,9 +609,9 @@ end);
 
 # Vole is an optional dependency. This loads it on demand (raising a clear error
 # if it is unavailable)
-_ImagesVoleGlobals := function()
+_ImagesVoleGlobals := function(why)
   if not IsBoundGlobal("VoleFind") then
-    ErrorNoReturn("this feature requires the 'vole' package, which could not be ",
+    ErrorNoReturn(why + "requires the 'vole' package, which could not be ",
                 "loaded; please install vole (https://github.com/peal/vole), then ",
                 "load it with LoadPackage(\"vole\")");
   fi;
@@ -631,7 +630,7 @@ _VoleCanonicalImage := function(G, obj, action, settings)
     Error("The 'vole' engine cannot compute minimal images (only canonical images)");
   fi;
 
-  vole := _ImagesVoleGlobals();
+  vole := _ImagesVoleGlobals("Finding canonical images with 'vole'");
   ret := vole.find.Canonical(G, vole.constraint.Stabilize(obj, action));
 
   if settings.getStab then
