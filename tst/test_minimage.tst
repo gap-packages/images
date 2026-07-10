@@ -13,7 +13,7 @@ gap> START_TEST("images package: test_minimage.tst");
 # loaded)
 gap> ReadPackage("images","tst/test_functions.g");;
 gap> CheckMinimalImageTransformations();
-gap> # CheckMinimalImagePartialPerm();
+gap> CheckMinimalImagePartialPerm();
 gap> CheckMinimalImagePerm();
 gap> STOP_TEST( "test_minimage.tst", 10000 );
 images package: test_minimage.tst

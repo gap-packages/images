@@ -515,7 +515,9 @@ function(inGroup, pp, action, settings)
 
   matrixMax := Maximum(max, LargestMovedPoint(inGroup)) + 1;
 
-  minTrans := CanonicalImage(inGroup, AsTransformation(pp, matrixMax), settings);
+  # Dispatch to the operation directly: settings is already parsed, and the
+  # user-facing CanonicalImage would reject its filled-in fields
+  minTrans := CanonicalImageOp(inGroup, AsTransformation(pp, matrixMax), action, settings);
 
   if settings.result = GetPerm or settings.result = GetBool then
       return minTrans;
