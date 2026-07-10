@@ -55,6 +55,19 @@ gap> checkPrefixHeavy := function(reps)
 gap> Reset(GlobalMersenneTwister, 2718);;
 gap> checkPrefixHeavy(100);
 0
+
+# A collection large enough that building the explicit group on
+# maxIn * nSets points (as the old implementation did) is infeasible;
+# the product action interface must handle it in well under a second.
+gap> G := PrimitiveGroup(100, 2);;
+gap> Reset(GlobalMersenneTwister, 314);;
+gap> sets := Set(List([1..40], i -> Set(Shuffle([1..100]){[1..8]})));;
+gap> mi := MinimalImage(G, sets, OnSetsSets);;
+gap> mp := MinimalImagePerm(G, sets, OnSetsSets);;
+gap> mp in G and OnSetsSets(sets, mp) = mi;
+true
+gap> ForAll([1..3], i -> MinimalImage(G, OnSetsSets(sets, Random(G)), OnSetsSets) = mi);
+true
 gap> STOP_TEST( "test_setsets.tst", 10000 );
 images package: test_setsets.tst
 #############################################################################
