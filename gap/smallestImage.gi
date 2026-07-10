@@ -301,8 +301,7 @@ end;
 # Ferret is an optional dependency which can compute the stabilizer of a
 # set of pairs directly in the natural action of G
 _ImagesFerretGlobals := function()
-  if IsBoundGlobal("Solve") and IsBoundGlobal("ConInGroup")
-     and IsBoundGlobal("ConStabilize") then
+  if IsPackageLoaded("ferret") then
     return rec(solve := ValueGlobal("Solve"),
                conInGroup := ValueGlobal("ConInGroup"),
                conStabilize := ValueGlobal("ConStabilize"));
