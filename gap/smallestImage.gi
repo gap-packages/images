@@ -243,7 +243,12 @@ end);
 _CanonicalSetSetImage := function(G, S, stab, stepval, settings)
     local L;
 
-    L := _NewSmallestImage_SetSet(G, S, stab, x -> x, stepval );
+    # Sets of sets are always canonicalised in the minimum order; the
+    # blockSize option makes _NewSmallestImage minimise under the blocked
+    # ordering, which matches GAP's ordering of sets of sets.
+    L := _NewSmallestImage(G, S, stab, x -> x, [false],
+                           settings.disableStabilizerCheck,
+                           rec(branch := "minimum", blockSize := stepval));
 
     if settings.result = GetImage then
         return L[1];

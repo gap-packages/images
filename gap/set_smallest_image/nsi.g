@@ -251,6 +251,38 @@ _IMAGES_COMMON_ORBIT := _IMAGES_RATIO(
 );
 
 
+# Support for "blocked" domains: the encoding of a set of sets places the
+# i-th inner set in the block of points [(i-1)*blockSize+1 .. i*blockSize].
+# GAP's ordering on sets of sets ({1,2} < {1,2,4} < {1,3}) is lexicographic
+# with an implicit end-of-set marker which sorts below every point, so it is
+# not the natural order on any static encoding of the blocks: at the first
+# position where two (naturally sorted) encoded sets differ, the one whose
+# point lies in a LATER block has ended an inner set earlier, and wins.
+
+# The (zero-based) block containing point x
+_IMAGES_BlockFloor := function(x, blockSize)
+    if x = infinity or x = -infinity then
+        return x;
+    fi;
+    return QuoInt(x - 1, blockSize);
+end;
+
+# The blocked ordering on two equal-length sets of encoded points
+_IMAGES_BlockedSetLess := function(x, y, blockSize)
+    local i;
+    for i in [1..Length(x)] do
+        if x[i] <> y[i] then
+            if _IMAGES_BlockFloor(x[i], blockSize)
+               <> _IMAGES_BlockFloor(y[i], blockSize) then
+                return _IMAGES_BlockFloor(x[i], blockSize)
+                       > _IMAGES_BlockFloor(y[i], blockSize);
+            fi;
+            return x[i] < y[i];
+        fi;
+    od;
+    return false;
+end;
+
 # _NewSmallestImage touches the group it searches over only through a small
 # interface: orbits of points under the current stabilizer, base changes,
 # transversal walks, descending the stabilizer chain, and the action of a
@@ -538,8 +570,9 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             orbsizes,  orbseen,  upb,  imsets,  imsetnodes,  node,  cands,  y,
             x,  num,  rep,  node2,  prevnode,  nodect,  changed,
             newnode,  image,  dict,  seen,  he,  bestim,  bestnode,
-            imset,  p, 
+            imset,  p,
             config,
+            blocked, lowbound, reloop, bad_node, candsmin, imsetLess,
             basepoint, fixedbase,
             globalOrbitCounts, globalBestOrbit, minOrbitMset, orbitMset,
             savedArgs,
@@ -656,6 +689,30 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
     if disableStabilizerCheck_in = true then
         config.tryImproveStabilizer := false;
     fi;
+
+    # Blocked domains (sets of sets): minimise under the blocked ordering
+    # instead of the natural one. See _IMAGES_BlockedSetLess above.
+    blocked := IsBound(config_option.blockSize);
+    if blocked then
+        if config_option.branch <> "minimum" then
+            ErrorNoReturn("blocked domains only support branch = \"minimum\"");
+        fi;
+        if early_exit[1] then
+            ErrorNoReturn("blocked domains do not support early exit");
+        fi;
+        config.blockSize := config_option.blockSize;
+        # A new orbit in a later block beats any upb in the current block,
+        # so the "upb cannot improve" shortcut does not apply.
+        config.skipNewOrbit := ReturnFalse;
+        imsetLess := function(a, b)
+            return _IMAGES_BlockedSetLess(a, b, config.blockSize);
+        end;
+    else
+        imsetLess := \<;
+    fi;
+    # The blocked ordering floor: start of the block which the point chosen
+    # at the current depth must lie in. Rises monotonically over the search.
+    lowbound := -infinity;
 
     if IsPermGroup(g) then
         iface := _IMAGES_NativeGroupIface(g);
@@ -970,10 +1027,76 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             #
             _IMAGES_StopTimer(_IMAGES_getcands);
             node.validkids := [];
+            if blocked then
+                # Blocked ordering (sets of sets): judge the node on all of
+                # its candidates, so make every orbit first.
+                for y in cands do
+                    x := node.image[y];
+                    if orbnums[x] = -1 then
+                        _IMAGES_StartTimer(_IMAGES_orbit);
+                        make_orbit(x);
+                        _IMAGES_StopTimer(_IMAGES_orbit);
+                    fi;
+                od;
+                reloop := true;
+                while reloop do
+                    reloop := false;
+                    node.validkids := [];
+                    candsmin := infinity;
+                    # A node with any candidate below the floor still extends
+                    # an inner set which better images have already closed,
+                    # so the whole node is beaten.
+                    bad_node := ForAny(cands,
+                        y -> orbmins[orbnums[node.image[y]]] < lowbound);
+                    if not bad_node then
+                        for y in cands do
+                            _IMAGES_IncCount(_IMAGES_check1);
+                            num := orbnums[node.image[y]];
+                            rep := orbmins[num];
+                            if rep = upb then
+                                _IMAGES_IncCount(_IMAGES_ShallowNode);
+                                Add(node.validkids, y);
+                            elif rep < upb then
+                                _IMAGES_StartTimer(_IMAGES_improve);
+                                upb := rep;
+                                node2 := node.prev;
+                                while node2 <> fail do
+                                    delete_node(node2);
+                                    node2 := node2.prev;
+                                od;
+                                _IMAGES_IncCount(_IMAGES_ShallowNode);
+                                node.validkids := [y];
+                                Info(InfoNSI,3,"Best down to ",upb);
+                                _IMAGES_StopTimer(_IMAGES_improve);
+                            fi;
+                            candsmin := Minimum(candsmin, rep);
+                        od;
+                    fi;
+                    # This node can close the current inner set (all its
+                    # candidates lie in a later block), which beats every
+                    # image still extending it: raise the floor, drop the
+                    # nodes accumulated under the old floor, and rescan.
+                    if candsmin < infinity and
+                       _IMAGES_BlockFloor(lowbound, config.blockSize)
+                       < _IMAGES_BlockFloor(candsmin, config.blockSize) then
+                        Info(InfoNSI, 2, "Layer ", depth,
+                             " closed a block, new floor at ", candsmin);
+                        lowbound := _IMAGES_BlockFloor(candsmin, config.blockSize)
+                                    * config.blockSize + 1;
+                        node2 := node.prev;
+                        while node2 <> fail do
+                            delete_node(node2);
+                            node2 := node2.prev;
+                        od;
+                        reloop := true;
+                        upb := candsmin;
+                    fi;
+                od;
+            else
             for y in cands do
                 _IMAGES_IncCount(_IMAGES_check1);
                 x := node.image[y];
-                
+
                 num := orbnums[x];
                 if num = -1 then
                     #
@@ -1020,6 +1143,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                     fi;
                 fi;
             od;
+            fi;
             if node.validkids = [] then
                 _IMAGES_StartTimer(_IMAGES_prune);
                 delete_node(node);
@@ -1151,7 +1275,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                     bestnode := node;
                     node := next_node(node);
                     while node <> fail do
-                        if node.imset < bestim then
+                        if imsetLess(node.imset, bestim) then
                             bestim := node.imset;
                             bestnode := node;
                         fi;
@@ -1176,8 +1300,16 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                 iface.descend();
                 if iface.isTrivial() then
                     Info(InfoNSI,2,"Run out of group, return best image");
+                    # imsets is sorted naturally, so imsetnodes[1] is minimal
+                    # under the natural order; the blocked order needs a scan
+                    bestnode := imsetnodes[1];
+                    for node2 in imsetnodes do
+                        if imsetLess(node2.imset, bestnode.imset) then
+                            bestnode := node2;
+                        fi;
+                    od;
                     _IMAGES_StopTimer(_IMAGES_pass3);
-                    return [OnTuples(imsetnodes[1].image,savedArgs.perminv),l^savedArgs.perminv];
+                    return [OnTuples(bestnode.image,savedArgs.perminv),l^savedArgs.perminv];
                 fi;
             fi;
         else
@@ -1191,7 +1323,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                 bestnode := node;
                 node := next_node(node);
                 while node <> fail do
-                    if node.imset < bestim then
+                    if imsetLess(node.imset, bestim) then
                         bestim := node.imset;
                         bestnode := node;
                     fi;
