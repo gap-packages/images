@@ -259,7 +259,8 @@ _CanonicalSetSetImage := function(G, S, stab, stepval, settings)
     fi;
 
     if settings.result = GetPerm then
-        return RepresentativeAction(G, S, L[1], OnTuples);
+        # G is a group interface record
+        return G.repAction(S, L[1]);
     fi;
 
     Error("Invalid value of result");
@@ -564,13 +565,51 @@ _cajWreath := function(G, max, copies)
   return GroupByGenerators(result, ());
 end;
 
+# The stabilizer of the set of sets fList, as permutations of the encoded
+# domain of nBlocks blocks of mMax points (the domain of
+# _IMAGES_SetSetActionIface). Each element's block part is determined by
+# its action on the inner sets, so ferret can find the stabilizer in the
+# natural action of G, and each generator lifts to the encoded domain.
+_IMAGES_SetSetStabilizer := function(G, fList, setImage, mMax, nBlocks)
+  local ferret, natstab, lifted, g, sigmaList, row, l, b, result;
+
+  ferret := _ImagesFerretGlobals();
+  # Duplicated inner sets would need a multiset matching below; they are
+  # degenerate enough to just take the slow path.
+  if ferret = fail or not IsDuplicateFreeList(fList) then
+    # Backtrack search in the explicit group on mMax*nBlocks points.
+    # This is far slower for large domains; loading ferret avoids it.
+    return Stabilizer(_cajWreath(G, mMax, nBlocks), setImage, OnSets);
+  fi;
+
+  natstab := ferret.solve([ferret.conInGroup(G),
+                           ferret.conStabilize(Set(fList), OnSetsSets)]);
+  lifted := [];
+  for g in GeneratorsOfGroup(natstab) do
+    sigmaList := List(fList, s -> Position(fList, OnSets(s, g)));
+    if fail in sigmaList then
+      ErrorNoReturn("panic: stabilizer generator does not stabilize the set of sets");
+    fi;
+    row := ListPerm(g, mMax);
+    l := EmptyPlist(mMax*nBlocks);
+    for b in [1..nBlocks] do
+      Append(l, row + (sigmaList[b] - 1)*mMax);
+    od;
+    Add(lifted, PermList(l));
+  od;
+  result := Group(lifted, ());
+  # g determines the block part, so the lift is an isomorphism
+  SetSize(result, Size(natstab));
+  return result;
+end;
+
 
 
 # This handles some trivial cases (OnSets, OnTuples)
 # and some non-trival ones too!
 InstallMethod(CanonicalImageOp, [IsPermGroup, IsList, IsFunction, IsObject],
 function(inGroup, inList, op, settings)
-  local stab, bigGroup, maxIn, setImage, imageperm, currentperm, i, outset, inner, outer, fList;
+  local stab, maxIn, setImage, imageperm, currentperm, i, outset, inner, outer, fList;
 
   # Bail out in global trivial case:
   if LargestMovedPoint(inGroup) = 0 then
@@ -628,9 +667,6 @@ function(inGroup, inList, op, settings)
     maxIn := Maximum(Maximum(List(fList, x -> Maximum(x))),
                      LargestMovedPoint(inGroup));
 
-    # TODO: Cache this
-    bigGroup := _cajWreath(inGroup, maxIn, Size(fList));
-
     setImage := Flat(List([1..Length(fList)],
                         x -> List(fList[x], y -> y + (x-1)*maxIn)));
     if settings.stabilizer <> fail then
@@ -640,18 +676,21 @@ function(inGroup, inList, op, settings)
             Error("Only the trivial group is accepted for SetSet stabilizer in CanonicalImage");
         fi;
     else
-        stab := Stabilizer(bigGroup, setImage, OnSets);
+        stab := _IMAGES_SetSetStabilizer(inGroup, fList, setImage,
+                                         maxIn, Length(fList));
     fi;
 
-    imageperm := _CanonicalSetSetImage(bigGroup, setImage, stab, maxIn, settings);
+    imageperm := _CanonicalSetSetImage(
+        _IMAGES_SetSetActionIface(inGroup, maxIn, Length(fList)),
+        setImage, stab, maxIn, settings);
 
     if settings.result = GetBool then
         return imageperm;
     fi;
 
     if settings.result = GetPerm then
-        # This perm is a wreath product perm, we want to project it down onto the first set
-        return PermList(List([1..maxIn], x -> (x^imageperm - 1) mod maxIn + 1));
+        # repAction already projected the answer into the natural action
+        return imageperm;
     fi;
 
     outset := List([1..Length(fList)], x -> []);

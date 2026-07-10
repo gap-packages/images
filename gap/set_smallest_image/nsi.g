@@ -562,6 +562,187 @@ _IMAGES_PairActionIface := function(G, mMax)
         end);
 end;
 
+# The action of diag(G) x Sym(blocks) on nBlocks blocks of mMax encoded
+# points (pt = p + (b-1)*mMax), used for sets of sets: one group element
+# acts on every inner set at once, and the blocks holding the inner sets
+# can be permuted freely. The two factors act independently on the (p, b)
+# coordinates, so the stabilizer chain factorises: G's chain on [1..mMax]
+# times "which blocks are still unfixed", and the explicit group on
+# mMax*nBlocks points is never built.
+_IMAGES_SetSetActionIface := function(G, mMax, nBlocks)
+    local chain, blocks, pendingBlock, liftGGen, liftBlockGen,
+          liftedGens, liftedInvs, svGen, basePath;
+
+    chain := CopyStabChain(StabChainMutable(G));
+    # the blocks Sym still acts on; base changes remove fixed blocks
+    blocks := [1..nBlocks];
+    pendingBlock := fail;
+    liftedGens := fail;
+    liftedInvs := fail;
+    svGen := [];
+    basePath := fail;
+
+    # g applied to the points of every block, blocks unmoved
+    liftGGen := function(gen)
+        local row, l, b;
+        row := ListPerm(gen, mMax);
+        l := EmptyPlist(mMax*nBlocks);
+        for b in [1..nBlocks] do
+            Append(l, row + (b-1)*mMax);
+        od;
+        return PermList(l);
+    end;
+
+    # a permutation of the block labels, points inside blocks unmoved
+    liftBlockGen := function(sigma)
+        local l, b;
+        l := EmptyPlist(mMax*nBlocks);
+        for b in [1..nBlocks] do
+            Append(l, [1..mMax] + (b^sigma - 1)*mMax);
+        od;
+        return PermList(l);
+    end;
+
+    return rec(
+        isNative := false,
+        nPoints := mMax * nBlocks,
+        startDepth := function()
+            svGen := [];
+            basePath := fail;
+        end,
+        levelGens := function()
+            local sigmas;
+            if liftedGens = fail then
+                sigmas := [];
+                if Length(blocks) >= 2 then
+                    Add(sigmas, (blocks[1], blocks[2]));
+                fi;
+                if Length(blocks) >= 3 then
+                    Add(sigmas, MappingPermListList(blocks,
+                        Concatenation(blocks{[2..Length(blocks)]}, [blocks[1]])));
+                fi;
+                liftedGens := Concatenation(List(chain.generators, liftGGen),
+                                            List(sigmas, liftBlockGen));
+                liftedInvs := List(liftedGens, x -> x^-1);
+            fi;
+            return liftedGens;
+        end,
+        makeOrbit := function(x, gens, orbnums, orbmins, orbsizes, orbseen)
+            local q, rep, num, pt, img, i;
+            if orbnums[x] <> -1 then
+                return orbnums[x];
+            fi;
+            q := [x];
+            rep := x;
+            num := Length(orbmins)+1;
+            orbnums[x] := num;
+            svGen[x] := 0;
+            Add(orbseen,x);
+            for pt in q do
+                for i in [1..Length(gens)] do
+                    img := pt^gens[i];
+                    if orbnums[img] = -1 then
+                        orbnums[img] := num;
+                        svGen[img] := i;
+                        Add(orbseen,img);
+                        Add(q,img);
+                        if img < rep then
+                            rep := img;
+                        fi;
+                    fi;
+                od;
+            od;
+            Add(orbmins,rep);
+            Add(orbsizes,Length(q));
+            return num;
+        end,
+        isBaseFixed := function(pt)
+            local p, b;
+            p := (pt - 1) mod mMax + 1;
+            b := (pt - p)/mMax + 1;
+            return ForAll(chain.generators, gen -> p^gen = p)
+                   and (not b in blocks or Length(blocks) = 1);
+        end,
+        baseChange := function(pt)
+            local p, b;
+            p := (pt - 1) mod mMax + 1;
+            b := (pt - p)/mMax + 1;
+            ChangeStabChain(chain, [p], false);
+            if b in blocks then
+                pendingBlock := b;
+            else
+                pendingBlock := fail;
+            fi;
+            basePath := fail;
+            # only called when pt is not fixed, so its orbit is non-trivial
+            return false;
+        end,
+        walkToBase := function(image, x, basepoint)
+            local gi, i, p;
+            # basePath applied at the orbit's breadth-first seed leads to
+            # basepoint; it is the same for every node of this depth.
+            if basePath = fail then
+                basePath := [];
+                p := basepoint;
+                gi := svGen[p];
+                while gi <> 0 do
+                    Add(basePath, gi);
+                    p := p^liftedInvs[gi];
+                    gi := svGen[p];
+                od;
+                basePath := Reversed(basePath);
+            fi;
+            # walk image[x] up to the seed, then down to basepoint
+            gi := svGen[image[x]];
+            while gi <> 0 do
+                image := OnTuples(image, liftedInvs[gi]);
+                gi := svGen[image[x]];
+            od;
+            for i in basePath do
+                image := OnTuples(image, liftedGens[i]);
+            od;
+            if image[x] <> basepoint then
+                ErrorNoReturn("panic: walk did not reach the base point");
+            fi;
+            return image;
+        end,
+        descend := function()
+            chain := chain.stabilizer;
+            if pendingBlock <> fail then
+                blocks := Difference(blocks, [pendingBlock]);
+                pendingBlock := fail;
+            fi;
+            liftedGens := fail;
+            liftedInvs := fail;
+        end,
+        isTrivial := function()
+            return Length(chain.generators) = 0 and Length(blocks) <= 1;
+        end,
+        positionAction := function(k, set)
+            # stabilizers are seeded as permutations of the encoded domain
+            return Action(k, set);
+        end,
+        repAction := function(S, T)
+            local ps, qs, i, p, g;
+            # The two coordinates map independently: any g in G taking the
+            # point parts of S to those of T pointwise pairs with the block
+            # map the search already followed, so g alone is the answer.
+            ps := [];
+            qs := [];
+            for i in [1..Length(S)] do
+                p := (S[i] - 1) mod mMax + 1;
+                Add(ps, p);
+                p := (T[i] - 1) mod mMax + 1;
+                Add(qs, p);
+            od;
+            g := RepresentativeAction(G, ps, qs, OnTuples);
+            if g = fail then
+                ErrorNoReturn("panic: no group element maps the object to its computed image");
+            fi;
+            return g;
+        end);
+end;
+
 _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCheck_in, config_option)
     local   leftmost_node,  next_node,  delete_node,  delete_nodes,
             clean_subtree,  handle_new_stabilizer_element,
