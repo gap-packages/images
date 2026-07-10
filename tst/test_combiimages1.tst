@@ -1,4 +1,4 @@
-#@if Filename(DirectoriesPackageLibrary("vole", "rust/target/release"), "vole") <> fail
+#@if LoadPackage("vole", false)
 gap> ReadPackage("images","tst/test_functions.g");;
 gap> checkCanonicalImageAtoms();
 gap> checkCanonicalImageMultiset();

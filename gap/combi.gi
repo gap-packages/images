@@ -148,7 +148,7 @@ BindGlobal("OnFundamental", function(f,p)
     fi;
 
     ret := rec(kind := f!.kind, type := f!.type);
-    
+
     if f!.kind = Fundamental.AtomType then
         ret.contents := f!.contents^p;
     elif f!.kind = Fundamental.CollectionType then
@@ -346,7 +346,7 @@ GraphOfFundamentalStructure := function(s, omega, parts)
             cols[j] := [Fundamental.PAtom, i];
         od;
     od;
-    
+
 
     graph := rec(vertices := [], edges := [], omega := Length(omega), atoms := HashMap());
 
@@ -399,7 +399,7 @@ end;
 
 StabilizerOfFundamentalStructureWithGroup := function(fs, omega, grp)
     local g, group, cangroup, vole;
-    vole := _ImagesVoleGlobals();
+    vole := _ImagesVoleGlobals("StabilizerOfFundamentalStructureWithGroup");
     g := _convertToDigraph(fs, omega, [omega]);
     cangroup := Group(Concatenation(GeneratorsOfGroup(grp), GeneratorsOfGroup(SymmetricGroup([Length(omega)+1..DigraphNrVertices(g.graph)]))));
     group := vole.find.Group(cangroup,
@@ -416,7 +416,7 @@ end;
 
 CanonicalPermOfFundamentalStructureWithGroup := function(fs, omega, grp)
     local g, perm, cangroup, vole;
-    vole := _ImagesVoleGlobals();
+    vole := _ImagesVoleGlobals("CanonicalPermOfFundamentalStructureWithGroup");
     g := _convertToDigraph(fs, omega, [omega]);
     cangroup := Group(Concatenation(GeneratorsOfGroup(grp), GeneratorsOfGroup(SymmetricGroup([Length(omega)+1..DigraphNrVertices(g.graph)]))));
     perm := vole.find.CanonicalPerm(cangroup,
