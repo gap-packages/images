@@ -37,7 +37,7 @@ jobs:
           gap-version: ${{ matrix.gap-version }}
       - uses: gap-actions/install-pkg@v1
         with:
-          packages: "https://github.com/peal/vole ${{ matrix.ferret }}"
+          packages: "peal/vole ${{ matrix.ferret }}"
       - uses: gap-actions/build-pkg@v3
       - uses: gap-actions/run-pkg-tests@v4
       - uses: gap-actions/run-pkg-tests@v4
