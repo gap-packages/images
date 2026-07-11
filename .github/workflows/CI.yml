@@ -39,8 +39,6 @@ jobs:
         with:
           packages: "https://github.com/peal/vole ${{ matrix.ferret }}"
       - uses: gap-actions/build-pkg@v3
-        with:
-          extra-pkgs: "json io profiling orb digraphs datastructures vole ${{ matrix.ferret }}"
       - uses: gap-actions/run-pkg-tests@v4
       - uses: gap-actions/run-pkg-tests@v4
         with:
