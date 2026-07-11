@@ -205,7 +205,11 @@ _CanonicalSetImage := function(G, S, stab, settings)
     fi;
 
     if settings.result = GetPerm then
-        return RepresentativeAction(G, S, L[1], OnTuples);
+        if IsPermGroup(G) then
+            return RepresentativeAction(G, S, L[1], OnTuples);
+        fi;
+        # G is a group interface record
+        return G.repAction(S, L[1]);
     fi;
 
     Error("Invalid value of result");
@@ -239,7 +243,12 @@ end);
 _CanonicalSetSetImage := function(G, S, stab, stepval, settings)
     local L;
 
-    L := _NewSmallestImage_SetSet(G, S, stab, x -> x, stepval );
+    # Sets of sets are always canonicalised in the minimum order; the
+    # blockSize option makes _NewSmallestImage minimise under the blocked
+    # ordering, which matches GAP's ordering of sets of sets.
+    L := _NewSmallestImage(G, S, stab, x -> x, [false],
+                           settings.disableStabilizerCheck,
+                           rec(branch := "minimum", blockSize := stepval));
 
     if settings.result = GetImage then
         return L[1];
@@ -250,7 +259,8 @@ _CanonicalSetSetImage := function(G, S, stab, stepval, settings)
     fi;
 
     if settings.result = GetPerm then
-        return RepresentativeAction(G, S, L[1], OnTuples);
+        # G is a group interface record
+        return G.repAction(S, L[1]);
     fi;
 
     Error("Invalid value of result");
@@ -294,14 +304,37 @@ end;
 
 
 
-_MinimalImage_partialFunction := function(l, G, mMax, settings)
-  local lresult, set, i, image, imageset, rowcolGroup,
-        stab, img, dom, perm;
+# Ferret is an optional dependency which can compute the stabilizer of a
+# set of pairs directly in the natural action of G
+_ImagesFerretGlobals := function()
+  if IsPackageLoaded("ferret") then
+    return rec(solve := ValueGlobal("Solve"),
+               conInGroup := ValueGlobal("ConInGroup"),
+               conStabilize := ValueGlobal("ConStabilize"));
+  fi;
+  return fail;
+end;
 
-  # Turn partial function into a subset of a 2D matrix,
-  # which contains (i,j) if i^trans = j.
-  set := _booleaniseList(l, mMax);
+# The stabilizer in G of a set of encoded pairs, returned as a subgroup of G
+# in its natural action (the pair action is faithful, so this is
+# well-defined).
+_IMAGES_PairSetStabilizer := function(G, set, mMax)
+  local ferret, pairs, rowcolGroup, bigstab, gens, result;
 
+  ferret := _ImagesFerretGlobals();
+  if ferret <> fail then
+    pairs := Set(set, function(p)
+        local r;
+        r := (p - 1) mod mMax + 1;
+        return [r, (p - r)/mMax + 1];
+    end);
+    return ferret.solve([ferret.conInGroup(G),
+                         ferret.conStabilize(pairs, OnSetsTuples)]);
+  fi;
+
+  # Without ferret, fall back on a backtrack search in the explicit
+  # row-column group on mMax^2 points, and project the result back to G.
+  # This is far slower for large mMax; loading ferret avoids it.
   # Cache only the most common group
   if mMax = LargestMovedPoint(G) then
     rowcolGroup := rowcolsquareGroup(G);
@@ -310,25 +343,51 @@ _MinimalImage_partialFunction := function(l, G, mMax, settings)
   else
     rowcolGroup := _rowColGen(G, mMax);
   fi;
+  bigstab := Stabilizer(rowcolGroup, set, OnSets);
+  # The image of the diagonal cell (x,x) under the row-column permutation
+  # of g is (x^g, x^g), from which we read off g itself
+  gens := List(GeneratorsOfGroup(bigstab),
+               b -> PermList(List([1..mMax],
+                                  x -> ((x + (x-1)*mMax)^b - 1) mod mMax + 1)));
+  result := Group(gens, ());
+  SetSize(result, Size(bigstab));
+  return result;
+end;
 
-  if settings.stabilizer <> fail then
-     stab := _rowColGen(settings.stabilizer, mMax);
-  else
-      # Find minimal image of set
-      stab := Stabilizer(rowcolGroup, set, OnSets);
+_MinimalImage_partialFunction := function(l, G, mMax, settings)
+  local set, order, pairGroup, stab, image;
+
+  # Turn partial function into a subset of a 2D matrix,
+  # which contains (i,j) if i^trans = j.
+  set := _booleaniseList(l, mMax);
+
+  order := settings.order;
+  if IsString(order) then
+      order := ValueGlobal(order);
+  fi;
+  if IsRecord(order) and IsBound(order.branch) and order.branch = "static" then
+      ErrorNoReturn("static branch orderings (such as CanonicalConfig_FixedMinOrbit) ",
+                    "are not supported for transformations, permutations ",
+                    "or partial permutations");
   fi;
 
-  image := _CanonicalSetImage(rowcolGroup, set, stab, settings);
+  pairGroup := _IMAGES_PairActionIface(G, mMax);
+
+  if settings.stabilizer <> fail then
+     stab := settings.stabilizer;
+  else
+     stab := _IMAGES_PairSetStabilizer(G, set, mMax);
+  fi;
+
+  image := _CanonicalSetImage(pairGroup, set, stab, settings);
 
   if settings.result = GetBool then
       return image;
   elif settings.result = GetImage then
       return _unbooleaniseList(image, mMax);
   elif settings.result = GetPerm then
-      # This horrible equation picks out the row permutation from our matrix
-      perm := List([1..mMax],
-                   x -> ((((mMax+1)*x-mMax)^image)+mMax)/(mMax+1));
-      return PermList(perm);
+      # repAction already projected the answer into the natural action of G
+      return image;
   fi;
 
 end;
@@ -409,6 +468,13 @@ function(inGroup, trans, action, settings)
   # LargestMovedPoint(inGroup) in general.
   matrixMax := Maximum(transformMax, LargestMovedPoint(inGroup));
 
+  # The stabilizer of the graph of a permutation is its centralizer,
+  # which GAP can compute directly in the natural action
+  if settings.stabilizer = fail then
+      settings := ShallowCopy(settings);
+      settings.stabilizer := Centralizer(inGroup, trans);
+  fi;
+
   # Turn transformation into function and pass to general case
   l := ListPerm(trans, matrixMax);
   lresult := _MinimalImage_partialFunction(l, inGroup, matrixMax, settings);
@@ -455,7 +521,9 @@ function(inGroup, pp, action, settings)
 
   matrixMax := Maximum(max, LargestMovedPoint(inGroup)) + 1;
 
-  minTrans := CanonicalImage(inGroup, AsTransformation(pp, matrixMax), settings);
+  # Dispatch to the operation directly: settings is already parsed, and the
+  # user-facing CanonicalImage would reject its filled-in fields
+  minTrans := CanonicalImageOp(inGroup, AsTransformation(pp, matrixMax), action, settings);
 
   if settings.result = GetPerm or settings.result = GetBool then
       return minTrans;
@@ -497,13 +565,51 @@ _cajWreath := function(G, max, copies)
   return GroupByGenerators(result, ());
 end;
 
+# The stabilizer of the set of sets fList, as permutations of the encoded
+# domain of nBlocks blocks of mMax points (the domain of
+# _IMAGES_SetSetActionIface). Each element's block part is determined by
+# its action on the inner sets, so ferret can find the stabilizer in the
+# natural action of G, and each generator lifts to the encoded domain.
+_IMAGES_SetSetStabilizer := function(G, fList, setImage, mMax, nBlocks)
+  local ferret, natstab, lifted, g, sigmaList, row, l, b, result;
+
+  ferret := _ImagesFerretGlobals();
+  # Duplicated inner sets would need a multiset matching below; they are
+  # degenerate enough to just take the slow path.
+  if ferret = fail or not IsDuplicateFreeList(fList) then
+    # Backtrack search in the explicit group on mMax*nBlocks points.
+    # This is far slower for large domains; loading ferret avoids it.
+    return Stabilizer(_cajWreath(G, mMax, nBlocks), setImage, OnSets);
+  fi;
+
+  natstab := ferret.solve([ferret.conInGroup(G),
+                           ferret.conStabilize(Set(fList), OnSetsSets)]);
+  lifted := [];
+  for g in GeneratorsOfGroup(natstab) do
+    sigmaList := List(fList, s -> Position(fList, OnSets(s, g)));
+    if fail in sigmaList then
+      ErrorNoReturn("panic: stabilizer generator does not stabilize the set of sets");
+    fi;
+    row := ListPerm(g, mMax);
+    l := EmptyPlist(mMax*nBlocks);
+    for b in [1..nBlocks] do
+      Append(l, row + (sigmaList[b] - 1)*mMax);
+    od;
+    Add(lifted, PermList(l));
+  od;
+  result := Group(lifted, ());
+  # g determines the block part, so the lift is an isomorphism
+  SetSize(result, Size(natstab));
+  return result;
+end;
+
 
 
 # This handles some trivial cases (OnSets, OnTuples)
 # and some non-trival ones too!
 InstallMethod(CanonicalImageOp, [IsPermGroup, IsList, IsFunction, IsObject],
 function(inGroup, inList, op, settings)
-  local stab, bigGroup, maxIn, setImage, imageperm, currentperm, i, outset, inner, outer, fList;
+  local stab, maxIn, setImage, imageperm, currentperm, i, outset, inner, outer, fList;
 
   # Bail out in global trivial case:
   if LargestMovedPoint(inGroup) = 0 then
@@ -561,9 +667,6 @@ function(inGroup, inList, op, settings)
     maxIn := Maximum(Maximum(List(fList, x -> Maximum(x))),
                      LargestMovedPoint(inGroup));
 
-    # TODO: Cache this
-    bigGroup := _cajWreath(inGroup, maxIn, Size(fList));
-
     setImage := Flat(List([1..Length(fList)],
                         x -> List(fList[x], y -> y + (x-1)*maxIn)));
     if settings.stabilizer <> fail then
@@ -573,18 +676,21 @@ function(inGroup, inList, op, settings)
             Error("Only the trivial group is accepted for SetSet stabilizer in CanonicalImage");
         fi;
     else
-        stab := Stabilizer(bigGroup, setImage, OnSets);
+        stab := _IMAGES_SetSetStabilizer(inGroup, fList, setImage,
+                                         maxIn, Length(fList));
     fi;
 
-    imageperm := _CanonicalSetSetImage(bigGroup, setImage, stab, maxIn, settings);
+    imageperm := _CanonicalSetSetImage(
+        _IMAGES_SetSetActionIface(inGroup, maxIn, Length(fList)),
+        setImage, stab, maxIn, settings);
 
     if settings.result = GetBool then
         return imageperm;
     fi;
 
     if settings.result = GetPerm then
-        # This perm is a wreath product perm, we want to project it down onto the first set
-        return PermList(List([1..maxIn], x -> (x^imageperm - 1) mod maxIn + 1));
+        # repAction already projected the answer into the natural action
+        return imageperm;
     fi;
 
     outset := List([1..Length(fList)], x -> []);
