@@ -167,6 +167,153 @@ _unbooleaniseList := function(s, matrixMax)
   return lresult;
 end;
 
+# Try to avoid the full row/column square action on mMax^2 points.
+# For sparse orbits of graphs of partial functions, it is enough to
+# build the induced permutation action on the pair points which can
+# actually appear in the orbit of the whole graph.
+_TryMinimalImageCompactPairAction := function(l, G, mMax, settings)
+  local set, fullDegree, orbitLimit, domainEntryLimit, gens, pairImage, setImage,
+        images, seen, domainEntries, pos, image, gen, newImage,
+        dom, compactSet, positionInDom, compactPermForGen,
+        compactGroup, compactG, compactStab, earlyskip, order, L,
+        encodedImage, ret;
+
+  # Keep this path conservative.  In particular, computing
+  # Stabilizer(compactG, compactSet, OnSets) can itself be expensive, so
+  # only use the compact action when the caller already supplied one.
+  if settings.stabilizer = fail or
+     settings.getStab or
+     settings.result = GetPerm then
+      return fail;
+  fi;
+
+  set := _booleaniseList(l, mMax);
+  fullDegree := mMax * mMax;
+  orbitLimit := 1024;
+  domainEntryLimit := 250000;
+  gens := GeneratorsOfGroup(G);
+
+  # The old square action encodes the pair [row,img] as
+  # (row-1)*mMax + img.  pairImage applies the original permutation
+  # diagonally to that encoded pair without first materialising a
+  # permutation on all mMax^2 encoded pairs.
+  pairImage := function(point, perm)
+      local img, row;
+      img := (point - 1) mod mMax + 1;
+      row := (point - img) / mMax + 1;
+      return (row^perm - 1) * mMax + img^perm;
+  end;
+
+  # A graph is represented as a sorted set of encoded pairs.  Acting on
+  # the whole graph lets us find the relevant pair domain from the orbit
+  # of the input object, instead of probing all individual pair orbits.
+  setImage := function(points, perm)
+      local result, point;
+      result := [];
+      for point in points do
+          Add(result, pairImage(point, perm));
+      od;
+      Sort(result);
+      return result;
+  end;
+
+  images := [set];
+  seen := NewDictionary(set, true);
+  AddDictionary(seen, set, true);
+  domainEntries := ShallowCopy(set);
+
+  # Build only the part of the pair domain reached by the orbit of the
+  # whole graph.  If that orbit is not small, or if the union of graph
+  # entries grows too large, keep the old square action.
+  pos := 1;
+  while pos <= Length(images) do
+      image := images[pos];
+      for gen in gens do
+          newImage := setImage(image, gen);
+          if LookupDictionary(seen, newImage) = fail then
+              if Length(images) >= orbitLimit then
+                  return fail;
+              fi;
+              if Length(domainEntries) + Length(newImage) > domainEntryLimit then
+                  return fail;
+              fi;
+              AddDictionary(seen, newImage, true);
+              Add(images, newImage);
+              Append(domainEntries, newImage);
+          fi;
+      od;
+      pos := pos + 1;
+  od;
+
+  dom := Set(domainEntries);
+  # The compact domain must be meaningfully smaller; otherwise the cost
+  # of building the compact action is unlikely to beat the cached square
+  # action.
+  if 4 * Length(dom) >= fullDegree then
+      return fail;
+  fi;
+
+  # The sorted domain preserves the original lexicographic order of the
+  # encoded pairs.  This is required because _NewSmallestImage compares
+  # integer points directly when choosing the minimal image.
+  positionInDom := function(point)
+      local p;
+      p := PositionSorted(dom, point);
+      if p > Length(dom) or dom[p] <> point then
+          Error("compact pair domain is not invariant");
+      fi;
+      return p;
+  end;
+
+  compactSet := List(set, positionInDom);
+  Sort(compactSet);
+
+  compactPermForGen := function(perm)
+      return PermList(List(dom, point -> positionInDom(pairImage(point, perm))));
+  end;
+
+  # Convert G, and the supplied stabilizer, into their induced actions on
+  # the compact domain.  Transfer known group sizes so GAP does not spend
+  # time rediscovering them for this constructed action.
+  compactGroup := function(group)
+      local compactGens, groupImage;
+      if IsTrivial(group) then
+          return Group(());
+      fi;
+      compactGens := List(GeneratorsOfGroup(group), compactPermForGen);
+      groupImage := Group(compactGens, ());
+      SetSize(groupImage, Size(group));
+      return groupImage;
+  end;
+
+  compactG := compactGroup(G);
+  compactStab := compactGroup(settings.stabilizer);
+
+  order := settings.order;
+  if IsString(order) then
+      order := ValueGlobal(order);
+  fi;
+  earlyskip := settings.result = GetBool and order.branch = "minimum";
+  L := _NewSmallestImage(compactG, compactSet, compactStab, x -> x,
+                         [earlyskip, compactSet],
+                         settings.disableStabilizerCheck,
+                         settings.order);
+
+  if settings.result = GetBool then
+      if L[1] = MinImage.Smaller or L[1] = MinImage.Larger then
+          return false;
+      fi;
+      return Set(L[1]) = compactSet;
+  fi;
+
+  # Convert the compact result back from ranks in dom to the original
+  # encoded-pair representation, then to the partial-function list.
+  encodedImage := List(L[1], point -> dom[point]);
+  Sort(encodedImage);
+  ret := _unbooleaniseList(encodedImage, mMax);
+  return ret;
+end;
+
 _CanonicalSetImage := function(G, S, stab, settings)
     local L, earlyskip, order;
 
@@ -349,7 +496,7 @@ _IMAGES_PairSetStabilizer := function(G, set, mMax)
 end;
 
 _MinimalImage_partialFunction := function(l, G, mMax, settings)
-  local set, order, pairGroup, stab, image;
+  local set, order, compactImage, pairGroup, stab, image;
 
   # Turn partial function into a subset of a 2D matrix,
   # which contains (i,j) if i^trans = j.
@@ -363,6 +510,11 @@ _MinimalImage_partialFunction := function(l, G, mMax, settings)
       ErrorNoReturn("static branch orderings (such as CanonicalConfig_FixedMinOrbit) ",
                     "are not supported for transformations, permutations ",
                     "or partial permutations");
+  fi;
+
+  compactImage := _TryMinimalImageCompactPairAction(l, G, mMax, settings);
+  if compactImage <> fail then
+      return compactImage;
   fi;
 
   pairGroup := _IMAGES_PairActionIface(G, mMax);

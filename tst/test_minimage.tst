@@ -15,6 +15,8 @@ gap> ReadPackage("images","tst/test_functions.g");;
 gap> CheckMinimalImageTransformations();
 gap> CheckMinimalImagePartialPerm();
 gap> CheckMinimalImagePerm();
+gap> CheckCompactPairAction();
+gap> CheckCompactPairActionFast();
 gap> STOP_TEST( "test_minimage.tst", 10000 );
 images package: test_minimage.tst
 #############################################################################
