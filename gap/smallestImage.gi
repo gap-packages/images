@@ -175,7 +175,7 @@ _TryMinimalImageCompactPairAction := function(l, G, mMax, settings)
   local set, fullDegree, orbitLimit, domainEntryLimit, gens, pairImage, setImage,
         images, seen, domainEntries, pos, image, gen, newImage,
         dom, compactSet, positionInDom, compactPermForGen,
-        compactGroup, compactG, compactStab, earlyskip, L,
+        compactGroup, compactG, compactStab, earlyskip, order, L,
         encodedImage, ret;
 
   # Keep this path conservative.  In particular, computing
@@ -289,7 +289,11 @@ _TryMinimalImageCompactPairAction := function(l, G, mMax, settings)
   compactG := compactGroup(G);
   compactStab := compactGroup(settings.stabilizer);
 
-  earlyskip := settings.result = GetBool;
+  order := settings.order;
+  if IsString(order) then
+      order := ValueGlobal(order);
+  fi;
+  earlyskip := settings.result = GetBool and order.branch = "minimum";
   L := _NewSmallestImage(compactG, compactSet, compactStab, x -> x,
                          [earlyskip, compactSet],
                          settings.disableStabilizerCheck,
