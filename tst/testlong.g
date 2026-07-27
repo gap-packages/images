@@ -8,6 +8,6 @@ LoadPackage( "io" );
 LoadPackage( "images" );
 dirs := DirectoriesPackageLibrary( "images", "tst" );
 
-FERRET_TEST_LIMIT := rec(count := 1000, groupSize := 10);
+FERRET_TEST_LIMIT := rec(count := 1000, groupSize := 12);
 
 TestDirectory(dirs, rec(exitGAP := true));
