@@ -379,6 +379,24 @@ _convertToDigraph := function(fs, omega, parts)
     return rec(graph := Digraph(edges), colours := colourtupleset);
 end;
 
+# Vertex i of the digraph built from a fundamental structure is omega[i],
+# so groups and labellings live in two different worlds: permutations of
+# the values in omega, and permutations of the vertex indices [1..|omega|].
+# These two translate between them (they are the identity when omega is
+# [1..n], the only case the code below used to handle correctly).
+_IMAGES_FSPermToVertices := function(omega, g)
+    local pos, i;
+    pos := [];
+    for i in [1..Length(omega)] do
+        pos[omega[i]] := i;
+    od;
+    return PermList(List([1..Length(omega)], i -> pos[omega[i]^g]));
+end;
+
+_IMAGES_FSPermToValues := function(omega, v)
+    return MappingPermListList(omega, omega{OnTuples([1..Length(omega)], v)});
+end;
+
 StabilizerOfFundamentalStructure := function(fs, omega, parts...)
     local g, group;
     Assert(0, Length(parts) <= 1);
@@ -393,7 +411,8 @@ StabilizerOfFundamentalStructure := function(fs, omega, parts...)
     # VoleFind.Group could be used here instead, but by default we use bliss.
     group := BlissAutomorphismGroup(g.graph, g.colours);
 
-    group := Group(List(GeneratorsOfGroup(group), x -> RestrictedPerm(x, [1..Length(omega)])));
+    group := Group(List(GeneratorsOfGroup(group),
+                 x -> _IMAGES_FSPermToValues(omega, RestrictedPerm(x, [1..Length(omega)]))), ());
     return group;
 end;
 
@@ -401,7 +420,9 @@ StabilizerOfFundamentalStructureWithGroup := function(fs, omega, grp)
     local g, group, cangroup, vole;
     vole := _ImagesVoleGlobals("StabilizerOfFundamentalStructureWithGroup");
     g := _convertToDigraph(fs, omega, [omega]);
-    cangroup := Group(Concatenation(GeneratorsOfGroup(grp), GeneratorsOfGroup(SymmetricGroup([Length(omega)+1..DigraphNrVertices(g.graph)]))));
+    cangroup := Group(Concatenation(
+        List(GeneratorsOfGroup(grp), x -> _IMAGES_FSPermToVertices(omega, x)),
+        GeneratorsOfGroup(SymmetricGroup([Length(omega)+1..DigraphNrVertices(g.graph)]))), ());
     group := vole.find.Group(cangroup,
         [
         vole.constraint.Stabilize(g.graph, OnDigraphs),
@@ -409,7 +430,8 @@ StabilizerOfFundamentalStructureWithGroup := function(fs, omega, grp)
         ]
     );
 
-    group := Group(List(GeneratorsOfGroup(group), x -> RestrictedPerm(x, [1..Length(omega)])));
+    group := Group(List(GeneratorsOfGroup(group),
+                 x -> _IMAGES_FSPermToValues(omega, RestrictedPerm(x, [1..Length(omega)]))), ());
     return group;
 end;
 
@@ -418,14 +440,16 @@ CanonicalPermOfFundamentalStructureWithGroup := function(fs, omega, grp)
     local g, perm, cangroup, vole;
     vole := _ImagesVoleGlobals("CanonicalPermOfFundamentalStructureWithGroup");
     g := _convertToDigraph(fs, omega, [omega]);
-    cangroup := Group(Concatenation(GeneratorsOfGroup(grp), GeneratorsOfGroup(SymmetricGroup([Length(omega)+1..DigraphNrVertices(g.graph)]))));
+    cangroup := Group(Concatenation(
+        List(GeneratorsOfGroup(grp), x -> _IMAGES_FSPermToVertices(omega, x)),
+        GeneratorsOfGroup(SymmetricGroup([Length(omega)+1..DigraphNrVertices(g.graph)]))), ());
     perm := vole.find.CanonicalPerm(cangroup,
         [
         vole.constraint.Stabilize(g.graph, OnDigraphs),
         vole.constraint.Stabilize(g.colours, OnTuplesSets)
         ]
     );
-    return RestrictedPerm(perm, [1..Length(omega)]);
+    return _IMAGES_FSPermToValues(omega, RestrictedPerm(perm, [1..Length(omega)]));
 end;
 
 CanonicalPermOfFundamentalStructure := function(fs, omega)
@@ -449,12 +473,14 @@ InstallMethod(CanonicalImageOp, [IsPermGroup, IsFundamentalStructureRep, IsFunct
         parts := Set(Orbits(inGroup, atoms), Set);
         dg := _convertToDigraph(fs, atoms, parts);
         perm := BlissCanonicalLabelling(dg.graph, dg.colours);
-        perm := MakeCanonicalLabellingRespectColors(MaximumList(atoms, 0), perm, parts);
+        # the labelling permutes vertex indices, so move the colour classes
+        # into vertex space and translate the result back to atom values
+        perm := MakeCanonicalLabellingRespectColors(Length(atoms), perm,
+                    List(parts, c -> Set(c, x -> PositionSorted(atoms, x))));
+        perm := _IMAGES_FSPermToValues(atoms, RestrictedPerm(perm, [1..Length(atoms)]));
     else
         perm := CanonicalPermOfFundamentalStructureWithGroup(fs, atoms, inGroup);
     fi;
-
-    perm := Permutation(perm, atoms);
 
     if settings.result = GetImage then
         return OnFundamental(fs, perm);
