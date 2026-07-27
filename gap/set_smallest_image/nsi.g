@@ -108,7 +108,7 @@ if _IMAGES_DO_TIMING then
     if IsBound( MakeThreadLocal ) then
         MakeThreadLocal("_IMAGES_nsi_stats");
     fi;
-    
+
     _IMAGES_GetStats := function()
         local   r,  c;
         r := rec();
@@ -154,7 +154,7 @@ end;
 
 # GAP dictionaries don't (currently) provide a way of getting the values
 # stored in them, so here we cache them separately
-_countingDict := function(dictexample) 
+_countingDict := function(dictexample)
     local data;
     data := rec(
         d := NewDictionary(dictexample, true),
@@ -186,7 +186,7 @@ _countingDict := function(dictexample)
             od;
             return smalllist;
         end,
-        
+
         dump := function() return data; end
         );
 end;
@@ -379,9 +379,24 @@ end;
 # stabilizer chain lives on [1..mMax]. The action is faithful (diagonal pairs
 # pin every point), so chain levels correspond exactly to those of the
 # explicit group.
+#
+# Orbits on the pair domain are swept through their product structure: the
+# orbit of (r,c) under the level H is the disjoint union over r' in r^H of
+# {r'} x C(r'), where C(r) is the orbit of c under Stab_H(r) and C(r'^lab) =
+# C(r')^lab along the Schreier tree of r^H. When r lies in the chain's top
+# base orbit -- the common case -- the orbital is re-rooted at the base
+# point b by walking c along the transversal, and both trees come straight
+# off the chain: r^H with its transversal, and Stab_H(b) = the next level
+# for the root cell. Points outside the base orbits fall back to a
+# breadth-first search (and a base change of a scratch copy for Stab(r)).
+# Each cell is then encoded and recorded with kernel list operations, so no
+# permutation on the mMax^2 domain is ever constructed. The Schreier trees
+# are kept per orbit; walkToBase composes from them the explicit element of
+# H routing a node's pair to the base point, and applies its pair action to
+# the whole image list by row lookups.
 _IMAGES_PairActionIface := function(G, mMax)
-    local chain, descendLevels, pairImage, liftGen,
-          liftedGens, liftedInvs, svGen, basePath;
+    local chain, descendLevels, pairImage, bpMins, bpData, transWalk,
+          lginvs, scratchShared, treeSnap;
 
     Assert(1, LargestMovedPoint(G) <= mMax);
 
@@ -392,75 +407,239 @@ _IMAGES_PairActionIface := function(G, mMax)
         return r^gen + (c^gen - 1)*mMax;
     end;
 
-    # Lift a generator of G to the explicit permutation of the mMax^2
-    # encoded pairs. Built blockwise with kernel list arithmetic, so this
-    # costs far less than an interpreted loop over all cells. The lifted
-    # generators of the current level restore kernel-speed orbit sweeps
-    # and image walks; crucially we lift only the generators, never a
-    # stabilizer chain or transversals on the big domain.
-    liftGen := function(gen)
-        local row, l, j;
-        row := ListPerm(gen, mMax);
-        l := EmptyPlist(mMax*mMax);
-        for j in [1..mMax] do
-            Append(l, row + (j^gen - 1)*mMax);
-        od;
-        return PermList(l);
-    end;
-
     # A private copy: base changes below would otherwise rebase G's cached
     # chain and pollute it with the trivial levels 'reduced := false' inserts.
     chain := CopyStabChain(StabChainMutable(G));
     descendLevels := 0;
-    liftedGens := fail;
-    liftedInvs := fail;
-    # svGen[pt] is the index of the lifted generator by which makeOrbit's
-    # breadth-first search first reached pt (0 at the orbit's seed). The
-    # walks in walkToBase reuse it, so no separate Schreier tree is built.
-    svGen := [];
-    basePath := fail;
+    lginvs := [];
+    scratchShared := fail;
+    treeSnap := fail;
+    # per-depth walk data of each non-trivial orbit, keyed by its minimum
+    bpMins := [];
+    bpData := [];
+
+    # the element of the Schreier tree <trans> carrying <p> to the root
+    transWalk := function(trans, p, root)
+        local u, t;
+        u := ();
+        while p <> root do
+            t := trans[p];
+            u := u * t;
+            p := p ^ t;
+        od;
+        return u;
+    end;
 
     return rec(
         isNative := false,
         nPoints := mMax * mMax,
         startDepth := function()
-            svGen := [];
-            basePath := fail;
+            bpMins := [];
+            bpData := [];
+            scratchShared := fail;
+            treeSnap := fail;
         end,
         levelGens := function()
-            if liftedGens = fail then
-                liftedGens := List(chain.generators, liftGen);
-                liftedInvs := List(liftedGens, x -> x^-1);
-            fi;
-            return liftedGens;
+            local gens;
+            gens := ShallowCopy(chain.generators);
+            lginvs := List(gens, g -> g^-1);
+            return gens;
         end,
         makeOrbit := function(x, gens, orbnums, orbmins, orbsizes, orbseen)
-            local q, rep, num, pt, img, i;
+            local r, c, fixedR, fixedC, R, C, rTrans, cTrans,
+                  rTransLabels, cTransLabels, treeLabels, sgens, sginvs,
+                  rroot, c0, p, t, onChainTree, labelRows, cells, valList,
+                  pts, num, rep, cellmin, pt2, img, r2, c2, lab, li, i;
             if orbnums[x] <> -1 then
                 return orbnums[x];
             fi;
-            q := [x];
-            rep := x;
-            num := Length(orbmins)+1;
-            orbnums[x] := num;
-            svGen[x] := 0;
-            Add(orbseen,x);
-            for pt in q do
-                for i in [1..Length(gens)] do
-                    img := pt^gens[i];
-                    if orbnums[img] = -1 then
-                        orbnums[img] := num;
-                        svGen[img] := i;
-                        Add(orbseen,img);
-                        Add(q,img);
-                        if img < rep then
-                            rep := img;
+            Assert(1, Length(gens) = Length(lginvs));
+            num := Length(orbmins) + 1;
+            r := (x - 1) mod mMax + 1;
+            c := (x - r)/mMax + 1;
+            fixedR := ForAll(gens, gen -> r^gen = r);
+            fixedC := ForAll(gens, gen -> c^gen = c);
+            if fixedR and fixedC then
+                orbnums[x] := num;
+                Add(orbseen, x);
+                Add(orbmins, x);
+                Add(orbsizes, 1);
+                return num;
+            fi;
+            # Schreier tree of r's orbit, labels pointing towards the root.
+            # The chain's own top orbit is that tree whenever it contains r
+            # (rooted at the base point); the orbital is then built rooted
+            # there, walking c along the transversal to the root cell. This
+            # sidesteps both an orbit sweep and any stabilizer computation:
+            # Stab(root) is just the next chain level.
+            onChainTree := false;
+            if fixedR then
+                R := [r];
+                rTrans := [];
+                rTransLabels := [];
+                treeLabels := [];
+                rroot := r;
+                c0 := c;
+            elif IsBound(chain.transversal[r]) then
+                onChainTree := true;
+                if treeSnap = fail then
+                    # base changes later in the depth rebuild these lists,
+                    # and the walk data must outlive them: snapshot once
+                    treeSnap := rec(orbit := ShallowCopy(chain.orbit),
+                                    transversal := ShallowCopy(chain.transversal),
+                                    translabels := ShallowCopy(chain.translabels),
+                                    labels := ShallowCopy(chain.labels));
+                    if IsBound(chain.stabilizer)
+                       and IsBound(chain.stabilizer.transversal) then
+                        treeSnap.stabgens := ShallowCopy(chain.stabilizer.generators);
+                        treeSnap.staborbit := ShallowCopy(chain.stabilizer.orbit);
+                        treeSnap.stabtrans := ShallowCopy(chain.stabilizer.transversal);
+                    else
+                        treeSnap.stabgens := [];
+                    fi;
+                fi;
+                R := treeSnap.orbit;
+                rTrans := treeSnap.transversal;
+                rTransLabels := treeSnap.translabels;
+                treeLabels := treeSnap.labels;
+                rroot := R[1];
+                # walk r up to the root, carrying c along
+                c0 := c;
+                p := r;
+                while p <> rroot do
+                    t := rTrans[p];
+                    c0 := c0^t;
+                    p := p^t;
+                od;
+            else
+                # r is moved but lies outside the top base orbit
+                R := [r];
+                rTrans := [];
+                rTransLabels := [];
+                rTransLabels[r] := 0;
+                treeLabels := lginvs;
+                rroot := r;
+                c0 := c;
+                for pt2 in R do
+                    for i in [1..Length(gens)] do
+                        img := pt2^gens[i];
+                        if not IsBound(rTransLabels[img]) then
+                            rTransLabels[img] := i;
+                            rTrans[img] := lginvs[i];
+                            Add(R, img);
                         fi;
+                    od;
+                od;
+            fi;
+            # the root cell: the orbit of c0 under Stab(rroot), with its tree
+            if r = c or fixedC then
+                # diagonal orbits stay on the diagonal, fixed columns are
+                # constant across the orbit; neither needs a C tree
+                C := [c0];
+                cTrans := [];
+            elif onChainTree and IsBound(treeSnap.stabtrans)
+                 and IsBound(treeSnap.stabtrans[c0]) then
+                C := treeSnap.staborbit;
+                cTrans := treeSnap.stabtrans;
+            else
+                if fixedR then
+                    # Stab(r) is the whole level
+                    sgens := gens;
+                    sginvs := lginvs;
+                elif onChainTree then
+                    sgens := treeSnap.stabgens;
+                    sginvs := List(sgens, g -> g^-1);
+                else
+                    if scratchShared = fail then
+                        scratchShared := CopyStabChain(chain);
+                    fi;
+                    ChangeStabChain(scratchShared, [r], true);
+                    sgens := ShallowCopy(scratchShared.stabilizer.generators);
+                    sginvs := List(sgens, g -> g^-1);
+                fi;
+                C := [c0];
+                cTrans := [];
+                cTransLabels := [];
+                cTransLabels[c0] := 0;
+                for pt2 in C do
+                    for i in [1..Length(sgens)] do
+                        img := pt2^sgens[i];
+                        if not IsBound(cTransLabels[img]) then
+                            cTransLabels[img] := i;
+                            cTrans[img] := sginvs[i];
+                            Add(C, img);
+                        fi;
+                    od;
+                od;
+            fi;
+            Assert(1, R[1] = rroot);
+            if r = c then
+                pts := R*(mMax + 1) - mMax;
+                orbnums{pts} := ListWithIdenticalEntries(Length(pts), num);
+                Append(orbseen, pts);
+                rep := Minimum(pts);
+            elif fixedR then
+                pts := C*mMax + (r - mMax);
+                orbnums{pts} := ListWithIdenticalEntries(Length(pts), num);
+                Append(orbseen, pts);
+                rep := Minimum(pts);
+            elif fixedC then
+                pts := R + (c - 1)*mMax;
+                orbnums{pts} := ListWithIdenticalEntries(Length(pts), num);
+                Append(orbseen, pts);
+                rep := Minimum(pts);
+            elif Length(C) = 1 then
+                # singleton cells: carry the column as a point along the
+                # Schreier tree, no per-cell lists
+                cells := [];
+                cells[rroot] := c0;
+                c2 := rroot + (c0 - 1)*mMax;
+                orbnums[c2] := num;
+                Add(orbseen, c2);
+                rep := c2;
+                for i in [2..Length(R)] do
+                    r2 := R[i];
+                    lab := rTrans[r2];
+                    c2 := cells[r2^lab]/lab;
+                    cells[r2] := c2;
+                    c2 := r2 + (c2 - 1)*mMax;
+                    orbnums[c2] := num;
+                    Add(orbseen, c2);
+                    if c2 < rep then
+                        rep := c2;
                     fi;
                 od;
-            od;
-            Add(orbmins,rep);
-            Add(orbsizes,Length(q));
+            else
+                labelRows := [];
+                cells := [];
+                cells[rroot] := C;
+                valList := ListWithIdenticalEntries(Length(C), num);
+                rep := infinity;
+                for i in [1..Length(R)] do
+                    r2 := R[i];
+                    if i > 1 then
+                        # cell(r2) = cell(parent)^(lab^-1), lab = rTrans[r2]
+                        li := rTransLabels[r2];
+                        if not IsBound(labelRows[li]) then
+                            labelRows[li] := ListPerm(treeLabels[li]^-1, mMax);
+                        fi;
+                        cells[r2] := labelRows[li]{cells[r2^rTrans[r2]]};
+                    fi;
+                    pts := cells[r2]*mMax + (r2 - mMax);
+                    orbnums{pts} := valList;
+                    Append(orbseen, pts);
+                    cellmin := Minimum(pts);
+                    if cellmin < rep then
+                        rep := cellmin;
+                    fi;
+                od;
+            fi;
+            Add(orbmins, rep);
+            Add(orbsizes, Length(R)*Length(C));
+            Add(bpMins, rep);
+            Add(bpData, rec(seedR := rroot, seedC := C[1],
+                            rTrans := rTrans, cTrans := cTrans,
+                            down := fail));
             return num;
         end,
         isBaseFixed := function(pt)
@@ -480,34 +659,32 @@ _IMAGES_PairActionIface := function(G, mMax)
                 ChangeStabChain(chain, [r, c], false);
                 descendLevels := 2;
             fi;
-            basePath := fail;
             # only called when pt is not fixed, so its orbit is non-trivial
             return false;
         end,
         walkToBase := function(image, x, basepoint)
-            local gi, i, p;
-            # basePath applied at the orbit's breadth-first seed leads to
-            # basepoint; it is the same for every node of this depth.
-            if basePath = fail then
-                basePath := [];
-                p := basepoint;
-                gi := svGen[p];
-                while gi <> 0 do
-                    Add(basePath, gi);
-                    p := p^liftedInvs[gi];
-                    gi := svGen[p];
-                od;
-                basePath := Reversed(basePath);
+            local dat, r1, c1, u, w, g, rows, t, rs, cs;
+            dat := bpData[Position(bpMins, basepoint)];
+            # the element carrying the orbit's seed pair to basepoint; the
+            # same for every node of this depth
+            if dat.down = fail then
+                r1 := (basepoint - 1) mod mMax + 1;
+                c1 := (basepoint - r1)/mMax + 1;
+                u := transWalk(dat.rTrans, r1, dat.seedR);
+                w := transWalk(dat.cTrans, c1^u, dat.seedC);
+                dat.down := w^-1 * u^-1;
             fi;
-            # walk image[x] up to the seed, then down to basepoint
-            gi := svGen[image[x]];
-            while gi <> 0 do
-                image := OnTuples(image, liftedInvs[gi]);
-                gi := svGen[image[x]];
-            od;
-            for i in basePath do
-                image := OnTuples(image, liftedGens[i]);
-            od;
+            # walk image[x] up to the seed pair, then down to basepoint
+            r1 := (image[x] - 1) mod mMax + 1;
+            c1 := (image[x] - r1)/mMax + 1;
+            u := transWalk(dat.rTrans, r1, dat.seedR);
+            w := transWalk(dat.cTrans, c1^u, dat.seedC);
+            g := u * w * dat.down;
+            rows := ListPerm(g, mMax);
+            t := image - 1;
+            rs := t mod mMax + 1;
+            cs := (t - rs + 1)/mMax + 1;
+            image := rows{rs} + (rows{cs} - 1)*mMax;
             if image[x] <> basepoint then
                 ErrorNoReturn("panic: walk did not reach the base point");
             fi;
@@ -519,8 +696,6 @@ _IMAGES_PairActionIface := function(G, mMax)
                 chain := chain.stabilizer;
                 descendLevels := descendLevels - 1;
             od;
-            liftedGens := fail;
-            liftedInvs := fail;
         end,
         isTrivial := function()
             return Length(chain.generators) = 0;
@@ -764,7 +939,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
     if IsString(config_option) then
         config_option := ValueGlobal(config_option);
     fi;
-    
+
     if config_option.branch = "static" then
         # Static orderings relabel the whole domain by an arbitrary
         # permutation, which cannot be expressed through a pair action.
@@ -784,7 +959,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
         k := k^savedArgs.perm;
         set := OnTuples(set, savedArgs.perm);
         config_option := rec(branch := "minimum");
-    else    
+    else
         savedArgs := rec(perminv := ());
     fi;
 
@@ -911,7 +1086,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
         od;
         return n;
     end;
-    
+
     next_node := function(node)
         local   n;
         n := node;
@@ -920,7 +1095,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
         until n = fail or not n.deleted;
         return n;
     end;
-    
+
     # Delete a node, and recursively deleting all it's children.
     delete_node := function(node)
         local   i;
@@ -955,9 +1130,9 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             delete_node(node);
         od;
     end;
-    
+
     # Filter nodes by stabilizer group,
-    # Updates the stabilizer group of the node, 
+    # Updates the stabilizer group of the node,
     clean_subtree := function(node)
         local   bad,  seen,  c,  x,  q,  gens,  olen,  pt,  gen,  im;
         Info(InfoNSI,3,"Cleaning at ",node.selected);
@@ -1015,7 +1190,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
         root.substab := l;
         clean_subtree(root);
     end;
-    
+
     # Given a group 'gp' and a set 'set', find orbit representatives
     # of 'set' in 'gp' simply.
     simpleOrbitReps := function(gp,set)
@@ -1043,7 +1218,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
         od;
         return reps;
     end;
-    
+
     # Make orbit of x, updating orbnums, orbmins and orbsizes as appropriate.
     make_orbit := function(x)
         if orbnums[x] <> -1 then
@@ -1101,7 +1276,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             while node <> fail do
                 _IMAGES_StartTimer(_IMAGES_getcands);
                 cands := Difference([1..m],skip_func(node.selected));
-  
+
                 _IMAGES_StopTimer(_IMAGES_getcands);
                 orbitMset := [];
                 for y in cands do
@@ -1125,7 +1300,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             while node <> fail do
                 _IMAGES_StartTimer(_IMAGES_getcands);
                 cands := Difference([1..m],skip_func(node.selected));
-  
+
                 _IMAGES_StopTimer(_IMAGES_getcands);
                 orbitMset := [];
                 for y in cands do
@@ -1406,7 +1581,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                 fi;
                 prevnode := newnode;
                 Add(node.children,newnode);
-                
+
                 image := node.image;
                 if image[x] <> basepoint then
                     image := iface.walkToBase(image, x, basepoint);
