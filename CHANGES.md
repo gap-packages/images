@@ -35,6 +35,11 @@ New functionality:
   group's order whenever the action is faithful, which avoids a full
   Schreier-Sims inside the search (formerly the dominant cost for large
   supplied stabilizers).
+* The default stabilizer for permutations (their centralizer) is now
+  computed only after the small-orbit enumeration has had a chance to
+  answer without it: computing it eagerly forced a stabilizer chain for
+  the group, so a small-orbit permutation could take 40 seconds where
+  the same object as a transformation took milliseconds.
 * `MinimalImageOrderedPair` and `MinimalImageUnorderedPair` now work for
   all supported actions (the ordered version previously always raised an
   error, and the unordered version only supported `OnPoints`);

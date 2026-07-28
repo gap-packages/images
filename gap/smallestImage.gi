@@ -502,6 +502,8 @@ _MinimalImage_partialFunction := function(l, G, mMax, settings)
 
   if settings.stabilizer <> fail then
      stab := settings.stabilizer;
+  elif IsBound(settings.centralizerOf) then
+     stab := Centralizer(G, settings.centralizerOf);
   else
      stab := _IMAGES_PairSetStabilizer(G, set, mMax);
   fi;
@@ -594,10 +596,14 @@ function(inGroup, trans, action, settings)
   matrixMax := Maximum(transformMax, LargestMovedPoint(inGroup));
 
   # The stabilizer of the graph of a permutation is its centralizer,
-  # which GAP can compute directly in the natural action
+  # which GAP computes faster than the generic pair stabilizer. It is
+  # computed in _MinimalImage_partialFunction rather than here so that
+  # the small-orbit pre-pass can answer first: Centralizer forces a
+  # stabilizer chain for the group, which can cost far more than the
+  # entire enumeration.
   if settings.stabilizer = fail then
       settings := ShallowCopy(settings);
-      settings.stabilizer := Centralizer(inGroup, trans);
+      settings.centralizerOf := trans;
   fi;
 
   # Turn transformation into function and pass to general case
