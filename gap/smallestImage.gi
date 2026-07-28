@@ -354,8 +354,47 @@ _IMAGES_PairSetStabilizer := function(G, set, mMax)
   return result;
 end;
 
+# The smallest image of the partial function <l> under G, found by walking
+# its whole orbit rather than searching for it. Encoding l as a set of pairs
+# puts exactly one point in each row and lists the rows in increasing order,
+# so comparing encoded sets is the same as comparing the lists themselves
+# lexicographically, and this agrees with what the search computes.
+_IMAGES_BruteForcePartialFunction := function(G, l, stab, settings)
+  local best, bestperm, g, lg;
+
+  best := l;
+  bestperm := ();
+  for g in RightTransversal(G, stab) do
+    # l maps i to l[i], so its image under g maps i^g to l[i]^g; both steps
+    # of that are kernel operations
+    lg := Permuted(OnTuples(l, g), g);
+    if lg < best then
+      best := lg;
+      bestperm := g;
+      # IsMinimalImage only has to learn that something smaller exists
+      if settings.result = GetBool then
+        break;
+      fi;
+    fi;
+  od;
+
+  if settings.getStab then
+    settings.original.stab := stab;
+  fi;
+
+  if settings.result = GetImage then
+    return best;
+  elif settings.result = GetPerm then
+    return bestperm;
+  elif settings.result = GetBool then
+    return best = l;
+  fi;
+
+  Error("Invalid value of result");
+end;
+
 _MinimalImage_partialFunction := function(l, G, mMax, settings)
-  local set, order, pairGroup, stab, image;
+  local set, order, minimumOrder, pairGroup, stab, orbitBound, image;
 
   # Turn partial function into a subset of a 2D matrix,
   # which contains (i,j) if i^trans = j.
@@ -370,14 +409,41 @@ _MinimalImage_partialFunction := function(l, G, mMax, settings)
                     "are not supported for transformations, permutations ",
                     "or partial permutations");
   fi;
-
-  pairGroup := _IMAGES_PairActionIface(G, mMax);
+  minimumOrder := IsRecord(order) and IsBound(order.branch)
+                  and order.branch = "minimum";
 
   if settings.stabilizer <> fail then
      stab := settings.stabilizer;
   else
      stab := _IMAGES_PairSetStabilizer(G, set, mMax);
   fi;
+
+  # A short orbit is cheaper to walk than to search. Walking it costs one
+  # group element application per orbit element, that is orbitBound*mMax
+  # operations; the search runs in the row-column action on mMax^2 encoded
+  # pairs, where lifting a single generator of G into that action, or
+  # allocating one table indexed by it, already costs mMax^2. So take the
+  # orbit whenever it is the cheaper of the two.
+  #
+  # Under a canonical (non-minimal) ordering the smallest image is as good a
+  # representative as the one the search picks, but it is a different one,
+  # so the decision has to come out the same for every object of an orbit.
+  # mMax and Size(G) are orbit invariants; the index below is one as well,
+  # but only when <stab> really is the whole stabilizer, which a
+  # caller-supplied stabilizer need not be. So canonical images are judged
+  # by the cruder bound, and only minimal images -- which come out the same
+  # either way -- by the index.
+  if minimumOrder then
+    orbitBound := Size(G)/Size(stab);
+  else
+    orbitBound := Size(G);
+  fi;
+  if settings.bruteForce = true or
+     (settings.bruteForce = "auto" and orbitBound * mMax <= mMax * mMax) then
+    return _IMAGES_BruteForcePartialFunction(G, l, stab, settings);
+  fi;
+
+  pairGroup := _IMAGES_PairActionIface(G, mMax);
 
   image := _CanonicalSetImage(pairGroup, set, stab, settings);
 
@@ -784,7 +850,8 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   fi;
 
   settings := rec(result := resultarg, stabilizer := fail, order := imagearg, getStab := false,
-                  disableStabilizerCheck := false, engine := "native");
+                  disableStabilizerCheck := false, engine := "native",
+                  bruteForce := "auto");
 
   if Length(arglist) >= index and IsRecord(arglist[index]) then
     settings := _ImageHelperFuncs.fillUserValues(settings, arglist[index]);
@@ -794,6 +861,10 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
 
   if index <= Length(arglist) then
     Error("Failed to understand argument ",index, ", which was ", arglist[index]);
+  fi;
+
+  if not settings.bruteForce in [true, false, "auto"] then
+    Error("The 'bruteForce' option must be true, false or \"auto\"");
   fi;
 
   if settings.engine = "vole" then

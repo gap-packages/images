@@ -157,6 +157,23 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    package when it is loaded, which is much faster for groups of large
 ##    degree; without <Package>ferret</Package> a slower fallback is used.
 ##    </Item>
+##    <Mark><C>bruteForce</C> (default <C>"auto"</C>)</Mark>
+##    <Item> This option selects how the image is computed, not which image
+##    is computed. For transformations, permutations and partial
+##    permutations the search runs in an action whose degree is the
+##    <E>square</E> of the degree of <A>G</A>, which is wasteful when the
+##    orbit of <A>O</A> is short; by default (<C>"auto"</C>) that orbit is
+##    then walked in full instead. Pass <K>true</K> or <K>false</K> to force
+##    or forbid this.
+##    <P/>
+##    <Ref Func="MinimalImage"/> and <Ref Func="IsMinimalImage"/> return the
+##    same value whichever way the image is found, since walking the orbit
+##    finds the same lexicographic minimum that the search does.
+##    <Ref Func="MinimalImagePerm"/> may return a different element mapping
+##    <A>O</A> to that same minimal image. As always, the representative
+##    chosen by <Ref Func="CanonicalImage"/> is not specified: it does
+##    differ between the two, so do not mix them within a computation.
+##    </Item>
 ##    <Mark><C>disableStabilizerCheck</C> (default <K>false</K>)</Mark>
 ##    <Item> By default, during search we perform cheap checks to try to find
 ##    extra elements of the stabilizer. Pass true to disable this check, this
