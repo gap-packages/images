@@ -372,6 +372,120 @@ CheckMinimalImageTupleSet := function()
 end;;
 
 
+# The same options record must be usable for several calls, including after
+# getStab has deposited the stabilizer into it
+CheckOptionsRecordReuse := function()
+    local g, cfg, r1, r2;
+    g := SymmetricGroup(5);
+    cfg := rec(stabilizer := Group(()), order := CanonicalConfig_Minimum);
+    r1 := CanonicalImage(g, [2,4], OnSets, cfg);
+    r2 := CanonicalImage(g, [2,4], OnSets, cfg);
+    if r1 <> r2 then
+        Print("options record not reusable on the set path\n");
+    fi;
+    r1 := CanonicalImage(g, Transformation([3,3,4,4]), OnPoints, cfg);
+    r2 := CanonicalImage(g, Transformation([3,3,4,4]), OnPoints, cfg);
+    if r1 <> r2 then
+        Print("options record not reusable on the transformation path\n");
+    fi;
+    cfg := rec(getStab := true);
+    r1 := CanonicalImage(g, [2,4], OnSets, cfg);
+    # the native engine deposits a subgroup stabilizing the canonical image
+    # (the vole engine gives Stabilizer(G, O, A) of the input instead)
+    if not IsBound(cfg.stab)
+       or not IsSubgroup(Stabilizer(g, r1, OnSets), cfg.stab) then
+        Print("getStab did not deposit a stabilizer subgroup\n");
+    fi;
+    r2 := CanonicalImage(g, [2,4], OnSets, cfg);
+    if r1 <> r2 then
+        Print("options record not reusable after getStab\n");
+    fi;
+end;;
+
+_bruteMinimalPair := function(G, O, F, ordered)
+    local best, g, cand;
+    best := fail;
+    for g in G do
+        cand := [F(O[1], g), F(O[2], g)];
+        if not ordered then
+            Sort(cand);
+        fi;
+        if best = fail or cand < best then
+            best := cand;
+        fi;
+    od;
+    return best;
+end;;
+
+CheckMinimalImagePairs := function()
+    local i, g, n, o, F, pairs;
+    for i in [1..FERRET_TEST_LIMIT.count] do
+        g := randomGroup(Random([2..FERRET_TEST_LIMIT.groupSize]));
+        if Size(g) > FERRET_TEST_LIMIT.bruteForceLimit then
+            continue;
+        fi;
+        n := Maximum(LargestMovedPoint(g), 2);
+        pairs := [
+            [OnPoints, [Random([1..n + 2]), Random([1..n + 2])]],
+            [OnSets, [RandomSet(n), RandomSet(n)]],
+            [OnTuples, [Shuffle(RandomSet(n)), Shuffle(RandomSet(n))]]];
+        for o in pairs do
+            F := o[1];
+            o := o[2];
+            if MinimalImageOrderedPair(g, o, F)
+               <> _bruteMinimalPair(g, o, F, true) then
+                Print(GeneratorsOfGroup(g), " ", o, " ", F,
+                      " wrong minimal ordered pair\n");
+            fi;
+            if MinimalImageUnorderedPair(g, o, F)
+               <> _bruteMinimalPair(g, o, F, false) then
+                Print(GeneratorsOfGroup(g), " ", o, " ", F,
+                      " wrong minimal unordered pair\n");
+            fi;
+        od;
+        # the OnPoints default
+        o := pairs[1][2];
+        if MinimalImageOrderedPair(g, o) <> _bruteMinimalPair(g, o, OnPoints, true)
+           or MinimalImageUnorderedPair(g, o)
+              <> _bruteMinimalPair(g, o, OnPoints, false) then
+            Print(GeneratorsOfGroup(g), " ", o, " wrong 2-argument pair image\n");
+        fi;
+    od;
+end;;
+
+_bruteAllMinimalPairs := function(G, n, ordered)
+    local ts, out, a, b, cand;
+    ts := List(Tuples([1..n], n), Transformation);
+    out := [];
+    for a in ts do
+        for b in ts do
+            cand := [a, b];
+            if not ordered then
+                Sort(cand);
+            fi;
+            if _bruteMinimalPair(G, cand, OnPoints, ordered) = cand then
+                AddSet(out, cand);
+            fi;
+        od;
+    od;
+    return out;
+end;;
+
+CheckAllMinimalPairs := function()
+    local g, n;
+    for g in [SymmetricGroup(3), Group((1,2,3)), Group((1,2)), Group(())] do
+        n := 3;
+        if Set(AllMinimalOrderedPairs(g, n, acceptTransform(n, n)))
+           <> _bruteAllMinimalPairs(g, n, true) then
+            Print(g, " wrong AllMinimalOrderedPairs\n");
+        fi;
+        if Set(AllMinimalUnorderedPairs(g, n, acceptTransform(n, n)))
+           <> _bruteAllMinimalPairs(g, n, false) then
+            Print(g, " wrong AllMinimalUnorderedPairs\n");
+        fi;
+    od;
+end;;
+
 FindAllMinimalImagesSetSlow := function(G, maxpnt, size)
     return Filtered(Combinations([1..maxpnt], size), 
         function(x)

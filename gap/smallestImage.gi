@@ -43,7 +43,14 @@ fillUserValues := function(options, useroptions)
   od;
 
   if useroptions <> rec() then
-    Error("Unknown options: ", useroptions);
+    if IsBound(useroptions.branch) then
+      # a CanonicalConfig_* record passed as the whole options record
+      ErrorNoReturn("Unknown options: ", RecNames(useroptions),
+                    " (this looks like an ordering; did you mean",
+                    " rec(order := ...)?)");
+    fi;
+    ErrorNoReturn("Unknown options: ", RecNames(useroptions),
+                  " (valid options are: ", RecNames(options), ")");
   fi;
 
   return ret;
@@ -77,13 +84,9 @@ _rowColGen := function( inGroup, x )
 end;
 
 _minOrbBuilder := function(select)
-    local fixedPoints, Func;
-    fixedPoints := function ( pts, gens )
-        return Filtered( pts, x -> ForAll( gens, y -> (x^y=x) ) );
-    end;
-
+    local Func;
     Func := function( G )
-        local vals,fp, order, branch;
+        local vals, order, branch;
         if LargestMovedPoint(G) = 0 then
             return ();
         fi;
@@ -212,7 +215,7 @@ _CanonicalSetImage := function(G, S, stab, settings)
         return G.repAction(S, L[1]);
     fi;
 
-    Error("Invalid value of result");
+    ErrorNoReturn("Invalid value of result");
 end;
 
 
@@ -221,10 +224,10 @@ InstallGlobalFunction("IsMinimalImageLessThan",
         local ret;
         B := Set(B);
         if Length(extra) <> 1 or extra[1] <> OnSets then
-            ErrorNoReturn("IsMinimalImageLessThan only supports 'OnSets' are present");
+            ErrorNoReturn("IsMinimalImageLessThan only supports the action OnSets");
         fi;
         if Length(A) <> Length(B) then
-            ErrorNoReturn("IsMinimalImageLessThan only supports equal sized sets are present");
+            ErrorNoReturn("IsMinimalImageLessThan only supports sets of equal size");
         fi;
         ret := _NewSmallestImage(G, A, Stabilizer(G, A, OnSets), x -> x, [true, Set(B)], false, CanonicalConfig_Minimum);
         if ret[1] = MinImage.Smaller or ret[1] = MinImage.Larger then
@@ -263,7 +266,7 @@ _CanonicalSetSetImage := function(G, S, stab, stepval, settings)
         return G.repAction(S, L[1]);
     fi;
 
-    Error("Invalid value of result");
+    ErrorNoReturn("Invalid value of result");
 end;
 
 _CanonicalTupleSetImage := function(G, origS, settings)
@@ -297,6 +300,8 @@ _CanonicalTupleSetImage := function(G, origS, settings)
     if settings.result = GetPerm then
         return curperm;
     fi;
+
+    ErrorNoReturn("Invalid value of result");
 end;
 
 
@@ -402,7 +407,7 @@ _trivialReturn := function(object, result)
     elif result = GetImage then
         return object;
     else
-        Error("Bad 'result' argument");
+        ErrorNoReturn("Invalid value of result");
     fi;
 end;
 
@@ -411,11 +416,10 @@ end;
 # Returns the minimum image of a transformation
 InstallMethod(CanonicalImageOp, [IsPermGroup, IsTransformation, IsFunction, IsObject],
 function(inGroup, trans, action, settings)
-  local l, lresult, set, stab, imageperm, imageset, retset,
-        transformMax, matrixMax, rowcolGroup, dom, img, i;
+  local l, lresult, transformMax, matrixMax;
 
   if action <> OnPoints then
-    Error("Can only act on transformations with OnPoints");
+    ErrorNoReturn("Transformations only support the action OnPoints");
   fi;
 
   # Return in trivial cases
@@ -449,11 +453,10 @@ end);
 # Returns the minimum image of a transformation
 InstallMethod(CanonicalImageOp, [IsPermGroup, IsPerm, IsFunction, IsObject],
 function(inGroup, trans, action, settings)
-  local l, lresult, set, stab, imageperm, imageset, retset,
-        transformMax, matrixMax, rowcolGroup, dom, img, i;
+  local l, lresult, transformMax, matrixMax;
 
   if action <> OnPoints then
-    Error("Can only act on permutations with OnPoints");
+    ErrorNoReturn("Permutations only support the action OnPoints");
   fi;
 
   # Return in trivial cases
@@ -504,10 +507,10 @@ end);
 
 InstallMethod(CanonicalImageOp, [IsPermGroup, IsPartialPerm, IsFunction, IsObject],
 function(inGroup, pp, action, settings)
-  local dom, max, matrixMax, minTrans, l, lresult, i;
+  local max, matrixMax, minTrans;
 
   if action <> OnPoints then
-    Error("Can only act on partial perms with OnPoints");
+    ErrorNoReturn("Partial permutations only support the action OnPoints");
   fi;
 
   # First find the largest integer of interest
@@ -673,7 +676,8 @@ function(inGroup, inList, op, settings)
         if IsTrivial(settings.stabilizer) then
             stab := Group(());
         else
-            Error("Only the trivial group is accepted for SetSet stabilizer in CanonicalImage");
+            ErrorNoReturn("Only the trivial group may be given as the <stabilizer> ",
+                  "option for the action OnSetsSets");
         fi;
     else
         stab := _IMAGES_SetSetStabilizer(inGroup, fList, setImage,
@@ -709,7 +713,9 @@ function(inGroup, inList, op, settings)
     return Set(outset, x -> Set(x));
   fi;
 
-  Error("Do not understand:", op);
+  ErrorNoReturn("Unsupported action ", NameFunction(op), " on a list: the ",
+                "supported actions are OnSets, OnTuples, OnSetsSets and ",
+                "OnTuplesSets");
 
 end);
 
@@ -717,7 +723,7 @@ end);
 # if it is unavailable)
 _ImagesVoleGlobals := function(why)
   if not IsBoundGlobal("VoleFind") then
-    ErrorNoReturn(why + "requires the 'vole' package, which could not be ",
+    ErrorNoReturn(why, " requires the 'vole' package, which could not be ",
                 "loaded; please install vole (https://github.com/peal/vole), then ",
                 "load it with LoadPackage(\"vole\")");
   fi;
@@ -733,7 +739,7 @@ _VoleCanonicalImage := function(G, obj, action, settings)
 
   if IsBound(settings.order) and IsRecord(settings.order)
      and IsBound(settings.order.branch) and settings.order.branch = "minimum" then
-    Error("The 'vole' engine cannot compute minimal images (only canonical images)");
+    ErrorNoReturn("The 'vole' engine cannot compute minimal images (only canonical images)");
   fi;
 
   vole := _ImagesVoleGlobals("Finding canonical images with 'vole'");
@@ -752,7 +758,7 @@ _VoleCanonicalImage := function(G, obj, action, settings)
     return action(obj, ret.canonical) = obj;
   fi;
 
-  Error("Invalid value of result");
+  ErrorNoReturn("Invalid value of result");
 end;
 
 InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, imagearg )
@@ -763,13 +769,13 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
         index;    # index
 
   if Length(arglist) < 2 or Length(arglist) > 4 then
-    Error("MinimalImage(G, obj [, action] [,config])");
+    ErrorNoReturn("usage: MinimalImage/CanonicalImage(G, obj [, action] [, config])");
   fi;
 
   G := arglist[1];
 
-  if not(IsGroup(G)) then
-    Error("First argument must be a group");
+  if not(IsPermGroup(G)) then
+    ErrorNoReturn("First argument must be a permutation group");
   fi;
 
   obj := arglist[2];
@@ -783,8 +789,11 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
     action := OnPoints;
   fi;
 
+  # 'stab' is where the getStab option deposits its answer, in the record the
+  # user passed; accepting it here lets the same record be passed to a
+  # second call
   settings := rec(result := resultarg, stabilizer := fail, order := imagearg, getStab := false,
-                  disableStabilizerCheck := false, engine := "native");
+                  disableStabilizerCheck := false, engine := "native", stab := fail);
 
   if Length(arglist) >= index and IsRecord(arglist[index]) then
     settings := _ImageHelperFuncs.fillUserValues(settings, arglist[index]);
@@ -793,13 +802,13 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   fi;
 
   if index <= Length(arglist) then
-    Error("Failed to understand argument ",index, ", which was ", arglist[index]);
+    ErrorNoReturn("Failed to understand argument ", index, ", which was ", arglist[index]);
   fi;
 
   if settings.engine = "vole" then
     return _VoleCanonicalImage(G, obj, action, settings);
   elif settings.engine <> "native" then
-    Error("Unknown engine '", settings.engine, "': must be \"native\" or \"vole\"");
+    ErrorNoReturn("Unknown engine '", settings.engine, "': must be \"native\" or \"vole\"");
   fi;
 
   return CanonicalImageOp(G, obj, action, settings);
@@ -835,7 +844,14 @@ InstallMethod(MinimalImageOrderedPair, [IsPermGroup, IsObject],
   function(G,O) return MinimalImageOrderedPair(G,O,OnPoints);
 end);
 
+InstallMethod(MinimalImageOrderedPair, [IsPermGroup, IsList, IsFunction],
+  function(G, O, F)
+    local fperm, first;
 
+    fperm := MinimalImagePerm(G, O[1], F);
+    first := F(O[1], fperm);
+    return [first, MinimalImage(Stabilizer(G, first, F), F(O[2], fperm), F)];
+end);
 
 InstallMethod(MinimalImageUnorderedPair, [IsPermGroup, IsObject],
   function(G,O) return MinimalImageUnorderedPair(G,O,OnPoints);
@@ -852,17 +868,17 @@ InstallMethod(MinimalImageUnorderedPair, [IsPermGroup, IsList, IsFunction],
     act2 := F(O[2], sperm);
 
     if act1 < act2 then
-        second := MinimalImage(Stabilizer(G, F(O[1], fperm)), F(O[2], fperm), F);
+        second := MinimalImage(Stabilizer(G, F(O[1], fperm), F), F(O[2], fperm), F);
         return [F(O[1], fperm), second];
     fi;
 
     if act1 > act2 then
-        first := MinimalImage(Stabilizer(G, F(O[2], sperm)), F(O[1], sperm), F);
+        first := MinimalImage(Stabilizer(G, F(O[2], sperm), F), F(O[1], sperm), F);
         return [F(O[2], sperm), first];
     fi;
 
-     second := MinimalImage(Stabilizer(G, F(O[1], fperm)), F(O[2], fperm), F);
-     first := MinimalImage(Stabilizer(G, F(O[2], sperm)), F(O[1], sperm), F);
+     second := MinimalImage(Stabilizer(G, F(O[1], fperm), F), F(O[2], fperm), F);
+     first := MinimalImage(Stabilizer(G, F(O[2], sperm), F), F(O[1], sperm), F);
 
      if first < second then
          return [act1, first];
