@@ -359,8 +359,125 @@ _IMAGES_PairSetStabilizer := function(G, set, mMax)
   return result;
 end;
 
+# When the orbit of the object is small, enumerating it directly is far
+# cheaper than the stabilizer-chain search: the search must build chains
+# for G (and for the supplied stabilizer's position action), which for
+# groups with deep chains costs minutes while a small orbit enumerates in
+# milliseconds. This pre-pass runs the orbit BFS on image lists with
+# kernel list operations and answers the query if the orbit closes within
+# a work budget, returning fail otherwise.
+#
+# It only fires for branch="minimum" orders: there the answer is the true
+# minimum of the orbit, so it agrees exactly with the search on every
+# combination of options (a getStab call, which returns fail here and
+# falls through to the search, still gets the same image). Comparing
+# image lists lexicographically agrees with the encoded-set order the
+# search minimises, because the encoded pairs (i, l[i]) sort by row.
+_IMAGES_PairSmallOrbit := function(l, G, mMax, settings)
+    local order, gens, glists, ginvlists, hash, dict, queue, parents,
+          gennos, cap, i, j, im, minpos, perm, check;
+
+    if settings.getStab then
+        return fail;
+    fi;
+    order := settings.order;
+    if IsString(order) then
+        order := ValueGlobal(order);
+    fi;
+    if not (IsRecord(order) and IsBound(order.branch)
+            and order.branch = "minimum") then
+        return fail;
+    fi;
+
+    gens := GeneratorsOfGroup(G);
+    # the image of l under conjugation by g, by kernel list indexing:
+    # (l^g)[i] = ((i^(g^-1))^l)^g
+    glists := List(gens, g -> ListPerm(g, mMax));
+    ginvlists := List(gens, g -> ListPerm(g^-1, mMax));
+
+    # A supplied stabilizer is promised to be validated on every path
+    # which consumes the option, so reject a wrong one here too, even
+    # though this path never otherwise looks at it
+    if settings.stabilizer <> fail then
+        for perm in GeneratorsOfGroup(settings.stabilizer) do
+            if ListPerm(perm, mMax){ l{ ListPerm(perm^-1, mMax) } } <> l then
+                ErrorNoReturn("the given <stabilizer> does not stabilize the object");
+            fi;
+        od;
+    fi;
+
+    # Enumeration work is |orbit| * |gens| * mMax list entries, and when
+    # the orbit is larger than the cap all of it is wasted, so the budget
+    # must track what the search would otherwise cost. When G already has
+    # a stabilizer chain and no enormous stabilizer was supplied the
+    # search is cheap, and only a small budget is justified. When the
+    # chain is missing (or a supplied stabilizer is so large that the
+    # search must run a Schreier-Sims on its position action) the search
+    # starts with a chain construction whose cost grows like a high power
+    # of mMax, and a far larger budget is still cheap by comparison.
+    if HasStabChainMutable(G)
+       and not (settings.stabilizer <> fail
+                and HasSize(settings.stabilizer)
+                and Size(settings.stabilizer) > 2^60) then
+        cap := Maximum(512, QuoInt(10^6, Length(gens) * mMax));
+    else
+        cap := Maximum(1024, QuoInt(mMax^3, 30 * Length(gens)));
+    fi;
+    cap := Minimum(cap, 500000);
+
+    hash := _IMAGES_Get_Hash(mMax);
+    dict := SparseHashTable(hash);
+    queue := [Immutable(ShallowCopy(l))];
+    AddHashEntry(dict, queue[1], 1);
+    parents := [0];
+    gennos := [0];
+    minpos := 1;
+    i := 1;
+    while i <= Length(queue) do
+        for j in [1..Length(gens)] do
+            im := glists[j]{ queue[i]{ ginvlists[j] } };
+            if GetHashEntry(dict, im) = fail then
+                if Length(queue) >= cap then
+                    return fail;
+                fi;
+                MakeImmutable(im);
+                Add(queue, im);
+                Add(parents, i);
+                Add(gennos, j);
+                AddHashEntry(dict, im, Length(queue));
+                if im < queue[minpos] then
+                    minpos := Length(queue);
+                fi;
+            fi;
+        od;
+        i := i + 1;
+    od;
+
+    if settings.result = GetBool then
+        return queue[minpos] = queue[1];
+    elif settings.result = GetImage then
+        return ShallowCopy(queue[minpos]);
+    fi;
+
+    # settings.result = GetPerm: multiply out the generator word leading
+    # from the root to the minimal element
+    perm := ();
+    i := minpos;
+    while parents[i] <> 0 do
+        perm := gens[gennos[i]] * perm;
+        i := parents[i];
+    od;
+    check := ListPerm(perm, mMax){ queue[1]{ ListPerm(perm^-1, mMax) } };
+    if check <> queue[minpos] then
+        ErrorNoReturn("internal error in the images package (the small ",
+                      "orbit pre-pass built a wrong conjugating element); ",
+                      "please report this");
+    fi;
+    return perm;
+end;
+
 _MinimalImage_partialFunction := function(l, G, mMax, settings)
-  local set, order, pairGroup, stab, image;
+  local set, order, result, pairGroup, stab, image;
 
   # Turn partial function into a subset of a 2D matrix,
   # which contains (i,j) if i^trans = j.
@@ -374,6 +491,11 @@ _MinimalImage_partialFunction := function(l, G, mMax, settings)
       ErrorNoReturn("static branch orderings (such as CanonicalConfig_FixedMinOrbit) ",
                     "are not supported for transformations, permutations ",
                     "or partial permutations");
+  fi;
+
+  result := _IMAGES_PairSmallOrbit(l, G, mMax, settings);
+  if result <> fail then
+      return result;
   fi;
 
   pairGroup := _IMAGES_PairActionIface(G, mMax);

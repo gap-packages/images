@@ -21,6 +21,20 @@ New functionality:
 * Sets of sets are canonicalised through the same unified search, and
   their stabilizers are seeded with ferret when available (100 sets on
   100 points improves from over 10 minutes to seconds).
+* `MinimalImage`, `IsMinimalImage` and `MinimalImagePerm` of
+  transformations, permutations and partial permutations now answer
+  directly from a bounded enumeration of the object's orbit when that
+  orbit is small. Previously such inputs could be pathologically slow:
+  the search builds stabilizer chains whose cost grows like a high power
+  of the degree, so a degree-1000 object with an orbit of 720 elements
+  took hours where the enumeration takes milliseconds. Large-orbit
+  inputs pay a few milliseconds of probing. Canonical images under the
+  dynamic orderings are unaffected.
+* The position action of a user-supplied `stabilizer` in the
+  transformation/permutation/partial permutation search now inherits the
+  group's order whenever the action is faithful, which avoids a full
+  Schreier-Sims inside the search (formerly the dominant cost for large
+  supplied stabilizers).
 * `MinimalImageOrderedPair` and `MinimalImageUnorderedPair` now work for
   all supported actions (the ordered version previously always raised an
   error, and the unordered version only supported `OnPoints`);
