@@ -207,9 +207,12 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    or a subgroup of this group; see <Ref Func="Stabilizer" BookName="ref"/>.
 ##    If this group is large, it is more efficient to pre-calculate it.
 ##    Default behaviour is to calculate the group, pass <C>Group(())</C> to disable
-##    this behaviour. Passing a group which does not stabilize <A>O</A> will
-##    produce incorrect answers (on some code paths this is detected and
-##    raises an error, but this cannot be relied on).
+##    this behaviour. The generators of the given group are checked to
+##    stabilize <A>O</A> (which characterises being a subgroup of the
+##    stabilizer), and a group failing the check is rejected with an error,
+##    so accidentally reusing a stabilizer computed for a different object
+##    cannot silently produce wrong answers. The <C>"vole"</C> engine
+##    computes its own stabilizer and ignores this option.
 ##    <P/>
 ##    When canonicalising transformations, permutations or partial
 ##    permutations, the default stabilizer is computed with the

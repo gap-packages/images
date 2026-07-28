@@ -44,6 +44,10 @@ Bug fixes:
   clear, non-resumable errors; previously several of these either
   printed internal data structures or could be continued past with
   `return;`, silently dropping the invalid input.
+* A user-supplied `stabilizer` is now checked (its generators must
+  preserve the object) on every path which consumes the option, so an
+  incorrect stabilizer is rejected instead of producing wrong answers
+  or obscure errors.
 * Print, String and Display of fundamental structures no longer give
   `<object>`.
 
