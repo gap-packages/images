@@ -1,0 +1,52 @@
+# Changelog for the images package
+
+## 1.4.0 (unreleased)
+
+New functionality:
+
+* New `Fundamental` / `Combinatorial` structures for canonicalising
+  general combinatorial objects (sets, multisets, tuples, matrices,
+  ordered partitions, coloured objects, ...) via canonical graph
+  labelling, with `CanonicalImage` support through the new
+  `OnFundamental` action.
+* New optional `engine := "vole"` option for `CanonicalImage`, computing
+  canonical images with the vole package.
+* `MinimalImage` of transformations, permutations and partial
+  permutations is now computed through a pair-action interface which
+  never constructs a permutation group on n^2 points. Together with a
+  sweep of orbits through their product structure this makes large
+  examples much faster (5-14x on degree ~2800 conjugacy problems;
+  one degree-800 example improves from over 8 minutes to under a
+  minute), and reduces memory use substantially.
+* Sets of sets are canonicalised through the same unified search, and
+  their stabilizers are seeded with ferret when available (100 sets on
+  100 points improves from over 10 minutes to seconds).
+* `MinimalImageOrderedPair` and `MinimalImageUnorderedPair` now work for
+  all supported actions (the ordered version previously always raised an
+  error, and the unordered version only supported `OnPoints`);
+  `AllMinimalOrderedPairs` and `AllMinimalUnorderedPairs`, which
+  previously always raised an error, now work and are tested against
+  brute-force oracles.
+* The `result` option (`GetImage` / `GetPerm` / `GetBool`) and the full
+  list of search orderings are now documented, along with a table of the
+  supported object types and actions.
+
+Bug fixes:
+
+* Canonical images of fundamental structures were wrong (inconsistent
+  across an orbit) for groups whose support has gaps.
+* `IsCanonicalImage` returned spurious `false` for the dynamic (non
+  minimum) orderings.
+* Partial permutations with an explicit options record raised an error.
+* The options record deposited into by `getStab` can now be passed to a
+  second call.
+* Unknown options, unsupported actions and invalid arguments now raise
+  clear, non-resumable errors; previously several of these either
+  printed internal data structures or could be continued past with
+  `return;`, silently dropping the invalid input.
+* Print, String and Display of fundamental structures no longer give
+  `<object>`.
+
+## 1.3.3 and earlier
+
+See the History section of README.md.

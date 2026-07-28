@@ -36,6 +36,15 @@
 ##    <Item>Converts a GAP transformation <A>p</A> into a fundamental structure. Similar to <C>Permutation</C>, it uses moved points <C>[point, point^p]</C> and forms a fundamental collection of type <C>"transformation"</C>.</Item>
 ##    <Mark><C>PartialPermutation( <A>p</A> )</C></Mark>
 ##    <Item>Converts a GAP partial permutation <A>p</A> into a fundamental structure. Similar to <C>Permutation</C>, it uses moved points <C>[point, point^p]</C> and forms a fundamental collection of type <C>"partialpermutation"</C>.</Item>
+##    <Mark><C>OrderedPartition( <A>p</A> )</C></Mark>
+##    <Item>Converts a list of lists <A>p</A> into a fundamental tuple of
+##    collections of type <C>"orderedpartition"</C>: the order of the parts
+##    matters, the order within each part does not.</Item>
+##    <Mark><C>WithColoring( <A>f</A>, <A>cols</A> )</C></Mark>
+##    <Item>Attaches a colouring to the fundamental structure <A>f</A>:
+##    <A>cols</A> is a list of lists of points, and two points may only be
+##    mapped to each other if they lie in the same list. This is the way to
+##    restrict which relabellings of <A>f</A> are considered.</Item>
 ##  </List>
 ##  </Description>
 ##  </ManSection>
@@ -70,8 +79,11 @@ DeclareGlobalName("Combinatorial");
 ##    <Mark><C>TupleOfWithType( <A>l</A>, <A>t</A> )</C></Mark>
 ##    <Item>Returns a new fundamental structure representing the tuple containing the list <A>l</A>, of type <A>t</A>.</Item>
 ##  </List>
+##  The record also contains the constants <C>AtomType</C>,
+##  <C>CollectionType</C> and <C>TupleType</C>, the possible values of the
+##  <C>kind</C> field of a fundamental structure.
 ##  </Description>
-##  </ManSection>F
+##  </ManSection>
 ##  <#/GAPDoc>
 DeclareGlobalName("Fundamental");
 
@@ -99,13 +111,25 @@ BindGlobal("FundamentalStructureType", NewType(FundamentalStructureFamily, IsFun
 ##  </List>
 ##  A new fundamental structure is returned with the modified contents, while the <C>kind</C> and <C>type</C> fields are preserved from the original structure <A>f</A>.
 ##  An error is raised if <A>f</A> has an invalid <C>kind</C>.
+##  <P/>
+##  The action is also installed as the power operation, so
+##  <C><A>f</A>^<A>p</A></C> may be used instead.
 ##  </Description>
 ##  </ManSection>
 ##  <#/GAPDoc>
 DeclareGlobalName("OnFundamental");
 
 
-# Get all atoms of a fundamental structure
+#############################################################################
+##  <#GAPDoc Label="AtomsOfFundamentalStructure">
+##  <ManSection>
+##  <Func Name="AtomsOfFundamentalStructure" Arg="f"/>
+##  <Description>
+##  Returns the set of all atoms (the underlying points) occurring anywhere
+##  in the fundamental structure <A>f</A>.
+##  </Description>
+##  </ManSection>
+##  <#/GAPDoc>
 DeclareGlobalName("AtomsOfFundamentalStructure");
 
 #############################################################################
@@ -148,8 +172,10 @@ DeclareGlobalName("GraphOfFundamentalStructure");
 ##  <A>parts</A> (optional) is a partition of <A>omega</A>, used for coloring the graph derived from <A>fs</A>. If not provided, an empty partition <C>[]</C> is used.
 ##  <P/>
 ##  The function first converts the fundamental structure <A>fs</A> into a digraph using <C>_convertToDigraph</C> (which internally calls <Ref Func="GraphOfFundamentalStructure"/>). This digraph also has an associated vertex coloring based on <A>parts</A> and the types of internal nodes.
-##  Then, it computes the automorphism group of this colored digraph. By default, this is done using <C>BlissAutomorphismGroup</C>. (A commented-out option suggests <C>VoleFind.Group</C> could also be used).
-##  Finally, the resulting automorphism group (which acts on all vertices of the internal graph) is restricted to act only on the vertices corresponding to <A>omega</A>. This restricted group is returned.
+##  Then, it computes the automorphism group of this colored digraph using
+##  <C>BlissAutomorphismGroup</C> from the <Package>Digraphs</Package> package.
+##  Finally, the resulting automorphism group is returned as a permutation
+##  group acting on the points in <A>omega</A>.
 ##  </Description>
 ##  </ManSection>
 ##  <#/GAPDoc>
@@ -161,10 +187,13 @@ DeclareGlobalName("StabilizerOfFundamentalStructure");
 ##  <Func Name="StabilizerOfFundamentalStructureWithGroup" Arg="fs, omega, grp"/>
 ##  <Description>
 ##  Computes the stabilizer of the fundamental structure <A>fs</A> within a given permutation group <A>grp</A>.
+##  This function requires the <Package>vole</Package> package to be loaded.
 ##  <P/>
 ##  <A>fs</A> is the fundamental structure.
-##  <A>omega</A> is a list of atomic elements. The group <A>grp</A> must act on these points (or, more precisely, on <C>[1..Length(omega)]</C> corresponding to these points).
-##  <A>grp</A> is a permutation group. The search for stabilizing permutations will be restricted to those derivable from <A>grp</A>.
+##  <A>omega</A> is a list of atomic elements, which must contain every atom
+##  of <A>fs</A> and every point moved by <A>grp</A>.
+##  <A>grp</A> is a permutation group acting on the points in <A>omega</A>.
+##  The search for stabilizing permutations is restricted to <A>grp</A>.
 ##  <P/>
 ##  The function converts <A>fs</A> into a colored digraph (using <C>_convertToDigraph</C> with <A>omega</A> as a single part for coloring).
 ##  It then constructs a candidate group for <C>VoleFind.Group</C> by combining <A>grp</A> (acting on <A>omega</A> vertices) with the symmetric group on the remaining non-<A>omega</A> vertices of the graph.
@@ -180,11 +209,13 @@ DeclareGlobalName("StabilizerOfFundamentalStructureWithGroup");
 ##  <ManSection>
 ##  <Func Name="CanonicalPermOfFundamentalStructureWithGroup" Arg="fs, omega, grp"/>
 ##  <Description>
-##  Computes a canonicalizing permutation for the fundamental structure <A>fs</A> with respect to <A>omega</A>, restricting the search to permutations related to the group <A>grp</A>.
+##  Computes a canonicalizing permutation for the fundamental structure <A>fs</A> with respect to <A>omega</A>, restricting the search to the group <A>grp</A>.
+##  This function requires the <Package>vole</Package> package to be loaded.
 ##  <P/>
 ##  <A>fs</A> is the fundamental structure.
-##  <A>omega</A> is a list of atomic elements.
-##  <A>grp</A> is a permutation group acting on <A>omega</A> (i.e., on <C>[1..Length(omega)]</C>).
+##  <A>omega</A> is a list of atomic elements, which must contain every atom
+##  of <A>fs</A> and every point moved by <A>grp</A>.
+##  <A>grp</A> is a permutation group acting on the points in <A>omega</A>.
 ##  <P/>
 ##  Similar to <Ref Func="StabilizerOfFundamentalStructureWithGroup"/>, this function converts <A>fs</A> to a colored digraph.
 ##  It forms a candidate group by combining <A>grp</A> (acting on <A>omega</A> vertices) with the symmetric group on non-<A>omega</A> vertices.
@@ -205,7 +236,7 @@ DeclareGlobalName("CanonicalPermOfFundamentalStructureWithGroup");
 ##  <A>fs</A> is the fundamental structure.
 ##  <A>omega</A> is a list of atomic elements.
 ##  <P/>
-##  This function is a convenience wrapper that calls <Ref Func="CanonicalPermOfFundamentalStructureWithGroup"/> with <A>fs</A>, <A>omega</A>, and <C>SymmetricGroup(omega)</C> (more precisely, <C>SymmetricGroup(Length(omega))</C> if omega itself is not <C>[1..n]</C>).
+##  This function is a convenience wrapper that calls <Ref Func="CanonicalPermOfFundamentalStructureWithGroup"/> with <A>fs</A>, <A>omega</A>, and <C>SymmetricGroup(<A>omega</A>)</C>. It requires the <Package>vole</Package> package to be loaded.
 ##  It returns a permutation acting on <A>omega</A> that maps <A>fs</A> to its canonical form.
 ##  </Description>
 ##  </ManSection>
@@ -219,7 +250,10 @@ DeclareGlobalName("CanonicalPermOfFundamentalStructure");
 ##  <Description>
 ##  Adjusts a permutation <A>p</A> (acting on <C>[1..<A>n</A>]</C>) to create a new permutation that respects a given coloring. The intent is to refine a canonical labeling <A>p</A> such that elements within the same color class are ordered canonically based on their preimages under <A>p</A>.
 ##  <P/>
-##  <A>n</A> is the number of points being permuted.
+##  <A>n</A> is the number of points being permuted; it is raised internally
+##  if <A>p</A> or <A>colours</A> mention larger points, and points of
+##  <C>[1..<A>n</A>]</C> not in any colour class are treated as one extra
+##  class.
 ##  <A>p</A> is the input permutation, typically a canonical labeling permutation obtained from a graph algorithm.
 ##  <A>colours</A> is a list of lists, where each inner list <C><A>colours</A>[i]</C> contains points belonging to the i-th color class. These inner lists are treated as sets.
 ##  <P/>

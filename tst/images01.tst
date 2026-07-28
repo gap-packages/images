@@ -33,5 +33,13 @@ gap> MinimalImage(G, [1,6,7,8], OnSets);
 gap> MinimalImage(G, [3,5,7,8], OnSets);
 [ 1, 2, 6, 8 ]
 
+# doc/solve.xml:53-60
+gap> p := MinimalImage(G, [2,3,5,7], OnSets, rec(result := GetPerm));
+(1,3,2)(4,6,5)(7,9,8)
+gap> OnSets([2,3,5,7], p);
+[ 1, 2, 4, 9 ]
+gap> MinimalImage(G, [2,3,5,7], OnSets, rec(result := GetBool));
+false
+
 #
 gap> STOP_TEST("images01.tst", 1);

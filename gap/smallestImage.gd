@@ -39,13 +39,18 @@ DeclareAttribute( "MaxOrbitPerm", IsPermGroup );
 ##  <Ref Func="MinimalImage"/> returns the minimal image of <A>pnt</A> under
 ##  the group <A>G</A>. <Ref Func="IsMinimalImage"/> returns a boolean which
 ##  is <K>true</K> if <Ref Func="MinimalImage"/> would return <A>pnt</A> (so
-##  the value is it's own minimal image).
+##  the value is its own minimal image).
 ##  <P/>
-##  <Ref Func="MinimalImagePerm"/> returns the permutation which maps
-##  <A>pnt</A> to its minimal image.
+##  <Ref Func="MinimalImagePerm"/> returns a permutation in <A>G</A> which
+##  maps <A>pnt</A> to its minimal image.
 ##  <P/>
-##  The option <A>Config</A> defines a number of advanced configuration
-##  options, which are described in <Ref Var="ImagesAdvancedConfig"/>.
+##  The supported combinations of <A>pnt</A> and <A>act</A> are listed in
+##  Section <Ref Sect="ImagesSupportedActions"/>. The option <A>Config</A>
+##  defines a number of advanced configuration options, which are described
+##  in <Ref Var="ImagesAdvancedConfig"/>. Note that passing an <C>order</C>
+##  option changes which image these functions compute: with any order other
+##  than <C>CanonicalConfig_Minimum</C> they behave like
+##  <Ref Func="CanonicalImage"/> and the result need not be minimal.
 ##  </Description>
 ##  </ManSection>
 ##  <#/GAPDoc>
@@ -56,16 +61,18 @@ DeclareGlobalFunction("MinimalImagePerm");
 #############################################################################
 ##  <#GAPDoc Label="IsMinimalImageLessThan">
 ##  <ManSection>
-##  <Func Name="IsMinimalImageLessThan" Arg="G, A, B[, act][, config]"/>
+##  <Func Name="IsMinimalImageLessThan" Arg="G, A, B, act"/>
 ##  <Description>
-##  <Ref Func="IsMinimalImageLessThan"/> checks if the minimal image of 
+##  <Ref Func="IsMinimalImageLessThan"/> checks if the minimal image of
 ##  <A>A</A> under the group <A>G</A> is smaller than <A>B</A>.
 ##  <P/>
-##  It returns MinImage.Smaller, MinImage.Equal or MinImage.Larger, if the
-##  minimal image of <A>A</A> is smaller, equal or larger than <A>B</A>.
+##  It returns <C>MinImage.Smaller</C>, <C>MinImage.Equal</C> or
+##  <C>MinImage.Larger</C>, if the minimal image of <A>A</A> is smaller,
+##  equal or larger than <A>B</A>.
 ##  <P/>
-##  The option <A>Config</A> defines a number of advanced configuration
-##  options, which are described in <Ref Var="ImagesAdvancedConfig"/>.
+##  <A>A</A> and <A>B</A> must be sets of the same size, and <A>act</A> must
+##  be <C>OnSets</C>; no other actions are currently supported, and this
+##  function accepts no configuration record.
 ##  </Description>
 ##  </ManSection>
 ##  <#/GAPDoc>
@@ -74,24 +81,27 @@ DeclareGlobalFunction("IsMinimalImageLessThan");
 #############################################################################
 ##  <#GAPDoc Label="CanonicalImage">
 ##  <ManSection>
-##  <Func Name="CanonicalImage" Arg="G[, pnt][, act][, Config]"/>
-##  <Func Name="IsCanonicalImage" Arg="G[, pnt][, act][, Config]"/>
-##  <Func Name="CanonicalImagePerm" Arg="G, [, pnt][, act][, Config]"/>
+##  <Func Name="CanonicalImage" Arg="G, pnt[, act][, Config]"/>
+##  <Func Name="IsCanonicalImage" Arg="G, pnt[, act][, Config]"/>
+##  <Func Name="CanonicalImagePerm" Arg="G, pnt[, act][, Config]"/>
 
 ##  <Description>
 ##  <Ref Func="CanonicalImage"/> returns a canonical image of <A>pnt</A> under
 ##  the group <A>G</A>. <Ref Func="IsCanonicalImage"/> returns a boolean which
 ##  is <K>true</K> if <Ref Func="CanonicalImage"/> would return <A>pnt</A> (so
-##  the value is it's own minimal image).
+##  the value is its own canonical image).
 ##  <P/>
-##  <Ref Func="CanonicalImagePerm"/> returns the permutation which maps
-##  <A>pnt</A> to its minimal image.
+##  <Ref Func="CanonicalImagePerm"/> returns a permutation in <A>G</A> which
+##  maps <A>pnt</A> to its canonical image.
 ##  <P/>
-##  By default, these functions use the fastest algorithm for calculating
-##  canonical images, which is often changed in new versions of the package.
+##  By default, these functions use <C>CanonicalConfig_Fast</C>, an alias for
+##  the fastest known ordering (currently
+##  <C>CanonicalConfig_RareRatioOrbitFixPlusMin</C>), which may change in new
+##  versions of the package. The supported combinations of <A>pnt</A> and
+##  <A>act</A> are listed in Section <Ref Sect="ImagesSupportedActions"/>.
 ##  The option <A>Config</A> defines a number of advanced configuration
-##  options, which are described in <Ref Var="ImagesAdvancedConfig"/>. These include the ability
-##  to choose the canonicalising algorithm used.
+##  options, which are described in <Ref Var="ImagesAdvancedConfig"/>. These
+##  include the ability to choose the canonicalising algorithm used.
 ##  </Description>
 ##  </ManSection>
 ##  <#/GAPDoc>
@@ -103,6 +113,22 @@ DeclareGlobalFunction("_CanonicalImageParse");
 
 DeclareOperation( "CanonicalImageOp", [IsPermGroup, IsObject, IsFunction, IsObject] );
 
+#############################################################################
+##  <#GAPDoc Label="MinimalImagePair">
+##  <ManSection>
+##  <Oper Name="MinimalImageOrderedPair" Arg="G, pair[, act]"/>
+##  <Oper Name="MinimalImageUnorderedPair" Arg="G, pair[, act]"/>
+##  <Description>
+##  <Ref Oper="MinimalImageOrderedPair"/> returns the lexicographically
+##  smallest pair <C>[A,B]</C> such that some single <C>g</C> in <A>G</A>
+##  maps <C><A>pair</A>[1]</C> to <C>A</C> and <C><A>pair</A>[2]</C> to
+##  <C>B</C> under <A>act</A>.
+##  <Ref Oper="MinimalImageUnorderedPair"/> instead minimises over both
+##  orderings of the pair, so exchanging the two entries of <A>pair</A> does
+##  not change the result. The default action is <C>OnPoints</C>.
+##  </Description>
+##  </ManSection>
+##  <#/GAPDoc>
 DeclareOperation( "MinimalImageUnorderedPair", [IsPermGroup, IsObject]);
 DeclareOperation( "MinimalImageUnorderedPair", [IsPermGroup, IsObject, IsFunction]);
 DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject]);
@@ -121,14 +147,12 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##  
 ##  <List>
 ##    <Mark><C>order</C></Mark>
-##    <Item> The search ordering used while building the image. There are many
-##    configuration options available. We shall list here just the three
-##    most useful ones. A full list is in the paper "Minimal and Canonical Images" by
-##    the authors of this package.
+##    <Item> The search ordering used while building the image. The most
+##    useful values are:
 ##      <List>
 ##         <Mark><C>CanonicalConfig_Minimum</C></Mark>
 ##       <Item>
-##         Lexicographically smallest set -- same as using MinimalImage.
+##         Lexicographically smallest image -- same as using MinimalImage.
 ##       </Item>
 ##         <Mark><C>CanonicalConfig_FixedMinOrbit</C></Mark>
 ##       <Item>
@@ -138,24 +162,72 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##         canonicalising transformations, permutations or partial
 ##         permutations, and will raise an error there.
 ##       </Item>
-##         <Mark><C>CanonicalConfig_RareRatioOrbitFixPlusMin</C></Mark>
+##         <Mark><C>CanonicalConfig_Fast</C></Mark>
 ##       <Item>
-##         The current best algorithm (default)
+##         The current best algorithm, and the default for
+##         <Ref Func="CanonicalImage"/>. It is an alias, currently for
+##         <C>CanonicalConfig_RareRatioOrbitFixPlusMin</C>, and may change
+##         between versions of the package.
 ##       </Item>
 ##      </List>
+##    The full list of orderings, whose behaviour is described in the paper
+##    <Cite Key="JJPW19"/>, is: <C>CanonicalConfig_Minimum</C>,
+##    <C>CanonicalConfig_MinOrbit</C>, <C>CanonicalConfig_MaxOrbit</C>,
+##    <C>CanonicalConfig_SingleMaxOrbit</C>, <C>CanonicalConfig_RareOrbit</C>,
+##    <C>CanonicalConfig_CommonOrbit</C>, <C>CanonicalConfig_RareRatioOrbit</C>,
+##    <C>CanonicalConfig_CommonRatioOrbit</C>,
+##    <C>CanonicalConfig_RareRatioOrbitFix</C>,
+##    <C>CanonicalConfig_CommonRatioOrbitFix</C>,
+##    <C>CanonicalConfig_RareRatioOrbitFixPlusMin</C>,
+##    <C>CanonicalConfig_RareRatioOrbitFixPlusRare</C>,
+##    <C>CanonicalConfig_RareRatioOrbitFixPlusCommon</C>,
+##    <C>CanonicalConfig_RareOrbitPlusMin</C>,
+##    <C>CanonicalConfig_RareOrbitPlusRare</C>,
+##    <C>CanonicalConfig_RareOrbitPlusCommon</C>,
+##    <C>CanonicalConfig_FixedMinOrbit</C>,
+##    <C>CanonicalConfig_FixedMaxOrbit</C> and <C>CanonicalConfig_Fast</C>.
+##    <P/>
+##    Note that these values are the value of the <C>order</C> component of
+##    the configuration record, as in <C>rec(order :=
+##    CanonicalConfig_Fast)</C> -- passing one directly as the whole
+##    configuration record is an error. For the action <C>OnSetsSets</C> the
+##    ordering is currently ignored, and the minimal image is computed
+##    whatever <C>order</C> is given.
+##    </Item>
+##    <Mark><C>result</C></Mark>
+##    <Item>What to return: <C>GetImage</C> (the image, the default),
+##    <C>GetPerm</C> (a permutation in <A>G</A> mapping <A>O</A> to its
+##    image, as <Ref Func="MinimalImagePerm"/> returns), or <C>GetBool</C>
+##    (<K>true</K> if <A>O</A> is its own image, as
+##    <Ref Func="IsMinimalImage"/> returns, which is often much faster than
+##    computing the image).
 ##    </Item>
 ##    <Mark><C>stabilizer</C></Mark>
 ##    <Item>The group <C>Stabilizer(<A>G</A>,<A>O</A>,<A>A</A>)</C>,
 ##    or a subgroup of this group; see <Ref Func="Stabilizer" BookName="ref"/>.
 ##    If this group is large, it is more efficient to pre-calculate it.
 ##    Default behaviour is to calculate the group, pass <C>Group(())</C> to disable
-##    this behaviour. This is not checked, and passing an incorrect group will
-##    produce incorrect answers.
+##    this behaviour. Passing a group which does not stabilize <A>O</A> will
+##    produce incorrect answers (on some code paths this is detected and
+##    raises an error, but this cannot be relied on).
 ##    <P/>
-##    When canonicalising transformations or partial permutations, the
-##    default stabilizer is computed with the <Package>ferret</Package>
-##    package when it is loaded, which is much faster for groups of large
-##    degree; without <Package>ferret</Package> a slower fallback is used.
+##    When canonicalising transformations, permutations or partial
+##    permutations, the default stabilizer is computed with the
+##    <Package>ferret</Package> package when it is loaded, which is much
+##    faster for groups of large degree; without <Package>ferret</Package> a
+##    slower fallback is used. For permutations the default is the
+##    centralizer.
+##    <P/>
+##    This option is honoured for sets, transformations, permutations and
+##    partial permutations. It is silently ignored for <C>OnTuples</C>,
+##    <C>OnTuplesSets</C>, points and fundamental structures, and for
+##    <C>OnSetsSets</C> only the trivial group is accepted.
+##    <P/>
+##    Beware of passing <C>Group(())</C> together with one of the dynamic
+##    orderings when the true stabilizer of <A>O</A> is very large: the
+##    search then rediscovers the stabilizer piecemeal, and can take many
+##    seconds on instances the default settings solve instantly. The same
+##    applies to <C>disableStabilizerCheck</C>.
 ##    </Item>
 ##    <Mark><C>disableStabilizerCheck</C> (default <K>false</K>)</Mark>
 ##    <Item> By default, during search we perform cheap checks to try to find
@@ -164,15 +236,21 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    subgroup.
 ##    </Item>
 ##    <Mark><C>getStab</C> (default <K>false</K>)</Mark>
-##    <Item> Return the calculated value of <C>Stabilizer(<A>G</A>,<A>O</A>,<A>A</A>)</C>.
-##    This may return a subgroup rather than the whole stabilizer.
+##    <Item> Store the stabilizer calculated during the search in the
+##    <C>stab</C> component of the configuration record that was passed in.
+##    With the <C>"vole"</C> engine this is
+##    <C>Stabilizer(<A>G</A>,<A>O</A>,<A>A</A>)</C>; with the native engine
+##    it is a subgroup stabilizing the returned image, and may be a proper
+##    subgroup. It is honoured on the same paths as <C>stabilizer</C>.
 ##    </Item>
 ##    <Mark><C>engine</C> (default <C>"native"</C>)</Mark>
 ##    <Item> Which algorithm to use to compute the canonical image. The default
 ##    <C>"native"</C> uses this package's own algorithm. Passing <C>"vole"</C>
 ##    instead computes the canonical image using the <Package>vole</Package>
-##    package (via <C>VoleFind.Canonical</C>), which supports the same actions.
-##    <Package>vole</Package> is an optional dependency, loaded on demand; an
+##    package (via <C>VoleFind.Canonical</C>), which supports the same actions
+##    except for fundamental structures
+##    (Chapter <Ref Chap="FundamentalAndCombinatorialStructures"/>).
+##    <Package>vole</Package> must already be loaded; an
 ##    error is raised if it is requested but not available.
 ##    Note that <Package>vole</Package> produces a different (but equally valid)
 ##    canonical representative, so the two engines must not be mixed for a given

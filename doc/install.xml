@@ -10,6 +10,17 @@
 
 To install the &Images; package simply place &Images; into the pkg
 directory of your &GAP; installation.
+<P/>
+The package requires &GAP; 4.13 or later, together with the
+<Package>Digraphs</Package> and <Package>Datastructures</Package> packages
+(both part of the standard &GAP; package distribution). Two further
+packages are optional but recommended, and are used automatically when
+available: <Package>ferret</Package> greatly speeds up the stabilizer
+computations used when canonicalising transformations, permutations,
+partial permutations and sets of sets, and <Package>vole</Package> is
+required for the <C>"vole"</C> engine and for canonicalising fundamental
+structures under groups which are not direct products of symmetric groups
+(see Chapter <Ref Chap="FundamentalAndCombinatorialStructures"/>).
 
 
 <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
