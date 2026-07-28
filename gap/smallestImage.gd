@@ -219,7 +219,10 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    <Package>ferret</Package> package when it is loaded, which is much
 ##    faster for groups of large degree; without <Package>ferret</Package> a
 ##    slower fallback is used. For permutations the default is the
-##    centralizer.
+##    centralizer. For the minimum orderings (which
+##    <Ref Func="MinimalImage"/> and its variants use), an object whose
+##    orbit under <A>G</A> is small is answered by enumerating the orbit
+##    directly, and then no stabilizer is needed at all.
 ##    <P/>
 ##    This option is honoured for sets, transformations, permutations and
 ##    partial permutations. It is silently ignored for <C>OnTuples</C>,

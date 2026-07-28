@@ -34,6 +34,31 @@ gap> MinimalImage(SymmetricGroup(5), Transformation([2,1,1]), OnPoints,
 >                 rec(stabilizer := Group((4,5))))
 >    = MinimalImage(SymmetricGroup(5), Transformation([2,1,1]), OnPoints);
 true
+
+# objects with a small orbit are answered by a direct enumeration
+# pre-pass; cover each result type and input type, with and without a
+# stabilizer, on a group whose stabilizer chain would be expensive
+gap> G := Group(Concatenation(GeneratorsOfGroup(SymmetricGroup(5)),
+>                             GeneratorsOfGroup(SymmetricGroup([6..40]))));;
+gap> t := Transformation(Concatenation([2,3,4,5,1], [6..40]));;
+gap> MinimalImage(G, t, OnPoints) = Transformation([2,3,4,5,1]);
+true
+gap> IsMinimalImage(G, t, OnPoints);
+true
+gap> MinimalImage(G, t, OnPoints,
+>        rec(stabilizer := Group(Concatenation([(1,2,3,4,5)],
+>            GeneratorsOfGroup(SymmetricGroup([6..40]))))))
+>    = Transformation([2,3,4,5,1]);
+true
+gap> MinimalImage(SymmetricGroup(12), (1,2), OnPoints);
+(11,12)
+gap> IsMinimalImage(SymmetricGroup(12), (1,2), OnPoints);
+false
+gap> (1,2)^MinimalImagePerm(SymmetricGroup(12), (1,2), OnPoints);
+(11,12)
+gap> MinimalImage(SymmetricGroup(9), PartialPerm([4],[7]), OnPoints)
+>    = PartialPerm([1],[2]);
+true
 gap> STOP_TEST( "test_minimage.tst", 10000 );
 images package: test_minimage.tst
 #############################################################################

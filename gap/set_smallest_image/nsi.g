@@ -693,7 +693,7 @@ _IMAGES_PairActionIface := function(G, mMax)
             return Length(chain.generators) = 0;
         end,
         positionAction := function(k, set)
-            local perms, gen, pos, img, i, perm;
+            local perms, gen, pos, img, i, perm, grp, covered, count, r;
             perms := [];
             for gen in GeneratorsOfGroup(k) do
                 perm := [];
@@ -707,7 +707,29 @@ _IMAGES_PairActionIface := function(G, mMax)
                 od;
                 Add(perms, PermList(perm));
             od;
-            return Group(perms, ());
+            grp := Group(perms, ());
+            # When the rows of the encoded pairs cover every point, an
+            # element of k fixing every pair fixes every point, so the
+            # position action is faithful and grp inherits the order of
+            # k. Without a known order the search's first point
+            # stabilizer of grp runs a full Schreier-Sims, which for
+            # large stabilizers costs orders of magnitude more than the
+            # whole remaining search.
+            if HasSize(k) or HasStabChainMutable(k) then
+                covered := BlistList([1..mMax], []);
+                count := 0;
+                for i in [1..Length(set)] do
+                    r := (set[i] - 1) mod mMax + 1;
+                    if not covered[r] then
+                        covered[r] := true;
+                        count := count + 1;
+                    fi;
+                od;
+                if count = mMax then
+                    SetSize(grp, Size(k));
+                fi;
+            fi;
+            return grp;
         end,
         repAction := function(S, T)
             local tup1, tup2, i, r, perm;
