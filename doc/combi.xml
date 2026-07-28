@@ -1,7 +1,73 @@
 <Chapter Label="FundamentalAndCombinatorialStructures">
 <Heading>Fundamental and Combinatorial Structures and Associated Graph Algorithms</Heading>
 
-This section details the <C>Fundamental</C> and <C>Combinatorial</C> records, which are used for creating and manipulating structured data representations within GAP. It also covers functions for converting these structures into graphs and for computing their stabilizers and canonical forms.
+This chapter details the <C>Fundamental</C> and <C>Combinatorial</C> records, which are used for creating and manipulating structured data representations within GAP. It also covers functions for converting these structures into graphs and for computing their stabilizers and canonical forms.
+<P/>
+Fundamental structures can be passed directly to <Ref Func="CanonicalImage"/>,
+<Ref Func="CanonicalImagePerm"/> and <Ref Func="IsCanonicalImage"/>, with the
+action <C>OnFundamental</C> (which is also the default action for them).
+<B>Note:</B> unless the group is a direct product of natural symmetric groups
+(such as the full symmetric group on the atoms), canonicalising a fundamental
+structure requires the optional <Package>vole</Package> package to be loaded.
+The graph computations in this chapter use bliss, through the required
+<Package>Digraphs</Package> package.
+
+<Section Label="CombiExamples">
+<Heading>Worked examples</Heading>
+
+As a first example we canonicalise Latin squares, considering two squares
+equivalent (isotopic) if one can be reached from the other by permuting rows,
+permuting columns, and renaming symbols. We represent a square as a 2D matrix
+whose row and column indices are drawn from points disjoint from the symbols,
+and attach a colouring so rows, columns and symbols cannot be exchanged with
+each other.
+
+<Example><![CDATA[
+gap> LoadPackage("images", false);
+true
+gap> n := 4;;
+gap> row := [n+1..2*n];;  col := [2*n+1..3*n];;
+gap> enc := m -> Combinatorial.WithColoring(
+>        Combinatorial.Matrix2D(m, row, col), [[1..n], row, col]);;
+gap> klein := [[1,2,3,4],[2,1,4,3],[3,4,1,2],[4,3,2,1]];;
+]]></Example>
+
+Now any group acting on the points <C>[1..3*n]</C> can be used to
+canonicalise; permutations which mix the colour classes are excluded by the
+colouring. The canonical image is the same whichever equivalent square we
+start from: here we scramble the Klein table by swapping two symbols, two
+rows and two columns. The order 4 Latin squares fall into exactly two
+isotopy classes, represented by the Klein and cyclic group tables, and the
+canonical images separate them.
+
+<Example><![CDATA[
+gap> klein2 := [[3,1,2,4],[1,3,4,2],[2,4,3,1],[4,2,1,3]];;
+gap> z4 := [[1,2,3,4],[2,3,4,1],[3,4,1,2],[4,1,2,3]];;
+gap> can1 := CanonicalImage(SymmetricGroup(3*n), enc(klein), OnFundamental);;
+gap> can2 := CanonicalImage(SymmetricGroup(3*n), enc(klein2), OnFundamental);;
+gap> can3 := CanonicalImage(SymmetricGroup(3*n), enc(z4), OnFundamental);;
+gap> can1 = can2;
+true
+gap> can1 = can3;
+false
+]]></Example>
+
+As a second example, the multiplication table of a semigroup of order
+<M>n</M> can be canonicalised up to isomorphism as a 2D matrix on which
+<C>SymmetricGroup(n)</C> acts simultaneously on values, rows and columns.
+
+<Example><![CDATA[
+gap> mat := [[1,2,3,4],[1,4,3,2],[1,2,4,3],[4,2,1,3]];;
+gap> fullm := Combinatorial.Matrix2D(mat, [1..4], [1..4]);;
+gap> CanonicalImagePerm(SymmetricGroup(4), fullm);
+(1,4,3,2)
+]]></Example>
+
+A pair of such tables can be treated as an ordered pair with
+<C>Combinatorial.Tuple</C>, or as an unordered pair with
+<C>Combinatorial.Multiset</C>.
+
+</Section>
 
 <Section Label="Function Documentation combi">
 <Heading>Function documentation</Heading>
@@ -16,6 +82,8 @@ The following functions operate on these fundamental structures:
 
 <#Include Label="OnFundamental" />
 This function describes how permutations act on fundamental structures.
+
+<#Include Label="AtomsOfFundamentalStructure" />
 
 <#Include Label="GraphOfFundamentalStructure" />
 This function explains the conversion of a fundamental structure into a graph representation, which is essential for the subsequent algorithms.

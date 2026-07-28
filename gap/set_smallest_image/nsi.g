@@ -1,32 +1,25 @@
+# The minimal/canonical image search at the heart of the images package.
 #
-# V 1.1 - Bug fixed
+# Originally by Steve Linton; extended by Chris Jefferson and others.
 #
-# By Steve Linton
+# The entry point is
 #
-# Bad documentation by Chris Jefferson
+#   _NewSmallestImage(g, set, k, skip_func, early_exit,
+#                     disableStabilizerCheck, config_option)
 #
-# Finds the minimal image of a Set set under a group G.
+# where g is either a permutation group or a group interface record (see
+# below), set is the set to minimise, k a known subgroup of its stabilizer,
+# skip_func is vestigial (every caller passes x -> x), early_exit is
+# [false] or [true, bound] for IsMinimalImageLessThan-style comparisons,
+# and config_option selects the search ordering (see the CanonicalConfig_*
+# records in smallestImage.gd; a blockSize component switches on the
+# blocked, sets-of-sets, ordering).
 #
-# Usage: NewSmallestImage(G, set, stab, x -> x);
-#
-# (ignore the last argument!)
-#
-# Where stab should be a subgroup of
-# Stabilizer(G,set);
-#
-# If in doubt, the best way to invoke this algorithm
-# is:
-# NewSmallestImage(G, set, Stabilizer(G, set, OnSets), x -> x);
-#
-# Returns a pair [image, stabilizer], where stabilizer is a subgroup of Stabilizer(G, set), possibly larger than the one given into the function.
-#
-# Note: The return type of this is NOT a set, but provides the pointwise mapping of the input set.
-# This means the permutation which actually provides the smallest image can be found cheaply as follows:
-#
-# res := NewSmallestImage(G, set, Group(()), x -> x);
-# perm := RepresentativeAction(G, set, res[1], OnTuples);
-
-
+# Returns [image, stabilizer]: image is the pointwise mapping of the input
+# set (NOT sorted; Set(image) is the image as a set, and the mapping allows
+# the corresponding permutation to be recovered), and stabilizer is a
+# subgroup of the stabilizer of the image, possibly larger than k. In
+# early-exit mode image may instead be MinImage.Smaller or MinImage.Larger.
 
 #
 # Search node data:
@@ -289,8 +282,8 @@ end;
 # given stabilizer subgroup on the set. The two constructors below build that
 # interface, so the same search code runs either over an explicit permutation
 # group, or over the "row-column" action of G on encoded pairs
-# (pt = i + (j-1)*mMax <-> pair (i,j)) without ever constructing the
-# mMax^2-point group which _rowColGen builds.
+# (pt = i + (j-1)*mMax <-> pair (i,j)) without ever constructing an explicit
+# group on mMax^2 points.
 
 # The interface record contains:
 #   nPoints              largest point of the domain
