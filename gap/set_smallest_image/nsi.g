@@ -315,7 +315,6 @@ _IMAGES_NativeGroupIface := function(g)
     local s;
     s := StabChainMutable(g);
     return rec(
-        isNative := true,
         nPoints := LargestMovedPoint(g),
         startDepth := function() end,
         levelGens := function() return s.generators; end,
@@ -431,7 +430,6 @@ _IMAGES_PairActionIface := function(G, mMax)
     end;
 
     return rec(
-        isNative := false,
         nPoints := mMax * mMax,
         startDepth := function()
             bpMins := [];
@@ -686,7 +684,8 @@ _IMAGES_PairActionIface := function(G, mMax)
             cs := (t - rs + 1)/mMax + 1;
             image := rows{rs} + (rows{cs} - 1)*mMax;
             if image[x] <> basepoint then
-                ErrorNoReturn("panic: walk did not reach the base point");
+                ErrorNoReturn("internal error in the images package (a transversal walk ",
+                              "missed its target); please report this");
             fi;
             return image;
         end,
@@ -731,7 +730,9 @@ _IMAGES_PairActionIface := function(G, mMax)
             od;
             perm := RepresentativeAction(G, tup1, tup2, OnTuples);
             if perm = fail then
-                ErrorNoReturn("panic: no group element maps the object to its computed image");
+                ErrorNoReturn("internal error in the images package (no group element ",
+                              "maps the object to its computed image); ",
+                              "please report this");
             fi;
             return perm;
         end);
@@ -779,7 +780,6 @@ _IMAGES_SetSetActionIface := function(G, mMax, nBlocks)
     end;
 
     return rec(
-        isNative := false,
         nPoints := mMax * nBlocks,
         startDepth := function()
             svGen := [];
@@ -877,7 +877,8 @@ _IMAGES_SetSetActionIface := function(G, mMax, nBlocks)
                 image := OnTuples(image, liftedGens[i]);
             od;
             if image[x] <> basepoint then
-                ErrorNoReturn("panic: walk did not reach the base point");
+                ErrorNoReturn("internal error in the images package (a transversal walk ",
+                              "missed its target); please report this");
             fi;
             return image;
         end,
@@ -912,7 +913,9 @@ _IMAGES_SetSetActionIface := function(G, mMax, nBlocks)
             od;
             g := RepresentativeAction(G, ps, qs, OnTuples);
             if g = fail then
-                ErrorNoReturn("panic: no group element maps the object to its computed image");
+                ErrorNoReturn("internal error in the images package (no group element ",
+                              "maps the object to its computed image); ",
+                              "please report this");
             fi;
             return g;
         end);
@@ -997,7 +1000,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                                     fi;
                                  end;
             else
-                ErrorNoReturn("?");
+                ErrorNoReturn("panic: unhandled ordering in CanonicalImage");
             fi;
         elif config_option.order in ["RareOrbit", "CommonOrbit", "RareRatioOrbit", "CommonRatioOrbit",
                                      "RareRatioOrbitFix", "CommonRatioOrbitFix"] then
@@ -1020,7 +1023,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             elif config_option.order = "CommonRatioOrbitFix" then
                 config.calculateBestOrbit := _IMAGES_COMMON_RATIO_ORBIT_FIX;
             else
-                ErrorNoReturn("?");
+                ErrorNoReturn("panic: unhandled ordering in CanonicalImage");
             fi;
         else
             ErrorNoReturn("Invalid ordering: ", config_option.order);
@@ -1034,7 +1037,7 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
             elif config_option.orbfilt = "Common" then
                 config.findBestOrbMset := function(x,y) return x > y; end;
             else
-                Error("Invalid 'orbfilt' option");
+                ErrorNoReturn("Invalid 'orbfilt' option");
             fi;
             config.preFilterByOrbMset := true;
         fi;
@@ -1615,10 +1618,6 @@ _NewSmallestImage := function(g,set,k,skip_func, early_exit, disableStabilizerCh
                         handle_new_stabilizer_element(node, he);
                     else
                         AddHashEntry(dict, node.imset, node);
-#                    if hash(node.imset) in seen then
-#                        Error("");
-#                    fi;
-#                    AddSet(seen, hash(node.imset));
                     fi;
                     node := next_node(node);
                 od;
