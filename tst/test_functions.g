@@ -353,10 +353,21 @@ CheckMinimalImageTuple := function()
     od;
 end;;
 
+# The OnTuples path computes Stabilizer(G, x) for each tuple entry, which
+# for transformations and permutations enumerates the conjugation orbit;
+# keep the groups small enough for that to be feasible
+_randomBoundedGroup := function(size)
+    local g;
+    repeat
+        g := randomGroup(size);
+    until Size(g) <= FERRET_TEST_LIMIT.bruteForceLimit;
+    return g;
+end;;
+
 CheckMinimalImageTupleTransformation := function()
     local i;
     for i in [1..FERRET_TEST_LIMIT.count] do
-        CheckMinimalImageTest(randomGroup(Random([2..FERRET_TEST_LIMIT.groupSize])),
+        CheckMinimalImageTest(_randomBoundedGroup(Random([2..FERRET_TEST_LIMIT.groupSize])),
                               List([1..Random([1..FERRET_TEST_LIMIT.groupSize/2])],
                                     x -> cajRandomTransformation(Random([1..FERRET_TEST_LIMIT.groupSize + 2]))), OnTuples, Minimum);
     od;
@@ -367,7 +378,7 @@ CheckMinimalImageTuplePerm := function()
     CheckMinimalImageTest(Group(()), [()], OnTuples, Minimum);
     CheckMinimalImageTest(Group((1,2,3)), [(1,2),(2,3)], OnTuples, Minimum);
     for i in [1..FERRET_TEST_LIMIT.count] do
-        CheckMinimalImageTest(randomGroup(Random([2..FERRET_TEST_LIMIT.groupSize])),
+        CheckMinimalImageTest(_randomBoundedGroup(Random([2..FERRET_TEST_LIMIT.groupSize])),
                               List([1..Random([1..3])],
                                     x -> Random(SymmetricGroup(Random([1..FERRET_TEST_LIMIT.groupSize + 2])))), OnTuples, Minimum);
     od;
