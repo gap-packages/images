@@ -622,6 +622,11 @@ function(inGroup, inList, op, settings)
   if op = OnSets then
       if settings.stabilizer <> fail then
           stab := settings.stabilizer;
+          # a group is a subgroup of the stabilizer iff its generators
+          # preserve the set, so this check is cheap and complete
+          if not ForAll(GeneratorsOfGroup(stab), g -> OnSets(inList, g) = inList) then
+              ErrorNoReturn("the given <stabilizer> does not stabilize the object");
+          fi;
       else
           stab := Stabilizer(inGroup, inList, OnSets);
       fi;
@@ -719,8 +724,7 @@ function(inGroup, inList, op, settings)
 
 end);
 
-# Vole is an optional dependency. This loads it on demand (raising a clear error
-# if it is unavailable)
+# Vole is an optional dependency; raise a clear error if it is not loaded
 _ImagesVoleGlobals := function(why)
   if not IsBoundGlobal("VoleFind") then
     ErrorNoReturn(why, " requires the 'vole' package, which could not be ",
