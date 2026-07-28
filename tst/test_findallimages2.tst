@@ -8,6 +8,7 @@ gap> LoadPackage("images",false);
 true
 gap> ReadPackage("images","tst/test_functions.g");;
 gap> CheckFindAllMinimalImages();
+gap> CheckAllMinimalPairs();
 gap> STOP_TEST( "test_findallimages2.tst", 10000 );
 images package: test_findallimages2.tst
 #############################################################################

@@ -170,7 +170,7 @@ AllMinimalOrderedPairs := function(G, n, generator)
     
     l := AllMinimalListsFiltered(G, n, generator);
     
-    stabs := List(l, x -> Stabilizer(G, x, n) );
+    stabs := List(l, x -> Stabilizer(G, x, OnPoints) );
     stabs_set := Set(stabs);
     inner_images := List(stabs_set, x -> AllMinimalListsFiltered(x, n, generator));
     out := [];
@@ -183,34 +183,14 @@ AllMinimalOrderedPairs := function(G, n, generator)
 end;
 
 AllMinimalUnorderedPairs := function(G, n, filter)
-    local pairs, seconds, seconds_image, out, p, mimage;
+    local pairs, out, p;
+    # Every canonical unordered pair appears among the minimal ordered
+    # pairs, so it suffices to keep those which are their own minimal
+    # unordered image.
     pairs := AllMinimalOrderedPairs(G, n, filter);
-    seconds := Set(pairs, x -> x[2]);
-    seconds_image := List(seconds, x -> CanonicalImage(G, x, OnPoints, rec(result := GetImage, stabilizer := Group(()))));
-
-    # Now we try to find the minimum unordered pairs [a,b].
-    # We use the following facts:
-    # 1) MinimumImage(G, a) = a;
-    # 2) In the minimum image of [a,b], the smallest of
-    #    MinimumImage(G, a) and MinimumImage(G, b) certainly appears
-    #
-    # So, go as follows:
-    # a) a < MinimumImage(G,b) : Is minimal, include.
-    # b) a > MinimumImage(G,b) : Is not minimal,
-    #                      covered where MinimumImage(G,b) appears first in pair.
-    # So this leaves a = MinimumImage(G, b).
-    # In this case, need to compare the two ways of ordering the pair
-    # We could do this more cleverly, but it doesn't happen too often!
-    # if so, then include.
-
     out := [];
     for p in pairs do
-        mimage := seconds_image[PositionSorted(seconds, p[2])];
-        if p[1] < mimage then
-            Add(out, p);
-        elif p[1] = mimage and p[1] < p[2] and 
-          MinimalImage(G, [p[1],p[2]], OnTuples) <= 
-          MinimalImage(G, [p[2],p[1]], OnTuples) then
+        if MinimalImageUnorderedPair(G, p, OnPoints) = p then
             Add(out, p);
         fi;
     od;
