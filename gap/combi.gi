@@ -139,6 +139,16 @@ function(x)
     return s;
 end);
 
+InstallMethod(String, [IsFundamentalStructureRep],
+function(x)
+    return Concatenation(x!.kind, ":", String(x!.contents), " of type ", x!.type);
+end);
+
+InstallMethod(PrintObj, [IsFundamentalStructureRep],
+function(x)
+    Print(String(x));
+end);
+
 
 BindGlobal("OnFundamental", function(f,p)
     local ret;
@@ -157,7 +167,7 @@ BindGlobal("OnFundamental", function(f,p)
     elif f!.kind = Fundamental.TupleType then
         ret.contents := List(f!.contents, x -> OnFundamental(x,p));
     else
-        Assert(0, "Invalid kind");
+        ErrorNoReturn("Invalid kind of fundamental structure");
     fi;
 
     ret := Objectify(FundamentalStructureType, ret);
@@ -192,7 +202,6 @@ end);
 
 InstallMethod(\=, [IsFundamentalStructureRep, IsFundamentalStructureRep],
 function(l,r)
-    local x,y;
     if IsInt(l) then
         l := Fundamental.AtomOf(l);
     fi;
@@ -219,7 +228,7 @@ end);
 
 InstallMethod(\<, [IsFundamentalStructureRep, IsFundamentalStructureRep],
 function(l,r)
-    local x,y,i;
+    local i;
     if IsInt(l) then
         l := Fundamental.AtomOf(l);
     fi;
@@ -256,15 +265,6 @@ _newVertex := function(graph, colour, height)
     vert :=  rec(name := [Length(graph.vertices), Fundamental.OtherVertex], colour := colour, height := height, id := Length(graph.vertices)+1);
     Add(graph.vertices,vert);
     return vert;
-end;
-
-_idOfOmega := function(graph, o)
-    local v;
-    v := First(graph.vertices, x -> x.name = [o, Fundamental.AtomVertex]);
-    if v = fail then
-        Error(String(o) + " is not an element of Omega");
-    fi;
-    return v.id;
 end;
 
 _buildGraph := function(graph, o, top)
@@ -324,7 +324,7 @@ _buildGraph := function(graph, o, top)
             return v[1];
         fi;
 
-        Assert(0, "Invalid kind: ", o!.kind);
+        ErrorNoReturn("Invalid kind of fundamental structure: ", o!.kind);
 end;
 
 _hash_default := function(hash, val, default)
