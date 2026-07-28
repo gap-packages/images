@@ -99,7 +99,7 @@ RandomSetSet := function(len)
 end;
 
 CheckMinimalImageTest := function(g, o, action, minList)
-    local good_min, nostab_min, slow_min, cpyg, rando, can_orig, can_rand, perm_orig, perm_rand, order, gp, can_nostab, small_list, minperm, stab, stab_min;
+    local good_min, nostab_min, slow_min, cpyg, rando, can_orig, can_rand, perm_orig, perm_rand, order, gp, can_nostab, small_list, minperm, stab, stab_min, opts, canOpts;
     cpyg := Group(GeneratorsOfGroup(g), ());
     good_min := MinimalImage(g, o, action);
     nostab_min := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), result := GetImage, order := CanonicalConfig_Minimum));
@@ -183,11 +183,35 @@ CheckMinimalImageTest := function(g, o, action, minList)
             continue;
         fi;
 
-        can_orig := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), order := order, result := GetImage));
-        can_rand := CanonicalImage(cpyg, rando, action, rec(stabilizer := Group(()), order := order, result := GetImage));
-        can_nostab :=  CanonicalImage(cpyg, rando, action, rec(stabilizer := Group(()), order := order, result := GetImage, disableStabilizerCheck := true));
-        perm_orig := CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), order := order, result := GetPerm));
-        perm_rand := CanonicalImage(cpyg, rando, action, rec(stabilizer := Group(()), order := order, result := GetPerm));
+        # Seeding the search with a trivial stabilizer makes the dynamic
+        # orderings rediscover the true stabilizer piecemeal, which is
+        # hopelessly slow when it is huge (a sparse partial perm under a
+        # large group); in big groups fall back to the default stabilizer.
+        if Size(g) <= FERRET_TEST_LIMIT.bruteForceLimit then
+            opts := rec(stabilizer := Group(()), order := order);
+        else
+            opts := rec(order := order);
+        fi;
+
+        canOpts := function(extra)
+            local r, n;
+            r := ShallowCopy(opts);
+            for n in RecNames(extra) do
+                r.(n) := extra.(n);
+            od;
+            return r;
+        end;
+
+        can_orig := CanonicalImage(cpyg, o, action, canOpts(rec(result := GetImage)));
+        can_rand := CanonicalImage(cpyg, rando, action, canOpts(rec(result := GetImage)));
+        perm_orig := CanonicalImage(cpyg, o, action, canOpts(rec(result := GetPerm)));
+        perm_rand := CanonicalImage(cpyg, rando, action, canOpts(rec(result := GetPerm)));
+        if Size(g) <= FERRET_TEST_LIMIT.bruteForceLimit then
+            can_nostab := CanonicalImage(cpyg, rando, action,
+                canOpts(rec(result := GetImage, disableStabilizerCheck := true)));
+        else
+            can_nostab := can_rand;
+        fi;
 
         if not(perm_orig in g and perm_rand in g and
                action(o, perm_orig) = can_orig and action(rando, perm_rand) = can_rand and
@@ -199,10 +223,10 @@ CheckMinimalImageTest := function(g, o, action, minList)
         # canonical image and anything else is not. (Regression check: the
         # early-exit comparisons used to assume the minimum ordering and
         # returned spurious 'false' for the dynamic orderings.)
-        if not CanonicalImage(cpyg, can_orig, action, rec(stabilizer := Group(()), order := order, result := GetBool)) then
+        if not CanonicalImage(cpyg, can_orig, action, canOpts(rec(result := GetBool))) then
             Print(GeneratorsOfGroup(g), ":", order, ":", o, " GetBool false on canonical image\n");
         fi;
-        if can_orig <> o and CanonicalImage(cpyg, o, action, rec(stabilizer := Group(()), order := order, result := GetBool)) then
+        if can_orig <> o and CanonicalImage(cpyg, o, action, canOpts(rec(result := GetBool))) then
             Print(GeneratorsOfGroup(g), ":", order, ":", o, " GetBool true on non-canonical object\n");
         fi;
     od;
