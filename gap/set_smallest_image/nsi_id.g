@@ -283,6 +283,11 @@ end;
 ##
 ## Identical results to the frontier search; memory bounded by the cap.
 
+# Statistics of the most recent hybrid run, for tuning frontierLimit:
+# the widest stored frontier, and the level at which the search
+# switched to re-enumeration (fail if it never did).
+_IMAGES_HYBRID_STATS := rec(maxFrontier := 0, bailLevel := fail);
+
 _NewSmallestImageHybrid := function(g, set, k, skip_func, early_exit,
                                     disableStabilizerCheck_in, config_option,
                                     frontierLimit)
@@ -335,6 +340,8 @@ _NewSmallestImageHybrid := function(g, set, k, skip_func, early_exit,
                      imset := Immutable(Set(set)), substab := l)];
     levels := [];
     idmode := false;
+    _IMAGES_HYBRID_STATS.maxFrontier := 1;
+    _IMAGES_HYBRID_STATS.bailLevel := fail;
 
     simpleOrbitReps := function(gp, set)
         local   m,  n,  b,  seed,  reps,  gens,  q,  pt,  gen,  im;
@@ -578,6 +585,7 @@ _NewSmallestImageHybrid := function(g, set, k, skip_func, early_exit,
             od;
 
             if bail then
+                _IMAGES_HYBRID_STATS.bailLevel := depth;
                 Info(InfoNSI, 2, "Hybrid: level ", depth, " exceeds ",
                      frontierLimit, " nodes, switching to re-enumeration");
                 # the previous frontier becomes the checkpoint; this
@@ -607,6 +615,9 @@ _NewSmallestImageHybrid := function(g, set, k, skip_func, early_exit,
                     end);
                 fi;
                 frontier := newfrontier;
+                if Length(frontier) > _IMAGES_HYBRID_STATS.maxFrontier then
+                    _IMAGES_HYBRID_STATS.maxFrontier := Length(frontier);
+                fi;
             fi;
             iface.descend();
         else
