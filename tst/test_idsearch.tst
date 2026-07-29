@@ -35,7 +35,17 @@ gap> p := MinimalImagePerm(G, [3,6,8], OnSets, rec(search := "iterative"));;
 gap> p in G and OnSets([3,6,8], p) = MinimalImage(G, [3,6,8], OnSets);
 true
 gap> MinimalImage(G, [3,6,8], OnSets, rec(search := "wibble"));
-Error, Unknown search 'wibble': must be "bfs" or "iterative"
+Error, Unknown search 'wibble': must be "bfs", "iterative" or "hybrid"
+gap> MinimalImage(G, [3,6,8], OnSets, rec(search := "hybrid"))
+>    = MinimalImage(G, [3,6,8], OnSets);
+true
+gap> MinimalImage(G, D, OnDigraphs, rec(search := "hybrid", frontierLimit := 2))
+>    = MinimalImage(G, D, OnDigraphs);
+true
+gap> MinimalImage(SymmetricGroup(8), T, OnMultiplicationTables,
+>                 rec(search := "hybrid", frontierLimit := 2))
+>    = MinimalImage(SymmetricGroup(8), T, OnMultiplicationTables);
+true
 gap> CanonicalImage(G, [3,6,8], OnSets, rec(search := "iterative",
 >                                           order := CanonicalConfig_RareOrbit));
 Error, search := "iterative" only supports the minimum ordering

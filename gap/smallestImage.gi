@@ -187,11 +187,16 @@ _CanonicalSetImage := function(G, S, stab, settings)
     fi;
     earlyskip := settings.result = GetBool and order.branch = "minimum";
 
-    if settings.search = "iterative" then
+    if settings.search <> "bfs" then
         if order.branch <> "minimum" or IsBound(order.blockSize) then
-            ErrorNoReturn("search := \"iterative\" only supports the minimum ordering");
+            ErrorNoReturn("search := \"", settings.search,
+                          "\" only supports the minimum ordering");
         fi;
-        L := _NewSmallestImageID(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order );
+        if settings.search = "iterative" then
+            L := _NewSmallestImageID(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order );
+        else
+            L := _NewSmallestImageHybrid(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order, settings.frontierLimit );
+        fi;
     else
         L := _NewSmallestImage(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order );
     fi;
@@ -1148,7 +1153,7 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   # second call
   settings := rec(result := resultarg, stabilizer := fail, order := imagearg, getStab := false,
                   disableStabilizerCheck := false, engine := "native", stab := fail,
-                  search := "bfs");
+                  search := "bfs", frontierLimit := fail);
 
   if Length(arglist) >= index and IsRecord(arglist[index]) then
     settings := _ImageHelperFuncs.fillUserValues(settings, arglist[index]);
@@ -1160,9 +1165,12 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
     ErrorNoReturn("Failed to understand argument ", index, ", which was ", arglist[index]);
   fi;
 
-  if not settings.search in ["bfs", "iterative"] then
+  if not settings.search in ["bfs", "iterative", "hybrid"] then
     ErrorNoReturn("Unknown search '", settings.search,
-                  "': must be \"bfs\" or \"iterative\"");
+                  "': must be \"bfs\", \"iterative\" or \"hybrid\"");
+  fi;
+  if settings.frontierLimit <> fail and not IsPosInt(settings.frontierLimit) then
+    ErrorNoReturn("frontierLimit must be a positive integer");
   fi;
 
   if settings.engine = "vole" then
