@@ -73,6 +73,15 @@ New functionality:
   Chow, Araujo, Codish and Vojtechovsky (identical results on every
   instance both systems solved); unlike SAT approaches this also
   supports arbitrary subgroups of the symmetric group.
+* New experimental option `search := "iterative"`: an
+  iterative-deepening variant of the minimum-ordering search which
+  fixes the minimal image one value at a time and re-enumerates the
+  realisations of the fixed prefix, instead of storing them all. Its
+  memory is bounded by the recursion depth (the frontier search can
+  exhaust memory on highly symmetric inputs), at the price of
+  re-enumeration time. Results are identical to the default search.
+  The default is unchanged; this option exists to evaluate a future
+  combined engine.
 * The pair-action search now transfers a known stabilizer order to the
   position action whenever the encoded pairs cover every moved point of
   the stabilizer (previously only when one coordinate covered every

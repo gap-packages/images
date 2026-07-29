@@ -305,8 +305,18 @@ end;
 #   repAction(S, T)      a group element mapping the list S to T pointwise
 
 _IMAGES_NativeGroupIface := function(g)
-    local s;
+    local s, walkWith;
     s := StabChainMutable(g);
+    # Walk an image to the base point through a specific chain level.
+    # Levels above the current one are never mutated by later base
+    # changes (ChangeStabChain only touches the level it is given and
+    # below), so a level record captured by getWalkHandle stays valid.
+    walkWith := function(lev, image, x, basepoint)
+        repeat
+            image := OnTuples(image, lev.transversal[image[x]]);
+        until image[x] = basepoint;
+        return image;
+    end;
     return rec(
         nPoints := LargestMovedPoint(g),
         startDepth := function() end,
@@ -346,11 +356,12 @@ _IMAGES_NativeGroupIface := function(g)
             return Length(s.orbit) = 1;
         end,
         walkToBase := function(image, x, basepoint)
-            repeat
-                image := OnTuples(image, s.transversal[image[x]]);
-            until image[x] = basepoint;
-            return image;
+            return walkWith(s, image, x, basepoint);
         end,
+        getWalkHandle := function(basepoint)
+            return s;
+        end,
+        walkToBaseWith := walkWith,
         descend := function()
             s := s.stabilizer;
         end,
@@ -388,7 +399,7 @@ end;
 # the whole image list by row lookups.
 _IMAGES_PairActionIface := function(G, mMax)
     local chain, descendLevels, pairImage, bpMins, bpData, transWalk,
-          lginvs, scratchShared, treeSnap;
+          lginvs, scratchShared, treeSnap, walkWith;
 
     Assert(1, LargestMovedPoint(G) <= mMax);
 
@@ -420,6 +431,35 @@ _IMAGES_PairActionIface := function(G, mMax)
             p := p ^ t;
         od;
         return u;
+    end;
+
+    walkWith := function(dat, image, x, basepoint)
+        local r1, c1, u, w, g, rows, t, rs, cs;
+        # the element carrying the orbit's seed pair to basepoint; the
+        # same for every node of this depth
+        if dat.down = fail then
+            r1 := (basepoint - 1) mod mMax + 1;
+            c1 := (basepoint - r1)/mMax + 1;
+            u := transWalk(dat.rTrans, r1, dat.seedR);
+            w := transWalk(dat.cTrans, c1^u, dat.seedC);
+            dat.down := w^-1 * u^-1;
+        fi;
+        # walk image[x] up to the seed pair, then down to basepoint
+        r1 := (image[x] - 1) mod mMax + 1;
+        c1 := (image[x] - r1)/mMax + 1;
+        u := transWalk(dat.rTrans, r1, dat.seedR);
+        w := transWalk(dat.cTrans, c1^u, dat.seedC);
+        g := u * w * dat.down;
+        rows := ListPerm(g, mMax);
+        t := image - 1;
+        rs := t mod mMax + 1;
+        cs := (t - rs + 1)/mMax + 1;
+        image := rows{rs} + (rows{cs} - 1)*mMax;
+        if image[x] <> basepoint then
+            ErrorNoReturn("internal error in the images package (a transversal walk ",
+                          "missed its target); please report this");
+        fi;
+        return image;
     end;
 
     return rec(
@@ -654,33 +694,17 @@ _IMAGES_PairActionIface := function(G, mMax)
             return false;
         end,
         walkToBase := function(image, x, basepoint)
-            local dat, r1, c1, u, w, g, rows, t, rs, cs;
-            dat := bpData[Position(bpMins, basepoint)];
-            # the element carrying the orbit's seed pair to basepoint; the
-            # same for every node of this depth
-            if dat.down = fail then
-                r1 := (basepoint - 1) mod mMax + 1;
-                c1 := (basepoint - r1)/mMax + 1;
-                u := transWalk(dat.rTrans, r1, dat.seedR);
-                w := transWalk(dat.cTrans, c1^u, dat.seedC);
-                dat.down := w^-1 * u^-1;
-            fi;
-            # walk image[x] up to the seed pair, then down to basepoint
-            r1 := (image[x] - 1) mod mMax + 1;
-            c1 := (image[x] - r1)/mMax + 1;
-            u := transWalk(dat.rTrans, r1, dat.seedR);
-            w := transWalk(dat.cTrans, c1^u, dat.seedC);
-            g := u * w * dat.down;
-            rows := ListPerm(g, mMax);
-            t := image - 1;
-            rs := t mod mMax + 1;
-            cs := (t - rs + 1)/mMax + 1;
-            image := rows{rs} + (rows{cs} - 1)*mMax;
-            if image[x] <> basepoint then
-                ErrorNoReturn("internal error in the images package (a transversal walk ",
-                              "missed its target); please report this");
-            fi;
-            return image;
+            return walkWith(bpData[Position(bpMins, basepoint)],
+                            image, x, basepoint);
+        end,
+        # The per-orbit walk records reference snapshot copies of the
+        # Schreier trees, so a handle stays valid after later depths
+        # reset bpData and change base further down the chain.
+        getWalkHandle := function(basepoint)
+            return bpData[Position(bpMins, basepoint)];
+        end,
+        walkToBaseWith := function(dat, image, x, basepoint)
+            return walkWith(dat, image, x, basepoint);
         end,
         descend := function()
             Assert(1, descendLevels > 0);
