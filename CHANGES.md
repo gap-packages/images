@@ -40,6 +40,16 @@ New functionality:
   answer without it: computing it eagerly forced a stabilizer chain for
   the group, so a small-orbit permutation could take 40 seconds where
   the same object as a transformation took milliseconds.
+* Partial permutations are now encoded sparsely: the search works on the
+  set of bound pairs instead of totalising the object into a
+  transformation on the whole domain. On sets of equal size the sparse
+  order coincides with the old totalised order, and conjugation
+  preserves the domain size, so every returned image is identical to
+  before (verified against the old code on a randomised battery); the
+  search just runs on a set the size of the domain, so partial
+  permutations with small support under large-degree groups speed up
+  substantially (a support-8 partial permutation under S100 improves
+  over 20x).
 * `MinimalImageOrderedPair` and `MinimalImageUnorderedPair` now work for
   all supported actions (the ordered version previously always raised an
   error, and the unordered version only supported `OnPoints`);

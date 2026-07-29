@@ -151,7 +151,9 @@ _booleaniseList := function(l, matrixMax)
   local set, i;
   set := [];
   for i in [1..Length(l)] do
-      Add(set, (i-1)*matrixMax + l[i]);
+      if IsBound(l[i]) then
+          Add(set, (i-1)*matrixMax + l[i]);
+      fi;
   od;
   return set;
 end;
@@ -363,19 +365,20 @@ end;
 # cheaper than the stabilizer-chain search: the search must build chains
 # for G (and for the supplied stabilizer's position action), which for
 # groups with deep chains costs minutes while a small orbit enumerates in
-# milliseconds. This pre-pass runs the orbit BFS on image lists with
-# kernel list operations and answers the query if the orbit closes within
-# a work budget, returning fail otherwise.
+# milliseconds. This pre-pass runs the orbit BFS with kernel list
+# arithmetic, minimising exactly the set order the search minimises, and
+# answers the query if the orbit closes within a work budget, returning
+# fail otherwise. The set may be sparse (a partial permutation's bound
+# pairs): all sets in one orbit have the same size, so the sorted-list
+# comparison never reaches the proper-prefix case.
 #
 # It only fires for branch="minimum" orders: there the answer is the true
 # minimum of the orbit, so it agrees exactly with the search on every
 # combination of options (a getStab call, which returns fail here and
-# falls through to the search, still gets the same image). Comparing
-# image lists lexicographically agrees with the encoded-set order the
-# search minimises, because the encoded pairs (i, l[i]) sort by row.
-_IMAGES_PairSmallOrbit := function(l, G, mMax, settings)
-    local order, gens, glists, ginvlists, hash, dict, queue, parents,
-          gennos, cap, i, j, im, minpos, perm, check;
+# falls through to the search, still gets the same image).
+_IMAGES_PairSmallOrbit := function(l, set, G, mMax, settings)
+    local order, gens, glists, ginvlists, dense, actGen, actBy, k, hash,
+          dict, queue, parents, gennos, cap, i, j, im, minpos, perm;
 
     if settings.getStab then
         return fail;
@@ -390,44 +393,80 @@ _IMAGES_PairSmallOrbit := function(l, G, mMax, settings)
     fi;
 
     gens := GeneratorsOfGroup(G);
-    # the image of l under conjugation by g, by kernel list indexing:
-    # (l^g)[i] = ((i^(g^-1))^l)^g
     glists := List(gens, g -> ListPerm(g, mMax));
-    ginvlists := List(gens, g -> ListPerm(g^-1, mMax));
+    # Orbit elements are kept as image lists when the object is total (a
+    # transformation or permutation): composing image lists is much
+    # cheaper than decoding and re-sorting encoded sets, and image-list
+    # comparison is the encoded-set order because the encoded pairs
+    # (i, l[i]) sort by row. A partial permutation's sparse set is
+    # enumerated as sorted encoded sets {(r-1)*mMax + c} directly.
+    dense := IsDenseList(l) and Length(l) = mMax;
+    if dense then
+        ginvlists := List(gens, g -> ListPerm(g^-1, mMax));
+        # (e^g)[i] = ((i^(g^-1))^e)^g
+        actGen := function(e, j)
+            return glists[j]{ e{ ginvlists[j] } };
+        end;
+        actBy := function(e, p)
+            return ListPerm(p, mMax){ e{ ListPerm(p^-1, mMax) } };
+        end;
+        queue := [Immutable(ShallowCopy(l))];
+    else
+        actGen := function(e, j)
+            local cs, im;
+            cs := (e - 1) mod mMax + 1;
+            im := (glists[j]{ (e - cs) / mMax + 1 } - 1) * mMax
+                  + glists[j]{ cs };
+            Sort(im);
+            return im;
+        end;
+        actBy := function(e, p)
+            local rows, cs, im;
+            rows := ListPerm(p, mMax);
+            cs := (e - 1) mod mMax + 1;
+            im := (rows{ (e - cs) / mMax + 1 } - 1) * mMax + rows{ cs };
+            Sort(im);
+            return im;
+        end;
+        queue := [Immutable(ShallowCopy(set))];
+    fi;
+    k := Length(set);
 
     # A supplied stabilizer is promised to be validated on every path
     # which consumes the option, so reject a wrong one here too, even
     # though this path never otherwise looks at it
     if settings.stabilizer <> fail then
         for perm in GeneratorsOfGroup(settings.stabilizer) do
-            if ListPerm(perm, mMax){ l{ ListPerm(perm^-1, mMax) } } <> l then
+            if actBy(queue[1], perm) <> queue[1] then
                 ErrorNoReturn("the given <stabilizer> does not stabilize the object");
             fi;
         od;
     fi;
 
-    # Enumeration work is |orbit| * |gens| * mMax list entries, and when
-    # the orbit is larger than the cap all of it is wasted, so the budget
-    # must track what the search would otherwise cost. When G already has
-    # a stabilizer chain and no enormous stabilizer was supplied the
-    # search is cheap, and only a small budget is justified. When the
-    # chain is missing (or a supplied stabilizer is so large that the
-    # search must run a Schreier-Sims on its position action) the search
-    # starts with a chain construction whose cost grows like a high power
-    # of mMax, and a far larger budget is still cheap by comparison.
+    # When the orbit is larger than the cap the whole enumeration is
+    # wasted, so the budget must track what the search would otherwise
+    # cost. The cost per enumerated element is a hash and dictionary
+    # constant of a few microseconds plus list work proportional to
+    # |set|, with the constant dominating for all but very large sets.
+    # When G already has a stabilizer chain and no enormous stabilizer
+    # was supplied the search is cheap, and only a small budget is
+    # justified. When the chain is missing (or a supplied stabilizer is
+    # so large that the search must run a Schreier-Sims on its position
+    # action) the search starts with a chain construction whose cost
+    # grows like a high power of mMax, and a far larger budget is still
+    # cheap by comparison.
     if HasStabChainMutable(G)
        and not (settings.stabilizer <> fail
                 and HasSize(settings.stabilizer)
                 and Size(settings.stabilizer) > 2^60) then
-        cap := Maximum(512, QuoInt(10^6, Length(gens) * mMax));
+        cap := Maximum(512, QuoInt(10^6, Length(gens) * (k + 100)));
     else
         cap := Maximum(1024, QuoInt(mMax^3, 30 * Length(gens)));
     fi;
     cap := Minimum(cap, 500000);
 
-    hash := _IMAGES_Get_Hash(mMax);
+    hash := _IMAGES_Get_Hash(Length(queue[1]));
     dict := SparseHashTable(hash);
-    queue := [Immutable(ShallowCopy(l))];
     AddHashEntry(dict, queue[1], 1);
     parents := [0];
     gennos := [0];
@@ -435,7 +474,7 @@ _IMAGES_PairSmallOrbit := function(l, G, mMax, settings)
     i := 1;
     while i <= Length(queue) do
         for j in [1..Length(gens)] do
-            im := glists[j]{ queue[i]{ ginvlists[j] } };
+            im := actGen(queue[i], j);
             if GetHashEntry(dict, im) = fail then
                 if Length(queue) >= cap then
                     return fail;
@@ -456,7 +495,11 @@ _IMAGES_PairSmallOrbit := function(l, G, mMax, settings)
     if settings.result = GetBool then
         return queue[minpos] = queue[1];
     elif settings.result = GetImage then
-        return ShallowCopy(queue[minpos]);
+        # return the partial function list in both representations
+        if dense then
+            return ShallowCopy(queue[minpos]);
+        fi;
+        return _unbooleaniseList(queue[minpos], mMax);
     fi;
 
     # settings.result = GetPerm: multiply out the generator word leading
@@ -467,8 +510,7 @@ _IMAGES_PairSmallOrbit := function(l, G, mMax, settings)
         perm := gens[gennos[i]] * perm;
         i := parents[i];
     od;
-    check := ListPerm(perm, mMax){ queue[1]{ ListPerm(perm^-1, mMax) } };
-    if check <> queue[minpos] then
+    if actBy(queue[1], perm) <> queue[minpos] then
         ErrorNoReturn("internal error in the images package (the small ",
                       "orbit pre-pass built a wrong conjugating element); ",
                       "please report this");
@@ -493,7 +535,7 @@ _MinimalImage_partialFunction := function(l, G, mMax, settings)
                     "or partial permutations");
   fi;
 
-  result := _IMAGES_PairSmallOrbit(l, G, mMax, settings);
+  result := _IMAGES_PairSmallOrbit(l, set, G, mMax, settings);
   if result <> fail then
       return result;
   fi;
@@ -635,7 +677,7 @@ end);
 
 InstallMethod(CanonicalImageOp, [IsPermGroup, IsPartialPerm, IsFunction, IsObject],
 function(inGroup, pp, action, settings)
-  local max, matrixMax, minTrans;
+  local max, matrixMax, l, lresult, dom, i;
 
   if action <> OnPoints then
     ErrorNoReturn("Partial permutations only support the action OnPoints");
@@ -650,19 +692,29 @@ function(inGroup, pp, action, settings)
       return _trivialReturn(pp, settings.result);
   fi;
 
-  matrixMax := Maximum(max, LargestMovedPoint(inGroup)) + 1;
+  matrixMax := Maximum(max, LargestMovedPoint(inGroup));
 
-  # Dispatch to the operation directly: settings is already parsed, and the
-  # user-facing CanonicalImage would reject its filled-in fields
-  minTrans := CanonicalImageOp(inGroup, AsTransformation(pp, matrixMax), action, settings);
+  # Encode only the bound pairs, so the search works on a set the size of
+  # the domain instead of the whole matrix. On sets of equal size (and
+  # conjugation preserves the domain size, so a whole orbit shares one
+  # size) this sparse encoding induces the same order as the older
+  # encoding which totalised the partial permutation with an extra fixed
+  # point: at the first row where two objects differ, a bound value beats
+  # both a larger bound value and any later row. The minimal images are
+  # therefore identical, and no extra point is needed.
+  l := [];
+  for i in DomainOfPartialPerm(pp) do
+      l[i] := i^pp;
+  od;
+
+  lresult := _MinimalImage_partialFunction(l, inGroup, matrixMax, settings);
 
   if settings.result = GetPerm or settings.result = GetBool then
-      return minTrans;
+      return lresult;
   fi;
 
-  # TODO: Ask how to avoid having to do this to get a PartialPermBack
-  # the mod is there as a quick(ish) way to turn 'matrixMax' into '0'.
-  return PartialPerm(List(ListTransformation(minTrans, matrixMax), x -> x mod matrixMax));
+  dom := Filtered([1..matrixMax], i -> IsBound(lresult[i]));
+  return PartialPerm(dom, lresult{dom});
 end);
 
 
