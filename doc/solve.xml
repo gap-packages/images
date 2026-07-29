@@ -82,15 +82,28 @@ supported action, so for lists the action should always be given.
 <Item>a positive integer, with <C>OnPoints</C>;</Item>
 <Item>a permutation, transformation or partial permutation, with
 <C>OnPoints</C> (that is, up to conjugacy);</Item>
+<Item>a digraph (from the <Package>Digraphs</Package> package), with
+<C>OnDigraphs</C> (the group must move only vertices of the digraph,
+and multidigraphs are not supported);</Item>
 <Item>a fundamental structure (see Chapter
 <Ref Chap="FundamentalAndCombinatorialStructures"/>), with
 <C>OnFundamental</C>.</Item>
 </List>
 
+For digraphs the order minimised is the sorted list of arcs, compared
+lexicographically, so the minimal image is the relabelling whose arc
+list <C>Set(DigraphEdges(D))</C> is smallest. This is neither the
+ordering of <C>&lt;</C> on digraph objects nor the lexicographic order
+on adjacency matrices read row by row as 0/1 strings. An undirected
+graph is represented by a symmetric digraph and needs no separate
+treatment.
+
+<P/>
+
 Not every configuration option applies to every combination: the
 <C>stabilizer</C> and <C>getStab</C> options only affect sets,
-transformations, permutations and partial permutations, and the
-<C>order</C> option is ignored for <C>OnSetsSets</C>. See
+transformations, permutations, partial permutations and digraphs, and
+the <C>order</C> option is ignored for <C>OnSetsSets</C>. See
 <Ref Var="ImagesAdvancedConfig"/> for the details.
 
 </Section>

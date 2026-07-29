@@ -368,9 +368,10 @@ end;
 # milliseconds. This pre-pass runs the orbit BFS with kernel list
 # arithmetic, minimising exactly the set order the search minimises, and
 # answers the query if the orbit closes within a work budget, returning
-# fail otherwise. The set may be sparse (a partial permutation's bound
-# pairs): all sets in one orbit have the same size, so the sorted-list
-# comparison never reaches the proper-prefix case.
+# fail otherwise (for GetImage the answer is the encoded set). The set
+# need not be a partial function (a partial permutation's bound pairs, a
+# digraph's arcs): all sets in one orbit have the same size, so the
+# sorted-list comparison never reaches the proper-prefix case.
 #
 # It only fires for branch="minimum" orders: there the answer is the true
 # minimum of the orbit, so it agrees exactly with the search on every
@@ -495,11 +496,11 @@ _IMAGES_PairSmallOrbit := function(l, set, G, mMax, settings)
     if settings.result = GetBool then
         return queue[minpos] = queue[1];
     elif settings.result = GetImage then
-        # return the partial function list in both representations
+        # return the encoded set in both representations
         if dense then
-            return ShallowCopy(queue[minpos]);
+            return List([1..mMax], i -> (i - 1)*mMax + queue[minpos][i]);
         fi;
-        return _unbooleaniseList(queue[minpos], mMax);
+        return ShallowCopy(queue[minpos]);
     fi;
 
     # settings.result = GetPerm: multiply out the generator word leading
@@ -518,12 +519,16 @@ _IMAGES_PairSmallOrbit := function(l, set, G, mMax, settings)
     return perm;
 end;
 
-_MinimalImage_partialFunction := function(l, G, mMax, settings)
-  local set, order, result, pairGroup, stab, image;
-
-  # Turn partial function into a subset of a 2D matrix,
-  # which contains (i,j) if i^trans = j.
-  set := _booleaniseList(l, mMax);
+# Minimise a set of encoded pairs under the pair action of G on
+# [1..mMax] x [1..mMax]. This is the common engine behind
+# transformations, permutations, partial permutations and digraphs. l is
+# the object as a (partial) image list when it is one, which lets the
+# small-orbit pre-pass work in the cheaper image-list representation;
+# any caller whose set is not a partial function must pass l = fail.
+# For GetImage the ENCODED minimal set is returned; GetPerm is already
+# projected into the natural action of G.
+_IMAGES_MinimalImage_PairSet := function(l, set, G, mMax, settings)
+  local order, result, pairGroup, stab;
 
   order := settings.order;
   if IsString(order) then
@@ -531,8 +536,8 @@ _MinimalImage_partialFunction := function(l, G, mMax, settings)
   fi;
   if IsRecord(order) and IsBound(order.branch) and order.branch = "static" then
       ErrorNoReturn("static branch orderings (such as CanonicalConfig_FixedMinOrbit) ",
-                    "are not supported for transformations, permutations ",
-                    "or partial permutations");
+                    "are not supported for transformations, permutations, ",
+                    "partial permutations or digraphs");
   fi;
 
   result := _IMAGES_PairSmallOrbit(l, set, G, mMax, settings);
@@ -546,21 +551,28 @@ _MinimalImage_partialFunction := function(l, G, mMax, settings)
      stab := settings.stabilizer;
   elif IsBound(settings.centralizerOf) then
      stab := Centralizer(G, settings.centralizerOf);
+  elif IsBound(settings.stabilizerFunc) then
+     stab := settings.stabilizerFunc();
   else
      stab := _IMAGES_PairSetStabilizer(G, set, mMax);
   fi;
 
-  image := _CanonicalSetImage(pairGroup, set, stab, settings);
+  return _CanonicalSetImage(pairGroup, set, stab, settings);
+end;
 
-  if settings.result = GetBool then
-      return image;
-  elif settings.result = GetImage then
+_MinimalImage_partialFunction := function(l, G, mMax, settings)
+  local set, image;
+
+  # Turn partial function into a subset of a 2D matrix,
+  # which contains (i,j) if i^trans = j.
+  set := _booleaniseList(l, mMax);
+
+  image := _IMAGES_MinimalImage_PairSet(l, set, G, mMax, settings);
+
+  if settings.result = GetImage then
       return _unbooleaniseList(image, mMax);
-  elif settings.result = GetPerm then
-      # repAction already projected the answer into the natural action of G
-      return image;
   fi;
-
+  return image;
 end;
 
 # This function just encapsulates what we have to return in the case
@@ -715,6 +727,60 @@ function(inGroup, pp, action, settings)
 
   dom := Filtered([1..matrixMax], i -> IsBound(lresult[i]));
   return PartialPerm(dom, lresult{dom});
+end);
+
+# A digraph's arcs are a set of pairs on its vertices, so digraphs run
+# through the same pair-action engine as transformations: the arc (u,v)
+# encodes to (u-1)*n + v, and the whole arc set is minimised at once.
+# The induced order compares the sorted arc lists lexicographically
+# (which is neither GAP's < on digraphs nor the lexicographic order on
+# adjacency matrices read as 0/1 strings). Undirected graphs are
+# symmetric digraphs and need no separate treatment.
+InstallMethod(CanonicalImageOp, [IsPermGroup, IsDigraph, IsFunction, IsObject],
+function(inGroup, digraph, action, settings)
+  local n, set, result, arcs;
+
+  if action <> OnDigraphs and action <> OnPoints then
+    ErrorNoReturn("Digraphs only support the action OnDigraphs");
+  fi;
+  if IsMultiDigraph(digraph) then
+    ErrorNoReturn("CanonicalImage does not support multidigraphs");
+  fi;
+
+  n := DigraphNrVertices(digraph);
+  if LargestMovedPoint(inGroup) > n then
+    ErrorNoReturn("the group moves points beyond the vertices of the digraph");
+  fi;
+
+  set := Set(DigraphEdges(digraph), e -> (e[1] - 1)*n + e[2]);
+
+  # Return in trivial cases (the search rejects empty sets)
+  if Length(set) = 0 or LargestMovedPoint(inGroup) = 0 then
+      return _trivialReturn(digraph, settings.result);
+  fi;
+
+  # When the group is the full symmetric group on the vertices, the
+  # stabilizer of the arc set is the automorphism group of the digraph,
+  # which bliss computes far faster than the generic pair stabilizer.
+  # It is computed lazily so the small-orbit pre-pass can answer first.
+  if settings.stabilizer = fail and IsNaturalSymmetricGroup(inGroup)
+     and MovedPoints(inGroup) = [1..n] then
+      settings := ShallowCopy(settings);
+      settings.stabilizerFunc := {} -> AutomorphismGroup(digraph);
+  fi;
+
+  result := _IMAGES_MinimalImage_PairSet(fail, set, inGroup, n, settings);
+
+  if settings.result <> GetImage then
+      return result;
+  fi;
+
+  arcs := List(result, function(p)
+      local c;
+      c := (p - 1) mod n + 1;
+      return [(p - c)/n + 1, c];
+  end);
+  return DigraphByEdges(arcs, n);
 end);
 
 

@@ -139,8 +139,8 @@ CheckMinimalImageTest := function(g, o, action, minList)
     fi;
 
     # a user-supplied stabilizer must not change the answer (only the
-    # OnPoints and OnSets paths consume one)
-    if (action = OnPoints or action = OnSets)
+    # OnPoints, OnSets and OnDigraphs paths consume one)
+    if (action = OnPoints or action = OnSets or action = OnDigraphs)
        and Size(g) <= FERRET_TEST_LIMIT.bruteForceLimit then
         stab := Stabilizer(g, o, action);
         stab_min := CanonicalImage(cpyg, o, action,
@@ -177,9 +177,11 @@ CheckMinimalImageTest := function(g, o, action, minList)
                   CanonicalConfig_FixedMinOrbit, CanonicalConfig_FixedMaxOrbit ] do
 
         # Static branch orderings are not supported for the pair action used
-        # by transformations, permutations and partial permutations
-        if order.branch = "static" and action = OnPoints and
-           (IsTransformation(o) or IsPerm(o) or IsPartialPerm(o)) then
+        # by transformations, permutations, partial permutations and digraphs
+        if order.branch = "static" and
+           ((action = OnPoints and
+             (IsTransformation(o) or IsPerm(o) or IsPartialPerm(o)))
+            or IsDigraph(o)) then
             continue;
         fi;
 
@@ -316,6 +318,52 @@ CheckMinimalImagePerm := function()
             CheckMinimalImageTest(g,
                 Random(SymmetricGroup(Random([1..FERRET_TEST_LIMIT.groupSize + 2]))), OnPoints, Minimum);
         fi;
+    od;
+end;;
+
+# The order minimised for digraphs is the sorted arc list compared
+# lexicographically, which is not GAP's < on digraphs
+minListDigraph := function(l)
+    local smallest, i;
+    smallest := l[1];
+    for i in l do
+        if Set(DigraphEdges(i)) < Set(DigraphEdges(smallest)) then
+            smallest := i;
+        fi;
+    od;
+    return smallest;
+end;;
+
+# A random digraph on [1..size], with loops, sometimes symmetrised
+# (an undirected graph is a symmetric digraph)
+cajRandomDigraph := function(size)
+    local arcs, u, v, d;
+    arcs := [];
+    for u in [1..size] do
+        for v in [1..size] do
+            if Random([1..4]) = 1 then
+                Add(arcs, [u,v]);
+            fi;
+        od;
+    od;
+    d := DigraphByEdges(arcs, size);
+    if Random([1..3]) = 1 then
+        d := DigraphSymmetricClosure(d);
+    fi;
+    return d;
+end;;
+
+CheckMinimalImageDigraph := function()
+    local i, n, g;
+    CheckMinimalImageTest(Group(()), DigraphByEdges([], 3), OnDigraphs, minListDigraph);
+    CheckMinimalImageTest(Group((1,2,3)), DigraphByEdges([], 3), OnDigraphs, minListDigraph);
+    CheckMinimalImageTest(Group((1,2,3)), DigraphByEdges([[2,2]], 3), OnDigraphs, minListDigraph);
+    CheckMinimalImageTest(SymmetricGroup(4), CompleteDigraph(4), OnDigraphs, minListDigraph);
+    for i in [1..FERRET_TEST_LIMIT.count] do
+        # the group must move only vertices of the digraph
+        n := Random([2..FERRET_TEST_LIMIT.groupSize + 2]);
+        g := randomGroup(Random([2..Minimum(n, FERRET_TEST_LIMIT.groupSize)]));
+        CheckMinimalImageTest(g, cajRandomDigraph(n), OnDigraphs, minListDigraph);
     od;
 end;;
 
