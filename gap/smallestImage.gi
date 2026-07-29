@@ -187,7 +187,14 @@ _CanonicalSetImage := function(G, S, stab, settings)
     fi;
     earlyskip := settings.result = GetBool and order.branch = "minimum";
 
-    L := _NewSmallestImage(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order );
+    if settings.search = "iterative" then
+        if order.branch <> "minimum" or IsBound(order.blockSize) then
+            ErrorNoReturn("search := \"iterative\" only supports the minimum ordering");
+        fi;
+        L := _NewSmallestImageID(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order );
+    else
+        L := _NewSmallestImage(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order );
+    fi;
 
     if settings.getStab then
         settings.original.stab := L[2];
@@ -1140,7 +1147,8 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   # user passed; accepting it here lets the same record be passed to a
   # second call
   settings := rec(result := resultarg, stabilizer := fail, order := imagearg, getStab := false,
-                  disableStabilizerCheck := false, engine := "native", stab := fail);
+                  disableStabilizerCheck := false, engine := "native", stab := fail,
+                  search := "bfs");
 
   if Length(arglist) >= index and IsRecord(arglist[index]) then
     settings := _ImageHelperFuncs.fillUserValues(settings, arglist[index]);
@@ -1150,6 +1158,11 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
 
   if index <= Length(arglist) then
     ErrorNoReturn("Failed to understand argument ", index, ", which was ", arglist[index]);
+  fi;
+
+  if not settings.search in ["bfs", "iterative"] then
+    ErrorNoReturn("Unknown search '", settings.search,
+                  "': must be \"bfs\" or \"iterative\"");
   fi;
 
   if settings.engine = "vole" then
