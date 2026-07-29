@@ -62,6 +62,11 @@ New functionality:
   separate treatment; multidigraphs are not supported. We believe this
   is the first implementation of minimal images of digraphs under an
   arbitrary permutation group.
+* The pair-action search now transfers a known stabilizer order to the
+  position action whenever the encoded pairs cover every moved point of
+  the stabilizer (previously only when one coordinate covered every
+  point of the domain), so the Schreier-Sims avoidance fires for many
+  more inputs, including non-injective transformations and digraphs.
 * `MinimalImageOrderedPair` and `MinimalImageUnorderedPair` now work for
   all supported actions (the ordered version previously always raised an
   error, and the unordered version only supported `OnPoints`);

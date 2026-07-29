@@ -693,7 +693,7 @@ _IMAGES_PairActionIface := function(G, mMax)
             return Length(chain.generators) = 0;
         end,
         positionAction := function(k, set)
-            local perms, gen, pos, img, i, perm, grp, covered, count, r;
+            local perms, gen, pos, img, i, perm, grp, covered, r;
             perms := [];
             for gen in GeneratorsOfGroup(k) do
                 perm := [];
@@ -708,24 +708,21 @@ _IMAGES_PairActionIface := function(G, mMax)
                 Add(perms, PermList(perm));
             od;
             grp := Group(perms, ());
-            # When the rows of the encoded pairs cover every point, an
-            # element of k fixing every pair fixes every point, so the
-            # position action is faithful and grp inherits the order of
-            # k. Without a known order the search's first point
-            # stabilizer of grp runs a full Schreier-Sims, which for
-            # large stabilizers costs orders of magnitude more than the
-            # whole remaining search.
+            # An element of k fixing every pair fixes both coordinates
+            # of every pair, so when the coordinates of the encoded
+            # pairs cover every moved point of k the position action is
+            # faithful and grp inherits the order of k. Without a known
+            # order the search's first point stabilizer of grp runs a
+            # full Schreier-Sims, which for large stabilizers costs
+            # orders of magnitude more than the whole remaining search.
             if HasSize(k) or HasStabChainMutable(k) then
                 covered := BlistList([1..mMax], []);
-                count := 0;
                 for i in [1..Length(set)] do
                     r := (set[i] - 1) mod mMax + 1;
-                    if not covered[r] then
-                        covered[r] := true;
-                        count := count + 1;
-                    fi;
+                    covered[r] := true;
+                    covered[(set[i] - r)/mMax + 1] := true;
                 od;
-                if count = mMax then
+                if ForAll(MovedPoints(k), p -> covered[p]) then
                     SetSize(grp, Size(k));
                 fi;
             fi;
