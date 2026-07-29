@@ -729,6 +729,99 @@ function(inGroup, pp, action, settings)
   return PartialPerm(dom, lresult{dom});
 end);
 
+# The action of a permutation on a multiplication (Cayley) table: the
+# table of the isomorphic structure on the relabelled elements, so
+# OnMultiplicationTables(T, g)[i^g][j^g] = T[i][j]^g. Isomorphism of
+# magmas is precisely equality up to this action.
+BindGlobal("OnMultiplicationTables", function(T, g)
+  local n, R, i, j;
+  n := Length(T);
+  R := List([1..n], i -> EmptyPlist(n));
+  for i in [1..n] do
+    for j in [1..n] do
+      R[i^g][j^g] := T[i][j]^g;
+    od;
+  od;
+  return R;
+end);
+
+# A multiplication table is a total function on the n^2 cells, i.e. a
+# set of pairs (cell, value). G acts on cells by the pair action and on
+# values naturally; that combined action is one permutation group on
+# n^2 + n points, and the pair-action engine does the rest. The induced
+# order is row-major comparison of the value lists, which is GAP's <
+# on the tables themselves.
+_IMAGES_TableLift := function(G, n)
+  local m, hgens, g, p, i, j, H;
+  m := n^2 + n;
+  hgens := [];
+  for g in GeneratorsOfGroup(G) do
+    p := [];
+    for i in [1..n] do
+      for j in [1..n] do
+        p[(i-1)*n + j] := (i^g - 1)*n + j^g;
+      od;
+    od;
+    for i in [1..n] do
+      p[n^2 + i] := n^2 + i^g;
+    od;
+    Add(hgens, PermList(p));
+  od;
+  H := Group(hgens, ());
+  # the value coordinate is the natural action, so the lift is faithful
+  SetSize(H, Size(G));
+  return H;
+end;
+
+_IMAGES_TableImage := function(G, T, settings)
+  local n, m, H, set, res, minT, i, j, c, v;
+  n := Length(T);
+  if not ForAll(T, row -> IsList(row) and Length(row) = n
+                          and ForAll(row, x -> IsPosInt(x) and x <= n)) then
+    ErrorNoReturn("OnMultiplicationTables requires an n x n table ",
+                  "with entries in [1..n]");
+  fi;
+  if LargestMovedPoint(G) > n then
+    ErrorNoReturn("the group moves points beyond the domain of the table");
+  fi;
+
+  m := n^2 + n;
+  H := _IMAGES_TableLift(G, n);
+  # cheap at this degree with the order already known, and it tells the
+  # small-orbit pre-pass to keep its probe budget small
+  StabChainMutable(H);
+
+  if settings.stabilizer <> fail then
+      # lift the supplied stabilizer to H; every consuming path
+      # validates it against the encoded set as usual
+      settings := ShallowCopy(settings);
+      settings.stabilizer := _IMAGES_TableLift(settings.stabilizer, n);
+  fi;
+
+  set := [];
+  for i in [1..n] do
+    for j in [1..n] do
+      Add(set, ((i-1)*n + j - 1)*m + n^2 + T[i][j]);
+    od;
+  od;
+
+  res := _IMAGES_MinimalImage_PairSet(fail, set, H, m, settings);
+
+  if settings.result = GetBool then
+      return res;
+  elif settings.result = GetPerm then
+      # res lives in H; read the underlying permutation off the values
+      return PermList(List([1..n], i -> (n^2 + i)^res - n^2));
+  fi;
+  minT := List([1..n], i -> EmptyPlist(n));
+  for i in [1..Length(res)] do
+      v := (res[i] - 1) mod m + 1 - n^2;
+      c := (res[i] - (v + n^2))/m + 1;
+      minT[QuoInt(c - 1, n) + 1][(c - 1) mod n + 1] := v;
+  od;
+  return minT;
+end;
+
 # A digraph's arcs are a set of pairs on its vertices, so digraphs run
 # through the same pair-action engine as transformations: the arc (u,v)
 # encodes to (u-1)*n + v, and the whole arc set is minimised at once.
@@ -908,6 +1001,10 @@ function(inGroup, inList, op, settings)
     return _CanonicalTupleSetImage(inGroup, inList, settings);
   fi;
 
+  if op = OnMultiplicationTables then
+    return _IMAGES_TableImage(inGroup, inList, settings);
+  fi;
+
   if op = OnSetsSets then
     # Our code is not happy with empty lists, so let's get them filtered out first
     # (we will add them back at the end)
@@ -965,8 +1062,8 @@ function(inGroup, inList, op, settings)
   fi;
 
   ErrorNoReturn("Unsupported action ", NameFunction(op), " on a list: the ",
-                "supported actions are OnSets, OnTuples, OnSetsSets and ",
-                "OnTuplesSets");
+                "supported actions are OnSets, OnTuples, OnSetsSets, ",
+                "OnTuplesSets and OnMultiplicationTables");
 
 end);
 

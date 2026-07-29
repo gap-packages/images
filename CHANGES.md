@@ -62,6 +62,17 @@ New functionality:
   separate treatment; multidigraphs are not supported. We believe this
   is the first implementation of minimal images of digraphs under an
   arbitrary permutation group.
+* New action `OnMultiplicationTables`: `MinimalImage`, `CanonicalImage`
+  and their variants now canonicalise multiplication (Cayley) tables,
+  returning the lexicographically least table in the orbit — a
+  distinguished representative of the isomorphism class of the magma.
+  A table is a total function on its n^2 cells, so it runs through the
+  pair-action search on a lifted group on n^2 + n points, with no new
+  search machinery. Verified against exhaustive enumeration and, for
+  the symmetric group case, against the SAT-based mlex tool of Janota,
+  Chow, Araujo, Codish and Vojtechovsky (identical results on every
+  instance both systems solved); unlike SAT approaches this also
+  supports arbitrary subgroups of the symmetric group.
 * The pair-action search now transfers a known stabilizer order to the
   position action whenever the encoded pairs cover every moved point of
   the stabilizer (previously only when one coordinate covered every

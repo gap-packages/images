@@ -85,6 +85,8 @@ supported action, so for lists the action should always be given.
 <Item>a digraph (from the <Package>Digraphs</Package> package), with
 <C>OnDigraphs</C> (the group must move only vertices of the digraph,
 and multidigraphs are not supported);</Item>
+<Item>a multiplication (Cayley) table, with
+<Ref Func="OnMultiplicationTables"/>;</Item>
 <Item>a fundamental structure (see Chapter
 <Ref Chap="FundamentalAndCombinatorialStructures"/>), with
 <C>OnFundamental</C>.</Item>
@@ -102,9 +104,10 @@ treatment.
 
 Not every configuration option applies to every combination: the
 <C>stabilizer</C> and <C>getStab</C> options only affect sets,
-transformations, permutations, partial permutations and digraphs, and
-the <C>order</C> option is ignored for <C>OnSetsSets</C>. See
-<Ref Var="ImagesAdvancedConfig"/> for the details.
+transformations, permutations, partial permutations, digraphs and
+multiplication tables, and the <C>order</C> option is ignored for
+<C>OnSetsSets</C>. See <Ref Var="ImagesAdvancedConfig"/> for the
+details.
 
 </Section>
 
@@ -112,6 +115,8 @@ the <C>order</C> option is ignored for <C>OnSetsSets</C>. See
 <Heading>Function documentation</Heading>
 
 <#Include Label="MinimalImage" />
+
+<#Include Label="OnMultiplicationTables" />
 
 <#Include Label="IsMinimalImageLessThan"/>
 
