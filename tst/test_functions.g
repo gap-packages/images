@@ -139,8 +139,10 @@ CheckMinimalImageTest := function(g, o, action, minList)
     fi;
 
     # a user-supplied stabilizer must not change the answer (only the
-    # OnPoints, OnSets and OnDigraphs paths consume one)
-    if (action = OnPoints or action = OnSets or action = OnDigraphs)
+    # OnPoints, OnSets, OnDigraphs and OnMultiplicationTables paths
+    # consume one)
+    if (action = OnPoints or action = OnSets or action = OnDigraphs
+        or action = OnMultiplicationTables)
        and Size(g) <= FERRET_TEST_LIMIT.bruteForceLimit then
         stab := Stabilizer(g, o, action);
         stab_min := CanonicalImage(cpyg, o, action,
@@ -176,12 +178,13 @@ CheckMinimalImageTest := function(g, o, action, minList)
                   CanonicalConfig_RareOrbitPlusMin, CanonicalConfig_RareOrbitPlusRare, CanonicalConfig_RareOrbitPlusCommon,
                   CanonicalConfig_FixedMinOrbit, CanonicalConfig_FixedMaxOrbit ] do
 
-        # Static branch orderings are not supported for the pair action used
-        # by transformations, permutations, partial permutations and digraphs
+        # Static branch orderings are not supported for the pair action
+        # used by transformations, permutations, partial permutations,
+        # digraphs and multiplication tables
         if order.branch = "static" and
            ((action = OnPoints and
              (IsTransformation(o) or IsPerm(o) or IsPartialPerm(o)))
-            or IsDigraph(o)) then
+            or IsDigraph(o) or action = OnMultiplicationTables) then
             continue;
         fi;
 
@@ -364,6 +367,29 @@ CheckMinimalImageDigraph := function()
         n := Random([2..FERRET_TEST_LIMIT.groupSize + 2]);
         g := randomGroup(Random([2..Minimum(n, FERRET_TEST_LIMIT.groupSize)]));
         CheckMinimalImageTest(g, cajRandomDigraph(n), OnDigraphs, minListDigraph);
+    od;
+end;;
+
+# our order on tables is GAP's < on the tables themselves, so Minimum
+# is the oracle
+cajRandomTable := function(n)
+    return List([1..n], i -> List([1..n], j -> Random([1..n])));
+end;;
+
+CheckMinimalImageTable := function()
+    local i, n, g, T;
+    CheckMinimalImageTest(Group(()), [[1]], OnMultiplicationTables, Minimum);
+    CheckMinimalImageTest(Group((1,2,3)), cajRandomTable(3),
+                          OnMultiplicationTables, Minimum);
+    CheckMinimalImageTest(SymmetricGroup(4),
+                          MultiplicationTable(CyclicGroup(4)),
+                          OnMultiplicationTables, Minimum);
+    for i in [1..FERRET_TEST_LIMIT.count] do
+        # the group must move only points of the table's domain
+        n := Random([2..FERRET_TEST_LIMIT.groupSize]);
+        g := randomGroup(Random([2..n]));
+        CheckMinimalImageTest(g, cajRandomTable(n),
+                              OnMultiplicationTables, Minimum);
     od;
 end;;
 

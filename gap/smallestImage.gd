@@ -59,6 +59,33 @@ DeclareGlobalFunction("IsMinimalImage");
 DeclareGlobalFunction("MinimalImagePerm");
 
 #############################################################################
+##  <#GAPDoc Label="OnMultiplicationTables">
+##  <ManSection>
+##  <Func Name="OnMultiplicationTables" Arg="table, g"/>
+##  <Description>
+##  The action of a permutation <A>g</A> on a multiplication (Cayley)
+##  table: the table of the isomorphic structure on the relabelled
+##  elements, so <C>OnMultiplicationTables(T, g)[i^g][j^g] = T[i][j]^g</C>.
+##  A table is a list of <M>n</M> rows of length <M>n</M> with entries in
+##  <C>[1..n]</C>, as produced by <C>MultiplicationTable</C>; two magmas
+##  are isomorphic precisely when their tables lie in the same orbit
+##  under <C>SymmetricGroup(n)</C>.
+##  <P/>
+##  <Ref Func="MinimalImage"/> with this action returns the
+##  lexicographically least table in the orbit (comparing tables row by
+##  row, which is &GAP;'s ordering of the tables as lists), so it is a
+##  distinguished representative of the isomorphism class of the magma.
+##  <Example><![CDATA[
+##  gap> T := MultiplicationTable(CyclicGroup(4));;
+##  gap> MinimalImage(SymmetricGroup(4), T, OnMultiplicationTables);
+##  [ [ 1, 2, 3, 4 ], [ 2, 1, 4, 3 ], [ 3, 4, 2, 1 ], [ 4, 3, 1, 2 ] ]
+##  ]]></Example>
+##  </Description>
+##  </ManSection>
+##  <#/GAPDoc>
+## (declared with BindGlobal in smallestImage.gi)
+
+#############################################################################
 ##  <#GAPDoc Label="IsMinimalImageLessThan">
 ##  <ManSection>
 ##  <Func Name="IsMinimalImageLessThan" Arg="G, A, B, act"/>
