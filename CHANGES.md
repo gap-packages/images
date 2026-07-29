@@ -50,6 +50,18 @@ New functionality:
   permutations with small support under large-degree groups speed up
   substantially (a support-8 partial permutation under S100 improves
   over 20x).
+* `MinimalImage`, `CanonicalImage` and their variants now support
+  digraphs (from the Digraphs package) under the action `OnDigraphs`:
+  a digraph's arcs are a set of pairs on its vertices, so digraphs run
+  through the same pair-action search as transformations. The order
+  minimised is the sorted arc list compared lexicographically. The
+  default stabilizer is the intersection of the group with the
+  automorphism group of the digraph (computed with bliss when the group
+  is the full symmetric group on the vertices, and with ferret
+  otherwise). Undirected graphs are symmetric digraphs and need no
+  separate treatment; multidigraphs are not supported. We believe this
+  is the first implementation of minimal images of digraphs under an
+  arbitrary permutation group.
 * `MinimalImageOrderedPair` and `MinimalImageUnorderedPair` now work for
   all supported actions (the ordered version previously always raised an
   error, and the unordered version only supported `OnPoints`);

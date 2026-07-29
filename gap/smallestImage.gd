@@ -214,18 +214,19 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    cannot silently produce wrong answers. The <C>"vole"</C> engine
 ##    computes its own stabilizer and ignores this option.
 ##    <P/>
-##    When canonicalising transformations, permutations or partial
-##    permutations, the default stabilizer is computed with the
+##    When canonicalising transformations, permutations, partial
+##    permutations or digraphs, the default stabilizer is computed with the
 ##    <Package>ferret</Package> package when it is loaded, which is much
 ##    faster for groups of large degree; without <Package>ferret</Package> a
 ##    slower fallback is used. For permutations the default is the
-##    centralizer. For the minimum orderings (which
-##    <Ref Func="MinimalImage"/> and its variants use), an object whose
-##    orbit under <A>G</A> is small is answered by enumerating the orbit
-##    directly, and then no stabilizer is needed at all.
+##    centralizer, and for digraphs under the full symmetric group on their
+##    vertices it is the automorphism group of the digraph. For the minimum
+##    orderings (which <Ref Func="MinimalImage"/> and its variants use), an
+##    object whose orbit under <A>G</A> is small is answered by enumerating
+##    the orbit directly, and then no stabilizer is needed at all.
 ##    <P/>
-##    This option is honoured for sets, transformations, permutations and
-##    partial permutations. It is silently ignored for <C>OnTuples</C>,
+##    This option is honoured for sets, transformations, permutations,
+##    partial permutations and digraphs. It is silently ignored for <C>OnTuples</C>,
 ##    <C>OnTuplesSets</C>, points and fundamental structures, and for
 ##    <C>OnSetsSets</C> only the trivial group is accepted.
 ##    <P/>

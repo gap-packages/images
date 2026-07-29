@@ -84,11 +84,11 @@ true
 gap> MinimalImage(SymmetricGroup(4), Transformation([2,1,1,3]), OnPoints,
 >                 rec(order := CanonicalConfig_FixedMinOrbit));
 Error, static branch orderings (such as CanonicalConfig_FixedMinOrbit) are not\
- supported for transformations, permutations or partial permutations
+ supported for transformations, permutations, partial permutations or digraphs
 gap> CanonicalImagePerm(SymmetricGroup(4), (1,2,3), OnPoints,
 >                       rec(order := CanonicalConfig_FixedMaxOrbit));
 Error, static branch orderings (such as CanonicalConfig_FixedMinOrbit) are not\
- supported for transformations, permutations or partial permutations
+ supported for transformations, permutations, partial permutations or digraphs
 
 # a transformation with an enormous stabilizer: the default stabilizer
 # seeding must keep the search tractable
