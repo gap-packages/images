@@ -59,6 +59,19 @@ gap> (1,2)^MinimalImagePerm(SymmetricGroup(12), (1,2), OnPoints);
 gap> MinimalImage(SymmetricGroup(9), PartialPerm([4],[7]), OnPoints)
 >    = PartialPerm([1],[2]);
 true
+
+# partial permutations are encoded sparsely (only their bound pairs);
+# a big-orbit case exercises the search on the sparse set
+gap> pp := PartialPerm([2,4,6,8,10],[3,5,7,9,11]);;
+gap> MinimalImage(SymmetricGroup(30), pp, OnPoints)
+>    = PartialPerm([1,3,5,7,9],[2,4,6,8,10]);
+true
+gap> IsMinimalImage(SymmetricGroup(30), PartialPerm([1,3,5,7,9],[2,4,6,8,10]),
+>                   OnPoints);
+true
+gap> pp^MinimalImagePerm(SymmetricGroup(30), pp, OnPoints)
+>    = MinimalImage(SymmetricGroup(30), pp, OnPoints);
+true
 gap> STOP_TEST( "test_minimage.tst", 10000 );
 images package: test_minimage.tst
 #############################################################################
