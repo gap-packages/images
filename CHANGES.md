@@ -73,15 +73,19 @@ New functionality:
   Chow, Araujo, Codish and Vojtechovsky (identical results on every
   instance both systems solved); unlike SAT approaches this also
   supports arbitrary subgroups of the symmetric group.
-* New experimental option `search := "iterative"`: an
-  iterative-deepening variant of the minimum-ordering search which
-  fixes the minimal image one value at a time and re-enumerates the
-  realisations of the fixed prefix, instead of storing them all. Its
-  memory is bounded by the recursion depth (the frontier search can
-  exhaust memory on highly symmetric inputs), at the price of
-  re-enumeration time. Results are identical to the default search.
-  The default is unchanged; this option exists to evaluate a future
-  combined engine.
+* New experimental options `search := "iterative"` and
+  `search := "hybrid"` for the minimum-ordering search. The default
+  ("bfs") search stores every partial image achieving the minimal
+  prefix, which can exhaust memory on highly symmetric inputs (a
+  cyclic group's multiplication table of order 12 exceeds 8GB). The
+  iterative search stores none of them, re-enumerating the
+  realisations of the fixed prefix at every level: bounded memory, at
+  the price of re-enumeration time. The hybrid search runs the
+  frontier search under a node cap (option `frontierLimit`) and
+  switches to re-enumeration from the last stored frontier only when
+  a level would exceed the cap, so it matches the default search's
+  speed when memory suffices and degrades gracefully instead of
+  running out of memory. All three produce identical results.
 * The pair-action search now transfers a known stabilizer order to the
   position action whenever the encoded pairs cover every moved point of
   the stabilizer (previously only when one coordinate covered every
