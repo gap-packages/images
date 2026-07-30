@@ -277,6 +277,21 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    it is a subgroup stabilizing the returned image, and may be a proper
 ##    subgroup. It is honoured on the same paths as <C>stabilizer</C>.
 ##    </Item>
+##    <Mark><C>setSetOrder</C> (default <C>"standard"</C>)</Mark>
+##    <Item> Which ordering of sets of sets <C>OnSetsSets</C> minimises.
+##    The default <C>"standard"</C> is &GAP;'s ordering. Passing
+##    <C>"divergence"</C> instead orders two collections by the first
+##    point where they diverge: the collection whose inner set contains
+##    the diverging value is smaller, so for inner sets
+##    <C>{1,2,3} &lt; {1,2,4} &lt; {1,2}</C>. The two orderings differ
+##    exactly at &GAP;'s prefix rule (a set which is a proper prefix of
+##    another compares smaller in &GAP;, larger under divergence). The
+##    divergence ordering is decided as the search runs, which can be
+##    substantially faster on collections with inner sets of many
+##    different sizes; both are stable, documented orderings, but they
+##    select different representatives, so do not mix them within one
+##    catalogue.
+##    </Item>
 ##    <Mark><C>engine</C> (default <C>"native"</C>)</Mark>
 ##    <Item> Which algorithm to use to compute the canonical image. The default
 ##    <C>"native"</C> uses this package's own algorithm. Passing <C>"vole"</C>

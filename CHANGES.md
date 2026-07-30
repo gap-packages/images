@@ -73,6 +73,17 @@ New functionality:
   Chow, Araujo, Codish and Vojtechovsky (identical results on every
   instance both systems solved); unlike SAT approaches this also
   supports arbitrary subgroups of the symmetric group.
+* New option `setSetOrder := "divergence"` for `OnSetsSets`: minimise
+  under the ordering which compares two collections at the first
+  diverging point (the collection whose inner set contains it is
+  smaller), instead of GAP's ordering. GAP's ordering is not decided
+  at the first divergence -- whether {1,2} beats {1,2,4} depends on
+  whether the first set later receives an element -- which forces the
+  search into a blocked comparison with weaker pruning. The divergence
+  ordering needs no blocking and can be dramatically faster on
+  collections with inner sets of many sizes (one 25-set collection on
+  50 points improves from over 10 minutes to 23 seconds). The two
+  orderings select different representatives; the default is unchanged.
 * New experimental options `search := "iterative"` and
   `search := "hybrid"` for the minimum-ordering search. The default
   ("bfs") search stores every partial image achieving the minimal

@@ -258,20 +258,51 @@ InstallGlobalFunction("IsMinimalImageLessThan",
 end);
 
 _CanonicalSetSetImage := function(G, S, stab, stepval, settings)
-    local L;
+    local L, order, decode;
 
-    # Sets of sets are always canonicalised in the minimum order; the
-    # blockSize option makes _NewSmallestImage minimise under the blocked
-    # ordering, which matches GAP's ordering of sets of sets.
+    # Sets of sets are always canonicalised in the minimum order. The
+    # default ("standard") ordering is GAP's ordering of sets of sets,
+    # which is not decided at the first divergence (a set which is a
+    # prefix of another compares smaller), so the search must minimise
+    # under the blocked comparison the blockSize option selects. The
+    # "divergence" ordering instead ranks collections by their encoded
+    # sets -- at the first diverging value, the inner set containing it
+    # is smaller -- which is decided as the search runs, needs no
+    # blocking, and keeps all the minimum-order machinery.
+    if settings.setSetOrder = "divergence" then
+        order := rec(branch := "minimum");
+    else
+        order := rec(branch := "minimum", blockSize := stepval);
+    fi;
     L := _NewSmallestImage(G, S, stab, x -> x, [false],
                            settings.disableStabilizerCheck,
-                           rec(branch := "minimum", blockSize := stepval));
+                           order);
 
     if settings.result = GetImage then
         return L[1];
     fi;
 
     if settings.result = GetBool then
+        if settings.setSetOrder = "divergence" then
+            # The minimal encoding arranges the inner sets in divergence
+            # order, but the input was encoded with its blocks in GAP's
+            # order, so a minimal collection can still have a different
+            # encoding: compare the decoded collections instead.
+            decode := function(enc)
+                local blocks, x, inner, b;
+                blocks := [];
+                for x in enc do
+                    inner := (x - 1) mod stepval + 1;
+                    b := (x - inner)/stepval + 1;
+                    if not IsBound(blocks[b]) then
+                        blocks[b] := [];
+                    fi;
+                    AddSet(blocks[b], inner);
+                od;
+                return Set(Compacted(blocks));
+            end;
+            return decode(Set(L[1])) = decode(Set(S));
+        fi;
         return Set(L[1]) = Set(S);
     fi;
 
@@ -1153,7 +1184,8 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   # second call
   settings := rec(result := resultarg, stabilizer := fail, order := imagearg, getStab := false,
                   disableStabilizerCheck := false, engine := "native", stab := fail,
-                  search := "bfs", frontierLimit := fail);
+                  search := "bfs", frontierLimit := fail,
+                  setSetOrder := "standard");
 
   if Length(arglist) >= index and IsRecord(arglist[index]) then
     settings := _ImageHelperFuncs.fillUserValues(settings, arglist[index]);
@@ -1171,6 +1203,10 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   fi;
   if settings.frontierLimit <> fail and not IsPosInt(settings.frontierLimit) then
     ErrorNoReturn("frontierLimit must be a positive integer");
+  fi;
+  if not settings.setSetOrder in ["standard", "divergence"] then
+    ErrorNoReturn("Unknown setSetOrder '", settings.setSetOrder,
+                  "': must be \"standard\" or \"divergence\"");
   fi;
 
   if settings.engine = "vole" then
