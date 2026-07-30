@@ -82,7 +82,7 @@ New functionality:
   search into a blocked comparison with weaker pruning. The divergence
   ordering needs no blocking and can be dramatically faster on
   collections with inner sets of many sizes (one 25-set collection on
-  50 points improves from over 10 minutes to 23 seconds). The two
+  50 points improves from over an hour to 23 seconds). The two
   orderings select different representatives; the default is unchanged.
 * New experimental options `search := "iterative"` and
   `search := "hybrid"` for the minimum-ordering search. The default
