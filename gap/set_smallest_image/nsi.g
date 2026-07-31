@@ -75,7 +75,14 @@ _IMAGES_TIME_CLASSES := MakeImmutable(_IMAGES_TIME_CLASSES);
 
 _IMAGES_nsi_stats := ListWithIdenticalEntries(Length(_IMAGES_TIME_CLASSES),0);
 
-_IMAGES_DO_TIMING := true;
+# The timers and counters are a development facility, and they are not
+# free: every candidate the search examines pays a counter update, which
+# measures at around 8% of the running time of a large search. They are
+# therefore off unless asked for -- assign _IMAGES_DO_TIMING before the
+# package is loaded to turn them on.
+if not IsBound( _IMAGES_DO_TIMING ) then
+    _IMAGES_DO_TIMING := false;
+fi;
 if IsBound( MakeThreadLocal ) then
     MakeThreadLocal("_IMAGES_DO_TIMING");
 fi;

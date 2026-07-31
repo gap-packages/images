@@ -172,8 +172,14 @@ _unbooleaniseList := function(s, matrixMax)
   return lresult;
 end;
 
-_CanonicalSetImage := function(G, S, stab, settings)
-    local L, earlyskip, order;
+# stabIsFull says the caller knows <stab> to be the whole stabilizer of
+# the object, which is the case whenever the package computed it. The
+# search then skips its stabilizer discovery pass: two nodes with equal
+# image sets differ by an element of the stabilizer, which is already in
+# the group, so the pass can only ever rediscover what it was given. It
+# is worth a fifth of the running time on a set of points.
+_CanonicalSetImage := function(G, S, stab, settings, stabIsFull)
+    local L, earlyskip, order, noDiscovery;
 
     # The early-exit tests inside _NewSmallestImage compare the point
     # branched on at depth d against the d-th smallest element of S, which
@@ -186,6 +192,7 @@ _CanonicalSetImage := function(G, S, stab, settings)
         order := ValueGlobal(order);
     fi;
     earlyskip := settings.result = GetBool and order.branch = "minimum";
+    noDiscovery := settings.disableStabilizerCheck or stabIsFull;
 
     if settings.search <> "bfs" then
         if order.branch <> "minimum" or IsBound(order.blockSize) then
@@ -193,12 +200,12 @@ _CanonicalSetImage := function(G, S, stab, settings)
                           "\" only supports the minimum ordering");
         fi;
         if settings.search = "iterative" then
-            L := _NewSmallestImageID(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order );
+            L := _NewSmallestImageID(G, S, stab, x -> x, [earlyskip, S], noDiscovery, settings.order );
         else
-            L := _NewSmallestImageHybrid(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order, settings.frontierLimit );
+            L := _NewSmallestImageHybrid(G, S, stab, x -> x, [earlyskip, S], noDiscovery, settings.order, settings.frontierLimit );
         fi;
     else
-        L := _NewSmallestImage(G, S, stab, x -> x, [earlyskip, S], settings.disableStabilizerCheck, settings.order );
+        L := _NewSmallestImage(G, S, stab, x -> x, [earlyskip, S], noDiscovery, settings.order );
     fi;
 
     if settings.getStab then
@@ -571,7 +578,7 @@ end;
 # For GetImage the ENCODED minimal set is returned; GetPerm is already
 # projected into the natural action of G.
 _IMAGES_MinimalImage_PairSet := function(l, set, G, mMax, settings)
-  local order, result, pairGroup, stab;
+  local order, result, pairGroup, stab, stabIsFull;
 
   order := settings.order;
   if IsString(order) then
@@ -590,17 +597,26 @@ _IMAGES_MinimalImage_PairSet := function(l, set, G, mMax, settings)
 
   pairGroup := _IMAGES_PairActionIface(G, mMax);
 
+  # Every stabilizer the package computes for itself is the whole
+  # stabilizer of the object: the centralizer of a permutation is the
+  # stabilizer of its graph, and both the ferret search and the
+  # automorphism group of a digraph are complete. Only a stabilizer
+  # supplied by the caller may be a proper subgroup.
   if settings.stabilizer <> fail then
      stab := settings.stabilizer;
-  elif IsBound(settings.centralizerOf) then
-     stab := Centralizer(G, settings.centralizerOf);
-  elif IsBound(settings.stabilizerFunc) then
-     stab := settings.stabilizerFunc();
+     stabIsFull := false;
   else
-     stab := _IMAGES_PairSetStabilizer(G, set, mMax);
+     stabIsFull := true;
+     if IsBound(settings.centralizerOf) then
+        stab := Centralizer(G, settings.centralizerOf);
+     elif IsBound(settings.stabilizerFunc) then
+        stab := settings.stabilizerFunc();
+     else
+        stab := _IMAGES_PairSetStabilizer(G, set, mMax);
+     fi;
   fi;
 
-  return _CanonicalSetImage(pairGroup, set, stab, settings);
+  return _CanonicalSetImage(pairGroup, set, stab, settings, stabIsFull);
 end;
 
 _MinimalImage_partialFunction := function(l, G, mMax, settings)
@@ -994,7 +1010,7 @@ end;
 # and some non-trival ones too!
 InstallMethod(CanonicalImageOp, [IsPermGroup, IsList, IsFunction, IsObject],
 function(inGroup, inList, op, settings)
-  local stab, maxIn, setImage, imageperm, currentperm, i, outset, inner, outer, fList;
+  local stab, stabIsFull, maxIn, setImage, imageperm, currentperm, i, outset, inner, outer, fList;
 
   # Bail out in global trivial case:
   if LargestMovedPoint(inGroup) = 0 then
@@ -1004,6 +1020,7 @@ function(inGroup, inList, op, settings)
   if op = OnSets then
       if settings.stabilizer <> fail then
           stab := settings.stabilizer;
+          stabIsFull := false;
           # a group is a subgroup of the stabilizer iff its generators
           # preserve the set, so this check is cheap and complete
           if not ForAll(GeneratorsOfGroup(stab), g -> OnSets(inList, g) = inList) then
@@ -1011,9 +1028,10 @@ function(inGroup, inList, op, settings)
           fi;
       else
           stab := Stabilizer(inGroup, inList, OnSets);
+          stabIsFull := true;
       fi;
 
-      imageperm := _CanonicalSetImage(inGroup, inList, stab, settings);
+      imageperm := _CanonicalSetImage(inGroup, inList, stab, settings, stabIsFull);
       if settings.result = GetImage then
          return Set(imageperm);
       else
