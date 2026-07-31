@@ -35,6 +35,13 @@ New functionality:
   group's order whenever the action is faithful, which avoids a full
   Schreier-Sims inside the search (formerly the dominant cost for large
   supplied stabilizers).
+* Stabilizer discovery during the search is skipped when the stabilizer
+  is already known to be complete, which is the case on every path
+  where the package computes it: the pass can then only rediscover what
+  it was given. Minimal images of sets, transformations, permutations,
+  partial permutations and digraphs are 1.18-1.47x faster as a result.
+* The search timers are now off unless `_IMAGES_DO_TIMING` is set
+  before the package is loaded; they cost about 8% of a large search.
 * The default stabilizer for permutations (their centralizer) is now
   computed only after the small-orbit enumeration has had a chance to
   answer without it: computing it eagerly forced a stabilizer chain for
