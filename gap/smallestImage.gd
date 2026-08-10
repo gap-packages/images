@@ -262,6 +262,23 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    search then rediscovers the stabilizer piecemeal, and can take many
 ##    seconds on instances the default settings solve instantly. The same
 ##    applies to <C>disableStabilizerCheck</C>.
+##    <P/>
+##    Passing a stabilizer can also change <E>which</E> representative a
+##    non-minimum ordering selects. <Ref Func="MinimalImage"/> and its
+##    variants are unaffected -- the minimum of an orbit is the minimum of
+##    that orbit whatever the search was told -- but the dynamic orderings
+##    prune and rank using the stabilizer, so
+##    <Ref Func="CanonicalImage"/> may return a different (equally valid)
+##    representative when a stabilizer is supplied than when it is
+##    computed. The same holds for the other options which change how the
+##    stabilizer is obtained or used, namely
+##    <C>disableStabilizerCheck</C>, <C>getStab</C> and
+##    <C>bruteForce</C>. Each fixed choice of settings still gives a
+##    canonical form -- the answer is constant on the orbit -- so what
+##    matters is to use one setting throughout a computation, and not to
+##    compare canonical images produced under different ones. No attempt
+##    is made here to say which orderings are sensitive to this and which
+##    are not.
 ##    </Item>
 ##    <Mark><C>disableStabilizerCheck</C> (default <K>false</K>)</Mark>
 ##    <Item> By default, during search we perform cheap checks to try to find
@@ -276,6 +293,38 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    <C>Stabilizer(<A>G</A>,<A>O</A>,<A>A</A>)</C>; with the native engine
 ##    it is a subgroup stabilizing the returned image, and may be a proper
 ##    subgroup. It is honoured on the same paths as <C>stabilizer</C>.
+##    </Item>
+##    <Mark><C>bruteForce</C> (default <C>"auto"</C>)</Mark>
+##    <Item> Whether to try the orbit-enumeration pre-pass described under
+##    <C>stabilizer</C> above, which answers an object whose orbit under
+##    <A>G</A> is small without any stabilizer chain at all. The pre-pass
+##    applies to transformations, permutations, partial permutations and
+##    digraphs; on every other path this option has no effect.
+##    <P/>
+##    Under the default <C>"auto"</C> the pre-pass enumerates up to a work
+##    budget estimated from the degree and the number of generators, and
+##    gives up and runs the search when the orbit does not close within it.
+##    Passing <K>false</K> always runs the search. Passing <K>true</K>
+##    removes the budget: the orbit is enumerated however large it turns
+##    out to be, so pass it only when you know the orbit is small.
+##    The budget is a heuristic and is sometimes wrong in both directions,
+##    which is what these two overrides are for.
+##    <P/>
+##    For the minimum orderings all three settings compute the same
+##    answer, because the pre-pass minimises exactly the order the search
+##    minimises; they differ only in how long they take. Note that
+##    <Ref Func="IsMinimalImage"/> stops the enumeration at the first image
+##    smaller than <A>O</A>, so it can answer <K>false</K> even for orbits
+##    which would run past the budget.
+##    <P/>
+##    Under a non-minimum ordering the pre-pass returns the minimum of the
+##    orbit, which is constant on the orbit and so is a canonical form, but
+##    is not the representative the search would have selected. Both are
+##    valid; they are different. This is the same settings-dependence
+##    described under <C>stabilizer</C> above, and the same rule applies:
+##    use one setting throughout. Whether the pre-pass runs at all is
+##    decided from the orbit alone, so it cannot split a single orbit
+##    between the two.
 ##    </Item>
 ##    <Mark><C>setSetOrder</C> (default <C>"standard"</C>)</Mark>
 ##    <Item> Which ordering of sets of sets <C>OnSetsSets</C> minimises.

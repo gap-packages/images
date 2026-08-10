@@ -28,8 +28,44 @@ New functionality:
   the search builds stabilizer chains whose cost grows like a high power
   of the degree, so a degree-1000 object with an orbit of 720 elements
   took hours where the enumeration takes milliseconds. Large-orbit
-  inputs pay a few milliseconds of probing. Canonical images under the
-  dynamic orderings are unaffected.
+  inputs pay a few milliseconds of probing.
+* That enumeration now serves the canonical (non-minimum) orderings as
+  well, where it returns the minimum of the orbit. A minimum is constant
+  on its orbit, so it is a canonical form -- it is simply not the
+  representative the search selects, so `CanonicalImage` of a small-orbit
+  transformation, permutation, partial permutation or digraph may now
+  return a different (equally valid) element than in 1.3.x. Measured
+  against the search in the same moment, `CanonicalImage` of the
+  benchmark suite's degree-600 example is 38x faster and of its
+  degree-2800 example 586x faster, bringing the canonical orderings up to
+  what the minimum orderings already got.
+  Whether the enumeration runs is decided from the orbit alone, so it
+  cannot select different representatives for two objects in one orbit.
+* Documented that supplying a `stabilizer`, or setting
+  `disableStabilizerCheck`, `getStab` or `bruteForce`, can change which
+  representative a non-minimum ordering selects: the dynamic orderings
+  prune and rank using the stabilizer. This was already true before this
+  release and is not new behaviour. `MinimalImage` and its variants are
+  unaffected, as the minimum of an orbit does not depend on what the
+  search was told, and each fixed choice of settings is still constant on
+  the orbit. No attempt is made to categorise which orderings are
+  sensitive.
+* `IsMinimalImage` now stops that enumeration at the first image smaller
+  than the object, instead of enumerating the whole orbit and then
+  comparing. Answering `false` is typically immediate as a result (one
+  degree-2800 example improves from 495ms to 0.07ms), and it is answered
+  even for orbits which would have run past the work budget, as long as
+  the witness turns up before the budget does.
+* New option `bruteForce` (`true` / `false` / `"auto"`, default
+  `"auto"`) selecting whether that enumeration is tried. `"auto"`
+  enumerates up to a work budget estimated from the degree and the number
+  of generators; `false` always runs the search; `true` removes the
+  budget and enumerates however long the orbit turns out to be. All three
+  compute the same answer, because the enumeration minimises exactly the
+  order the search minimises -- which is what the new
+  `tst/test_bruteforce.tst` checks. The budget is a heuristic and is
+  sometimes wrong in both directions, and these overrides are how to say
+  so.
 * The position action of a user-supplied `stabilizer` in the
   transformation/permutation/partial permutation search now inherits the
   group's order whenever the action is faithful, which avoids a full

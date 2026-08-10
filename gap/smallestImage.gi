@@ -423,14 +423,28 @@ end;
 # digraph's arcs): all sets in one orbit have the same size, so the
 # sorted-list comparison never reaches the proper-prefix case.
 #
-# It only fires for branch="minimum" orders: there the answer is the true
-# minimum of the orbit, so it agrees exactly with the search on every
-# combination of options (a getStab call, which returns fail here and
-# falls through to the search, still gets the same image).
+# For branch="minimum" orders the answer is the true minimum of the orbit,
+# so it agrees exactly with the search on every combination of options (a
+# getStab call, which returns fail here and falls through to the search,
+# still gets the same image).
+#
+# It fires for the dynamic (canonical) orders too, where the orbit minimum
+# is returned as the canonical representative. A minimum is constant on an
+# orbit, so it is a canonical form; it is simply not the same one the
+# search would have chosen. That makes the choice of path part of the
+# answer, so the choice must itself depend only on the orbit -- see the
+# budget and the GetBool shortcut below, both of which are restricted
+# accordingly. It also means that on this path, as on the search path,
+# options which change how the stabilizer is obtained or used can change
+# which representative comes back.
 _IMAGES_PairSmallOrbit := function(l, set, G, mMax, settings)
     local order, gens, glists, ginvlists, dense, actGen, actBy, k, hash,
-          dict, queue, parents, gennos, cap, i, j, im, minpos, perm;
+          dict, queue, parents, gennos, cap, i, j, im, minpos, perm,
+          wantBool, minOrder;
 
+    if settings.bruteForce = false then
+        return fail;
+    fi;
     if settings.getStab then
         return fail;
     fi;
@@ -438,10 +452,10 @@ _IMAGES_PairSmallOrbit := function(l, set, G, mMax, settings)
     if IsString(order) then
         order := ValueGlobal(order);
     fi;
-    if not (IsRecord(order) and IsBound(order.branch)
-            and order.branch = "minimum") then
+    if not (IsRecord(order) and IsBound(order.branch)) then
         return fail;
     fi;
+    minOrder := order.branch = "minimum";
 
     gens := GeneratorsOfGroup(G);
     glists := List(gens, g -> ListPerm(g, mMax));
@@ -506,15 +520,36 @@ _IMAGES_PairSmallOrbit := function(l, set, G, mMax, settings)
     # action) the search starts with a chain construction whose cost
     # grows like a high power of mMax, and a far larger budget is still
     # cheap by comparison.
-    if HasStabChainMutable(G)
-       and not (settings.stabilizer <> fail
-                and HasSize(settings.stabilizer)
-                and Size(settings.stabilizer) > 2^60) then
-        cap := Maximum(512, QuoInt(10^6, Length(gens) * (k + 100)));
+    if settings.bruteForce = true then
+        # the caller has taken responsibility for the orbit being small
+        cap := infinity;
+    elif not minOrder then
+        # Under a non-minimum ordering this pre-pass and the search pick
+        # DIFFERENT representatives of the orbit (both valid), so which of
+        # the two runs must be decided by the orbit alone: if it were
+        # decided per object, two objects in one orbit could come back
+        # with different canonical images. Everything the budget below
+        # looks at -- the degree, the number of generators, and whether
+        # the orbit closes within the budget -- is constant on an orbit.
+        # In particular it must not consult HasStabChainMutable(G) the way
+        # the minimum case does: that is a property of the session, so a
+        # Size(G) call between two canonical images of one orbit would
+        # change the answer for the second one. The search on this path
+        # always builds the pair action and a stabilizer, so the generous
+        # budget is the appropriate one.
+        cap := Minimum(500000,
+                       Maximum(1024, QuoInt(mMax^3, 30 * Length(gens))));
     else
-        cap := Maximum(1024, QuoInt(mMax^3, 30 * Length(gens)));
+        if HasStabChainMutable(G)
+           and not (settings.stabilizer <> fail
+                    and HasSize(settings.stabilizer)
+                    and Size(settings.stabilizer) > 2^60) then
+            cap := Maximum(512, QuoInt(10^6, Length(gens) * (k + 100)));
+        else
+            cap := Maximum(1024, QuoInt(mMax^3, 30 * Length(gens)));
+        fi;
+        cap := Minimum(cap, 500000);
     fi;
-    cap := Minimum(cap, 500000);
 
     hash := _IMAGES_Get_Hash(Length(queue[1]));
     dict := SparseHashTable(hash);
@@ -522,10 +557,25 @@ _IMAGES_PairSmallOrbit := function(l, set, G, mMax, settings)
     parents := [0];
     gennos := [0];
     minpos := 1;
+    # IsMinimalImage only has to learn that something smaller than the
+    # object exists, so it can stop at the first one rather than
+    # enumerate the rest of the orbit. That also lets it answer for
+    # orbits which would have run past the cap, as long as the witness
+    # turns up before the cap does.
+    #
+    # That last part is exactly why a non-minimum ordering must not take
+    # the shortcut: escaping the cap would let IsCanonicalImage answer
+    # from the orbit for an object whose CanonicalImage came from the
+    # search, and those two pick different representatives. There the
+    # whole orbit is enumerated and the answer read off minpos below.
+    wantBool := settings.result = GetBool and minOrder;
     i := 1;
     while i <= Length(queue) do
         for j in [1..Length(gens)] do
             im := actGen(queue[i], j);
+            if wantBool and im < queue[1] then
+                return false;
+            fi;
             if GetHashEntry(dict, im) = fail then
                 if Length(queue) >= cap then
                     return fail;
@@ -544,7 +594,10 @@ _IMAGES_PairSmallOrbit := function(l, set, G, mMax, settings)
     od;
 
     if settings.result = GetBool then
-        return queue[minpos] = queue[1];
+        # nothing anywhere in the orbit beat the object. When the shortcut
+        # above was in play this is reached only if it never fired, and
+        # minpos is then still 1 for the same reason.
+        return minpos = 1;
     elif settings.result = GetImage then
         # return the encoded set in both representations
         if dense then
@@ -1203,7 +1256,7 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   settings := rec(result := resultarg, stabilizer := fail, order := imagearg, getStab := false,
                   disableStabilizerCheck := false, engine := "native", stab := fail,
                   search := "bfs", frontierLimit := fail,
-                  setSetOrder := "standard");
+                  setSetOrder := "standard", bruteForce := "auto");
 
   if Length(arglist) >= index and IsRecord(arglist[index]) then
     settings := _ImageHelperFuncs.fillUserValues(settings, arglist[index]);
@@ -1225,6 +1278,9 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   if not settings.setSetOrder in ["standard", "divergence"] then
     ErrorNoReturn("Unknown setSetOrder '", settings.setSetOrder,
                   "': must be \"standard\" or \"divergence\"");
+  fi;
+  if not settings.bruteForce in [true, false, "auto"] then
+    ErrorNoReturn("bruteForce must be true, false or \"auto\"");
   fi;
 
   if settings.engine = "vole" then
