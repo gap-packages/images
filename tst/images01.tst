@@ -41,5 +41,10 @@ gap> OnSets([2,3,5,7], p);
 gap> MinimalImage(G, [2,3,5,7], OnSets, rec(result := GetBool));
 false
 
+# doc/../gap/smallestImage.gd:78-82
+gap> T := MultiplicationTable(CyclicGroup(4));;
+gap> MinimalImage(SymmetricGroup(4), T, OnMultiplicationTables);
+[ [ 1, 2, 3, 4 ], [ 2, 1, 4, 3 ], [ 3, 4, 2, 1 ], [ 4, 3, 1, 2 ] ]
+
 #
 gap> STOP_TEST("images01.tst", 1);
