@@ -46,9 +46,6 @@ none of it has to be rediscovered.
   `CHANGES.md`, in `gap/set_smallest_image/nsi_id.g` and in
   `tst/test_idsearch.tst`, but not in the option list in
   `gap/smallestImage.gd`, so they are absent from the manual.
-* **`tst/timing.g` is dead.** It requires the unavailable `timing`
-  package and has not run in a long time. Its one distinctive problem is
-  carried over as `sets/grid-10x10` in `tst/bench.g`, so it can go.
 
 ## Known defects
 
