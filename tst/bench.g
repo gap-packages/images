@@ -9,6 +9,12 @@
 ##      gap> RunImagesBenchmarks(rec(tiers := ["quick", "full"]));
 ##      gap> RunImagesBenchmarks(rec(only := "smallorbit"));
 ##
+##  By default every entry runs in its own GAP process under a hard
+##  memory cap (memLimit, default "8g"), started from a workspace built
+##  at the beginning of the run, so an entry which exhausts memory
+##  fails alone instead of killing the run. See "Process isolation"
+##  below, and isolate := false for the in-process runner.
+##
 ##  Every performance claim in CHANGES.md should have an entry here, so
 ##  that the claim can be re-checked. Each entry records the claim it
 ##  supports in its 'claim' field.
@@ -194,8 +200,10 @@ end;
 #
 # A benchmark which raises must not abort the whole run -- the remaining
 # entries are still worth having -- so the call is wrapped. Note this does
-# NOT save us from a benchmark which exhausts memory: GAP's "reached the
-# pre-set memory limit" is not catchable here and will end the run.
+# NOT save us from a benchmark which exhausts memory: GAP's memory-limit
+# abort is not catchable here and ends the process. That is what the
+# process isolation below exists for: with isolate := true (the default)
+# the abort ends one child, not the run.
 BenchOnce := function(bench, variant)
     local state, t0, t1, res;
     Reset(GlobalMersenneTwister, bench.seed);
@@ -267,25 +275,174 @@ end;
 # Forward declaration; the entries themselves are at the end of this file.
 ImagesBenchmarks := [];
 
+#############################################################################
+##
+##  Process isolation
+##
+##  By default each entry runs in its own GAP process, so that an entry
+##  which exhausts memory (or otherwise kills its GAP) takes down that
+##  one entry and not the whole run: GAP's "cannot extend the workspace"
+##  abort cannot be caught in-process (see BenchOnce). The children are
+##  started from a workspace built freshly at the beginning of each run
+##  and deleted at the end, which cuts each child's startup from seconds
+##  to well under a second.
+##
+##  Two things worth knowing:
+##
+##    * It is the -K limit, not -o, which bounds a child. On reaching -o
+##      GAP enlarges the workspace and carries on, so -o never makes an
+##      entry fail; -K makes it abort with a clear message instead of
+##      eating the machine.
+##    * The children read the entries from the workspace, which is built
+##      from tst/bench.g as it is on disk when the run starts. An entry
+##      added or edited only in the current session is invisible to
+##      them; run such an entry with isolate := false.
+
+# The executable running this GAP, as an absolute path, for starting
+# child processes.
+BenchGapExecutable := function()
+    local argv0, path;
+    argv0 := GAPInfo.SystemCommandLine[1];
+    if '/' in argv0 then
+        if argv0[1] = '/' then
+            return argv0;
+        fi;
+        return Filename(DirectoryCurrent(), argv0);
+    fi;
+    path := Filename(DirectoriesSystemPrograms(), argv0);
+    if path = fail then
+        ErrorNoReturn("cannot find the GAP executable '", argv0,
+                      "' on PATH, so cannot start child processes");
+    fi;
+    return path;
+end;
+
+# Run the GAP at <gapexe> with <args>, stdout and stderr both captured
+# to <logfile>; returns the exit code. The /bin/sh wrapper exists only
+# to merge stderr into the log -- Process() cannot redirect it -- so
+# that a child's abort message lands in the log instead of mid-table.
+BenchRunGap := function(gapexe, args, logfile)
+    local inp, out, code;
+    inp := InputTextNone();
+    out := OutputTextFile(logfile, false);
+    if out = fail then
+        ErrorNoReturn("cannot open child log file ", logfile);
+    fi;
+    code := Process(DirectoryCurrent(), Filename(Directory("/bin"), "sh"),
+                    inp, out,
+                    Concatenation(["-c", "exec \"$0\" \"$@\" 2>&1", gapexe],
+                                  args));
+    CloseStream(out);
+    CloseStream(inp);
+    return code;
+end;
+
+# Build the workspace the children start from: this file read, and every
+# package any entry needs preloaded (one missing here is skipped per
+# entry as usual). Returns the workspace path; raises if the build fails.
+BenchBuildWorkspace := function(gapexe, dir)
+    local ws, logfile, needs, b, p, cmd, code;
+    ws := Filename(dir, "bench.ws");
+    logfile := Filename(dir, "workspace.log");
+    needs := [];
+    for b in ImagesBenchmarks do
+        if IsBound(b.needs) then
+            UniteSet(needs, b.needs);
+        fi;
+    od;
+    cmd := "ReadPackage(\"images\", \"tst/bench.g\");;";
+    for p in needs do
+        Append(cmd, Concatenation("LoadPackage(\"", p, "\", false);;"));
+    od;
+    Append(cmd, Concatenation("if SaveWorkspace(\"", ws,
+                              "\") <> true then QUIT_GAP(3); fi;;",
+                              "QUIT_GAP(0);"));
+    code := BenchRunGap(gapexe, ["-q", "--quitonbreak", "-c", cmd], logfile);
+    if code <> 0 or not IsExistingFile(ws) then
+        ErrorNoReturn("building the benchmark workspace failed (exit ",
+                      code, "); see ", logfile);
+    fi;
+    return ws;
+end;
+
+# The child side of an isolated run: time the entry called <name> and
+# write the measurements to <outfile> as a readable GAP expression.
+# Always exits the process. Distinct exit codes make a protocol error
+# distinguishable from a crash in the entry itself.
+_ImagesBenchChildRun := function(name, repeats, outfile)
+    local b;
+    b := First(ImagesBenchmarks, x -> x.name = name);
+    if b = fail then
+        QUIT_GAP(4);
+    fi;
+    b := BenchNormalise(b);
+    if repeats <> fail then
+        b.repeats := repeats;
+    fi;
+    if not BenchHasPackages(b.needs) then
+        PrintTo(outfile, "return rec(skipped := true);\n");
+        QUIT_GAP(0);
+    fi;
+    PrintTo(outfile, "return ", BenchTimeEntry(b), ";\n");
+    QUIT_GAP(0);
+end;
+
+# Run one entry in a child GAP started from the workspace <ws>. Returns
+# what BenchTimeEntry would have, or rec(skipped := true), or
+# rec(childFailed := <exit code>, log := <path>) when the child died.
+BenchRunEntryIsolated := function(gapexe, ws, dir, idx, b, repeats, memLimit)
+    local stem, outfile, logfile, args, code, result;
+    stem := Concatenation("entry-", String(idx));
+    outfile := Filename(dir, Concatenation(stem, ".out.g"));
+    logfile := Filename(dir, Concatenation(stem, ".log"));
+    args := ["-L", ws, "-q", "--quitonbreak"];
+    if memLimit <> fail then
+        Append(args, ["-K", memLimit]);
+    fi;
+    Append(args, ["-c", Concatenation("_ImagesBenchChildRun(\"", b.name,
+                                      "\", ", String(repeats), ", \"",
+                                      outfile, "\");")]);
+    code := BenchRunGap(gapexe, args, logfile);
+    if code = 0 and IsExistingFile(outfile) then
+        result := ReadAsFunction(outfile)();
+        RemoveFile(outfile);
+        return result;
+    fi;
+    return rec(childFailed := code, log := logfile);
+end;
+
 ##  RunImagesBenchmarks( [<opts>] )
 ##
 ##  <opts> is a record which may contain:
-##    tiers   : list of tiers to run          (default ["quick"])
-##    only    : substring of the names to run (default: all of the tiers)
-##    repeats : override every entry's round count. Setting this below 3
-##              is for smoke-testing the harness only: the interleaving
-##              needs several rounds to average anything out, so the
-##              resulting numbers are not a measurement.
-##    quiet   : true to suppress the table
+##    tiers    : list of tiers to run          (default ["quick"])
+##    only     : substring of the names to run (default: all of the tiers)
+##    repeats  : override every entry's round count. Setting this below 3
+##               is for smoke-testing the harness only: the interleaving
+##               needs several rounds to average anything out, so the
+##               resulting numbers are not a measurement.
+##    quiet    : true to suppress the table
+##    isolate  : run each entry in its own GAP process, started from a
+##               workspace built at the beginning of the run (default
+##               true). An entry which exhausts memory then fails alone
+##               instead of killing the run. Pass false to run in this
+##               process, which is needed for entries added or edited in
+##               the current session (the children read this file from
+##               disk), and leaves nothing to protect against a memory
+##               abort.
+##    memLimit : hard memory cap for each child, as a GAP -K value
+##               (default "8g"); fail for no cap. Only -K actually
+##               bounds a child: GAP enlarges past -o and carries on.
+##               Ignored with isolate := false.
 ##
 ##  Returns the results as a list of records, so that two runs can be
 ##  compared programmatically.
 RunImagesBenchmarks := function(arg)
     local opts, results, benches, b, v, ns, base, note, row, width, label,
-          m, shown, screen, measured, idx;
+          m, shown, screen, measured, idx, vidx, gapexe, tmpdir, ws,
+          childrenDied, isolated;
 
     opts := rec(tiers := ["quick"], only := fail, quiet := false,
-                repeats := fail);
+                repeats := fail, isolate := true, memLimit := "8g");
     if Length(arg) >= 1 and IsRecord(arg[1]) then
         for row in RecNames(arg[1]) do
             # a misspelled option would otherwise be copied in, never read,
@@ -302,6 +459,13 @@ RunImagesBenchmarks := function(arg)
         ErrorNoReturn("'tiers' must be a list of tier names, for example ",
                       "[\"quick\", \"full\"]");
     fi;
+    if not opts.isolate in [true, false] then
+        ErrorNoReturn("'isolate' must be true or false");
+    fi;
+    if not (opts.memLimit = fail or IsString(opts.memLimit)) then
+        ErrorNoReturn("'memLimit' must be a string such as \"8g\", ",
+                      "or fail for no cap");
+    fi;
 
     benches := List(ImagesBenchmarks, BenchNormalise);
     benches := Filtered(benches, function(b)
@@ -315,6 +479,16 @@ RunImagesBenchmarks := function(arg)
                      List(benches, b -> Length(b.name) + 2 +
                           Maximum(List(b.variants, v -> Length(v.name))))));
 
+    gapexe := fail; tmpdir := fail; ws := fail; childrenDied := false;
+    if opts.isolate then
+        gapexe := BenchGapExecutable();
+        tmpdir := DirectoryTemporary();
+        if not opts.quiet then
+            Print("building the child workspace ...\n");
+        fi;
+        ws := BenchBuildWorkspace(gapexe, tmpdir);
+    fi;
+
     # a table row is wider than GAP's default 80 columns, which would
     # otherwise be broken across lines mid-number
     screen := SizeScreen();
@@ -327,8 +501,42 @@ RunImagesBenchmarks := function(arg)
     fi;
 
     results := [];
-    for b in benches do
-        if not BenchHasPackages(b.needs) then
+    for idx in [1 .. Length(benches)] do
+        b := benches[idx];
+        if opts.isolate then
+            isolated := BenchRunEntryIsolated(gapexe, ws, tmpdir, idx, b,
+                                              opts.repeats, opts.memLimit);
+            if IsRecord(isolated) and IsBound(isolated.childFailed) then
+                childrenDied := true;
+                if not opts.quiet then
+                    Print(String(b.name, -width), "  ", String(b.tier, -7),
+                          String("FAILED", 12), "  (child exit ",
+                          isolated.childFailed, "; see ", isolated.log,
+                          ")\n");
+                fi;
+                Add(results, rec(name := b.name, tier := b.tier,
+                                 failed := true,
+                                 exit := isolated.childFailed,
+                                 log := isolated.log, claim := b.claim));
+                continue;
+            elif IsRecord(isolated) and IsBound(isolated.skipped) then
+                measured := fail;
+            else
+                measured := isolated;
+            fi;
+        else
+            if BenchHasPackages(b.needs) then
+                if opts.repeats <> fail then
+                    b.repeats := opts.repeats;
+                fi;
+                # all the variants are timed together, interleaved, so
+                # nothing can be printed until the whole entry is done
+                measured := BenchTimeEntry(b);
+            else
+                measured := fail;
+            fi;
+        fi;
+        if measured = fail then
             if not opts.quiet then
                 Print(String(b.name, -width), "  ", String(b.tier, -7),
                       String("skipped", 12), "  (needs ",
@@ -337,16 +545,10 @@ RunImagesBenchmarks := function(arg)
             Add(results, rec(name := b.name, skipped := true));
             continue;
         fi;
-        if opts.repeats <> fail then
-            b.repeats := opts.repeats;
-        fi;
-        # all the variants are timed together, interleaved, so nothing can
-        # be printed until the whole entry is done
-        measured := BenchTimeEntry(b);
         base := fail;
-        for idx in [1 .. Length(b.variants)] do
-            v := b.variants[idx];
-            m := measured[idx];
+        for vidx in [1 .. Length(b.variants)] do
+            v := b.variants[vidx];
+            m := measured[vidx];
             ns := m.ns;
             note := "";
             if m.ok then
@@ -381,6 +583,16 @@ RunImagesBenchmarks := function(arg)
               "one process. To see it, run this suite in a second GAP with\n",
               "  _IMAGES_DO_TIMING := true;\n",
               "assigned before the images package is loaded.\n\n");
+    fi;
+    if opts.isolate then
+        if childrenDied then
+            # loud even under quiet := true: a dead child is a failure,
+            # and its log is about to be the only evidence
+            Print("Some child processes died; their logs are kept in ",
+                  Filename(tmpdir, ""), "\n");
+        else
+            RemoveDirectoryRecursively(Filename(tmpdir, ""));
+        fi;
     fi;
     SizeScreen(screen);
     return results;

@@ -37,11 +37,15 @@ none of it has to be rediscovered.
   `search/cyclic12-table` variants have never been observed to finish.
   The opt-in entries (`digraph/random-n30-bfs`,
   `search/cyclic12-table-bfs`) have never been run at all.
-* **GAP's memory-limit abort is not catchable.** `CALL_WITH_CATCH` does
-  not trap `reached the pre-set memory limit`; it drops to the break loop
-  and kills the whole run. Currently mitigated only by choosing instances
-  which do not exhaust memory, which is fragile. The robust fix is to run
-  each entry in its own process with `--quitonbreak`.
+* ~~**GAP's memory-limit abort is not catchable.**~~ Done: by default
+  each entry now runs in its own GAP process under a hard `-K` cap
+  (option `memLimit`, default `"8g"`), started from a workspace built at
+  the beginning of the run, so a memory abort fails one entry instead of
+  the run. Note it must be `-K`: on reaching `-o` GAP enlarges the
+  workspace and carries on, so `-o` never bounds anything — commands
+  elsewhere which pass `-o 4g` for safety are not in fact capped. The
+  opt-in entries documented as "expected to exhaust memory" are now
+  runnable deliberately and die cleanly.
 
 ## Known defects
 
