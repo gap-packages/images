@@ -43,11 +43,6 @@ none of it has to be rediscovered.
   which do not exhaust memory, which is fragile. The robust fix is to run
   each entry in its own process with `--quitonbreak`.
 
-* **`search` and `frontierLimit` are undocumented.** They appear in
-  `CHANGES.md`, in `gap/set_smallest_image/nsi_id.g` and in
-  `tst/test_idsearch.tst`, but not in the option list in
-  `gap/smallestImage.gd`, so they are absent from the manual.
-
 ## Known defects
 
 * **The small-orbit budget can misfire.** For the minimum orderings the

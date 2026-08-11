@@ -351,6 +351,37 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    <C>setsets/divergence-mixed</C> and
 ##    <C>setsets/divergence-nested</C> in <F>tst/bench.g</F>.
 ##    </Item>
+##    <Mark><C>search</C> (default <C>"bfs"</C>)</Mark>
+##    <Item> Which search strategy the native engine uses. The default
+##    <C>"bfs"</C> is the frontier search: it stores every partial image
+##    achieving the minimal prefix, which can exhaust memory on highly
+##    symmetric inputs (a cyclic group's multiplication table of order 12
+##    exceeds 8GB). Passing <C>"iterative"</C> stores none of them,
+##    re-enumerating the realisations of the fixed prefix at every level:
+##    bounded memory, at the price of re-enumeration time. Passing
+##    <C>"hybrid"</C> runs the frontier search while each stored level
+##    fits under <C>frontierLimit</C> nodes, and switches to
+##    re-enumeration from the last stored frontier only when a level
+##    would exceed the cap, so it matches the default search's speed when
+##    memory suffices and degrades gracefully instead of running out of
+##    memory. All three produce identical results.
+##    <P/>
+##    <C>"iterative"</C> and <C>"hybrid"</C> are experimental. They
+##    support only the minimum ordering on unblocked domains (which
+##    excludes sets of sets); any other ordering is rejected with an
+##    error.
+##    </Item>
+##    <Mark><C>frontierLimit</C> (default chosen from the input)</Mark>
+##    <Item> The cap on the nodes stored per level by
+##    <C>search := "hybrid"</C>; the other searches ignore it. When it is
+##    not given, the cap is <C>Maximum(1000, QuoInt(50000000, m))</C>
+##    nodes for an object encoded on <C>m</C> points, which roughly
+##    bounds the stored list entries rather than the node count. After a
+##    hybrid run the global <C>_IMAGES_HYBRID_STATS</C> holds the widest
+##    frontier actually stored and the level at which the search switched
+##    to re-enumeration (<K>fail</K> if it never did), which is the
+##    information needed to tune the cap.
+##    </Item>
 ##    <Mark><C>engine</C> (default <C>"native"</C>)</Mark>
 ##    <Item> Which algorithm to use to compute the canonical image. The default
 ##    <C>"native"</C> uses this package's own algorithm. Passing <C>"vole"</C>
