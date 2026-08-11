@@ -582,7 +582,10 @@ rec(
   claim := "CHANGES 1.4.0: the default stabilizer for permutations (their \
 centralizer) is computed only after the small-orbit enumeration has had a \
 chance to answer without it; computing it eagerly took 40 seconds where the \
-same object as a transformation took milliseconds.",
+same object as a transformation took milliseconds. This entry is a \
+regression guard, not a demonstration: the fix made the permutation and \
+transformation paths equal, so a ratio near 1x is the expected result, and \
+a large ratio in either direction means one path has regressed.",
   setup := function()
       local G, n;
       G := BenchDiagonalCopies(Group((1,2,3,4,5)), 200);

@@ -42,6 +42,7 @@ none of it has to be rediscovered.
   and kills the whole run. Currently mitigated only by choosing instances
   which do not exhaust memory, which is fragile. The robust fix is to run
   each entry in its own process with `--quitonbreak`.
+
 * **`search` and `frontierLimit` are undocumented.** They appear in
   `CHANGES.md`, in `gap/set_smallest_image/nsi_id.g` and in
   `tst/test_idsearch.tst`, but not in the option list in
@@ -113,7 +114,3 @@ the report, would stop this being buried in prose.
   per entry; `pairaction/trans-S200` is 4.4s and
   `setsets/100-sets-on-100-points` is about 4.5s across its repeats.
   Either move them or change the promise.
-* **`smallorbit/perm-centralizer` is a regression guard, not a
-  demonstration.** It reports 1.19x because the fix made the permutation
-  and transformation paths equal, which is the point. Make sure the claim
-  field says so, or a future reader will think the entry shows nothing.
