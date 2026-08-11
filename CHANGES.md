@@ -123,10 +123,26 @@ New functionality:
   at the first divergence -- whether {1,2} beats {1,2,4} depends on
   whether the first set later receives an element -- which forces the
   search into a blocked comparison with weaker pruning. The divergence
-  ordering needs no blocking and can be dramatically faster on
-  collections with inner sets of many sizes (one 25-set collection on
-  50 points improves from over an hour to 23 seconds). The two
-  orderings select different representatives; the default is unchanged.
+  ordering needs no blocking. The two orderings select different
+  representatives; the default is unchanged.
+  <br>
+  Which of the two is faster depends strongly on the instance, and the
+  spread in both directions is large. On one 25-set collection on 50
+  points with mixed inner sizes the divergence ordering takes 23
+  seconds where the blocked ordering was measured past 3600s. On the
+  collections in `tst/bench.g` the direction reverses: on mixed-size
+  inner sets divergence is 8x slower at 8 sets on 16 points and 42x
+  slower at 10 sets on 20 points, and on a chain of nested sets --
+  the prefix-heavy shape the blocked comparison exists for, and so
+  where divergence might be expected to win most -- it is around 1000x
+  slower at 8 sets on 16 points and exhausts 4GB at 10 sets on 20
+  points where GAP's ordering finishes in 10ms. So the earlier claim
+  that the divergence ordering is never slower than the blocked one is
+  false, though its large wins are real. This is not a later
+  regression: the same measurements hold at the commit which introduced
+  the option. Choose between the orderings on the representative you
+  want, and if you are choosing on speed, measure on your own
+  instances.
 * New experimental options `search := "iterative"` and
   `search := "hybrid"` for the minimum-ordering search. The default
   ("bfs") search stores every partial image achieving the minimal
@@ -154,6 +170,20 @@ New functionality:
 * The `result` option (`GetImage` / `GetPerm` / `GetBool`) and the full
   list of search orderings are now documented, along with a table of the
   supported object types and actions.
+* New benchmark suite `tst/bench.g`, with one named problem per
+  performance claim in this changelog, so that those numbers can be
+  rechecked rather than taken on trust. It has no package dependencies
+  (the old `tst/timing.g` needed the unmaintained `timing` package and
+  had stopped running), reports wall-clock minima over repeated runs with
+  state rebuilt from a fixed seed, and is tiered `"quick"` / `"full"` /
+  `"opt-in"` so the multi-minute cases have to be asked for. Where a
+  claim has two sides -- pre-pass against search, divergence ordering
+  against GAP's, hybrid search against bfs -- both are run as variants of
+  one entry so the ratio is measured in the same moment rather than
+  compared against a number from earlier. The problems are chosen to have
+  the shape each claim describes; they are not the original scripts, so
+  they do not reproduce the historical figures exactly. Nothing in it is
+  asserted on, so it is not part of `tst/testall.g`.
 
 Bug fixes:
 
