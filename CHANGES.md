@@ -17,10 +17,15 @@ New functionality:
   sweep of orbits through their product structure this makes large
   examples much faster (5-14x on degree ~2800 conjugacy problems;
   one degree-800 example improves from over 8 minutes to under a
-  minute), and reduces memory use substantially.
+  minute), and reduces memory use substantially. Those ratios were
+  measured against the n^2 construction when it was removed and cannot
+  be re-measured, since the old side is gone; `tst/bench.g` tracks the
+  shapes one-sided as the `pairaction/` entries.
 * Sets of sets are canonicalised through the same unified search, and
   their stabilizers are seeded with ferret when available (100 sets on
-  100 points improves from over 10 minutes to seconds).
+  100 points improves from over 10 minutes to seconds; the 10-minute
+  side was the previous implementation, which is gone, so `tst/bench.g`
+  tracks the instance one-sided as `setsets/100-sets-on-100-points`).
 * `MinimalImage`, `IsMinimalImage` and `MinimalImagePerm` of
   transformations, permutations and partial permutations now answer
   directly from a bounded enumeration of the object's orbit when that
@@ -89,9 +94,15 @@ New functionality:
   is already known to be complete, which is the case on every path
   where the package computes it: the pass can then only rediscover what
   it was given. Minimal images of sets, transformations, permutations,
-  partial permutations and digraphs are 1.18-1.47x faster as a result.
+  partial permutations and digraphs are 1.18-1.47x faster as a result
+  (re-checkable: `stabilizer/discovery-skip` in `tst/bench.g` forces
+  the pass back on through a benchmark hook and measures 1.38x on the
+  instance the change was measured on).
 * The search timers are now off unless `_IMAGES_DO_TIMING` is set
-  before the package is loaded; they cost about 8% of a large search.
+  before the package is loaded; they cost about 8% of a large search
+  (re-checkable: `search/timer-cost` in `tst/bench.g` runs its
+  timers-on side from a workspace built with the flag set, and
+  measures 1.09x on its workload).
 * The default stabilizer for permutations (their centralizer) is now
   computed only after the small-orbit enumeration has had a chance to
   answer without it: computing it eagerly forced a stabilizer chain for
@@ -106,7 +117,9 @@ New functionality:
   search just runs on a set the size of the domain, so partial
   permutations with small support under large-degree groups speed up
   substantially (a support-8 partial permutation under S100 improves
-  over 20x).
+  over 20x -- measured against the totalising encoding when it was
+  removed; the old side is gone, so `tst/bench.g` tracks the shape
+  one-sided as `partialperm/sparse-support8-S100`).
 * `MinimalImage`, `CanonicalImage` and their variants now support
   digraphs (from the Digraphs package) under the action `OnDigraphs`:
   a digraph's arcs are a set of pairs on its vertices, so digraphs run

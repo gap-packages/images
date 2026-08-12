@@ -74,26 +74,30 @@ none of it has to be rediscovered.
 
 ## Honesty of the benchmark suite
 
-The suite exists to make the performance claims in `CHANGES.md`
-re-checkable. Roughly half of them are not checkable as written, because
-the code they compare against was deleted, the original instance is gone,
-or the mechanism is not reachable from the options record:
+Done: every entry now carries a required `verified` field, shown as a
+column in the report -- `A/B` (both sides run), `guard` (expected ratio
+about 1x), `one-sided` (the baseline is deleted code or a lost
+instance; the shape is tracked so regressions still show), or
+`coverage` (a kept problem shape with no A/B claim). Two claims which
+were unverifiable became `A/B`:
 
-| claim | status |
-| --- | --- |
-| small-orbit pre-pass, minimum and canonical | A/B verified via `bruteForce` |
-| `IsMinimalImage` early exit | A/B verified |
-| pair-action interface, 5-14x at degree 2800 | no A/B: old `n^2` construction removed |
-| degree-800 example, 8 minutes to under a minute | original script gone; bench uses a shaped problem |
-| partial permutations, over 20x | no A/B: totalising encoding removed |
-| search timers cost about 8% | not measurable in one process |
-| discovery skip, 1.18-1.47x | skip not reachable from the options record; bench measures a neighbouring quantity |
-| 100 sets on 100 points, 10 minutes to seconds | instance recovered from commit `1a46452`; the slow side is the deleted implementation |
-| divergence ordering, tried and removed | measurements in the CHANGES entry, reproducible from the shape described there |
+* **The discovery skip (1.18-1.47x)**: the skip was unreachable from
+  the options record, so the benchmark hook `_IMAGES_FORCE_DISCOVERY`
+  now forces the pass back on; `stabilizer/discovery-skip` measures
+  1.38x on the instance the original change was measured on, with
+  identical answers.
+* **The search timers (about 8%)**: the flag is read at package load,
+  so one process could never compare the two. Entries may now give a
+  variant `ws := "timing"`, and the harness builds a second workspace
+  with `_IMAGES_DO_TIMING` set and interleaves one child per
+  measurement across the two workspaces; `search/timer-cost` measures
+  1.09x.
 
-Decide per claim whether to add an A/B switch, mark it unverifiable, or
-weaken the wording. A `verified` field per entry, surfaced as a column in
-the report, would stop this being buried in prose.
+The one-sided claims (pair-action 5-14x and the degree-800 example,
+the partial-permutation 20x, the 100-sets-on-100-points instance) are
+annotated as such in `CHANGES.md` itself: their baselines were deleted
+with the code they measured, so they are historical measurements, and
+the bench entries track the shapes so a regression still shows.
 
 ## Possible improvements
 
@@ -105,7 +109,8 @@ the report, would stop this being buried in prose.
   documented but unlovely. Either hoist the existing stabilizer
   computation above the pre-pass and conjugate it to the returned image,
   or build Schreier generators off the BFS tree. Not blocking anything.
-* **Review tier assignments.** `quick` promises "a few seconds at most"
-  per entry; `pairaction/trans-S200` is 4.4s and
-  `setsets/100-sets-on-100-points` is about 4.5s across its repeats.
-  Either move them or change the promise.
+* ~~**Review tier assignments.**~~ Done: `pairaction/trans-S200` and
+  `setsets/100-sets-on-100-points` moved to the full tier; every quick
+  entry is now under a second per round and the whole quick tier runs
+  in around 12s wall, so it is cheap enough to run whenever GAP as a
+  whole is tested.

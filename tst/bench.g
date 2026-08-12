@@ -237,9 +237,24 @@ end;
 
 # Normalise a benchmark record: fill defaults and turn a bare 'run' into a
 # single unnamed variant, so the runner only ever sees a list of variants.
+#
+# 'verified' is required on every entry, so the honesty of each claim is
+# stated where the claim is, and the report can show it:
+#   "A/B"       both sides of the claim run here (possibly as a pair of
+#               entries, when one side is expected to die)
+#   "guard"     a regression guard: the expected ratio is about 1x
+#   "one-sided" only the surviving side runs; the baseline is gone
+#               (deleted code, lost instance)
+#   "coverage"  the entry keeps a problem shape timed, with no A/B claim
 BenchNormalise := function(b)
     local out;
     out := ShallowCopy(b);
+    if not IsBound(out.verified)
+       or not out.verified in ["A/B", "guard", "one-sided", "coverage"] then
+        ErrorNoReturn("benchmark entry '", out.name, "' must declare ",
+                      "verified as one of \"A/B\", \"guard\", ",
+                      "\"one-sided\", \"coverage\"");
+    fi;
     if not IsBound(out.needs) then out.needs := []; fi;
     # three rounds is the floor for the interleaving to mean anything: with
     # one round a single spike is the whole measurement
@@ -254,6 +269,13 @@ BenchNormalise := function(b)
         local w;
         w := ShallowCopy(x);
         if not IsBound(w.setup) then w.setup := out.setup; fi;
+        # which workspace the variant's child starts from: "timing" is
+        # built with _IMAGES_DO_TIMING set before the package loads
+        if not IsBound(w.ws) then w.ws := "default"; fi;
+        if not w.ws in ["default", "timing"] then
+            ErrorNoReturn("benchmark entry '", out.name,
+                          "': unknown workspace \"", w.ws, "\"");
+        fi;
         return w;
     end);
     return out;
@@ -324,20 +346,28 @@ BenchRunGap := function(gapexe, args, logfile)
     return code;
 end;
 
-# Build the workspace the children start from: this file read, and every
-# package any entry needs preloaded (one missing here is skipped per
-# entry as usual). Returns the workspace path; raises if the build fails.
-BenchBuildWorkspace := function(gapexe, dir)
+# Build a workspace for the children to start from: this file read, and
+# every package any entry needs preloaded (one missing here is skipped
+# per entry as usual). <key> selects the flavour: "default", or
+# "timing", which assigns _IMAGES_DO_TIMING before the package loads so
+# its children carry the search timers. Returns the workspace path;
+# raises if the build fails.
+BenchBuildWorkspace := function(gapexe, dir, key)
     local ws, logfile, needs, b, p, cmd, code;
-    ws := Filename(dir, "bench.ws");
-    logfile := Filename(dir, "workspace.log");
+    ws := Filename(dir, Concatenation("bench-", key, ".ws"));
+    logfile := Filename(dir, Concatenation("workspace-", key, ".log"));
     needs := [];
     for b in ImagesBenchmarks do
         if IsBound(b.needs) then
             UniteSet(needs, b.needs);
         fi;
     od;
-    cmd := "ReadPackage(\"images\", \"tst/bench.g\");;";
+    if key = "timing" then
+        cmd := "_IMAGES_DO_TIMING := true;;";
+    else
+        cmd := "";
+    fi;
+    Append(cmd, "ReadPackage(\"images\", \"tst/bench.g\");;");
     for p in needs do
         Append(cmd, Concatenation("LoadPackage(\"", p, "\", false);;"));
     od;
@@ -346,7 +376,8 @@ BenchBuildWorkspace := function(gapexe, dir)
                               "QUIT_GAP(0);"));
     code := BenchRunGap(gapexe, ["-q", "--quitonbreak", "-c", cmd], logfile);
     if code <> 0 or not IsExistingFile(ws) then
-        ErrorNoReturn("building the benchmark workspace failed (exit ",
+        ErrorNoReturn("building the '", key,
+                      "' benchmark workspace failed (exit ",
                       code, "); see ", logfile);
     fi;
     return ws;
@@ -372,6 +403,74 @@ _ImagesBenchChildRun := function(name, repeats, outfile)
     fi;
     PrintTo(outfile, "return ", BenchTimeEntry(b), ";\n");
     QUIT_GAP(0);
+end;
+
+# The child side when an entry's variants need different workspaces:
+# one measurement of one variant, appended to <outfile>. Always exits.
+_ImagesBenchChildOnce := function(name, vidx, outfile)
+    local b;
+    b := First(ImagesBenchmarks, x -> x.name = name);
+    if b = fail then
+        QUIT_GAP(4);
+    fi;
+    b := BenchNormalise(b);
+    if not BenchHasPackages(b.needs) then
+        PrintTo(outfile, "return rec(skipped := true);\n");
+        QUIT_GAP(0);
+    fi;
+    PrintTo(outfile, "return ", BenchOnce(b, b.variants[vidx]), ";\n");
+    QUIT_GAP(0);
+end;
+
+# Run one entry whose variants start from different workspaces: one
+# child per measurement, still interleaved round-robin, so the variants
+# stay comparable in the same moment. <wss> maps workspace keys to
+# paths. Returns what BenchTimeEntry would have, or the skipped/failed
+# records BenchRunEntryIsolated uses.
+BenchRunEntrySplit := function(gapexe, wss, dir, idx, b, repeats, memLimit)
+    local nv, best, alive, reps, round, v, stem, outfile, logfile, args,
+          code, m;
+    nv := Length(b.variants);
+    best := ListWithIdenticalEntries(nv, fail);
+    alive := ListWithIdenticalEntries(nv, true);
+    reps := b.repeats;
+    if repeats <> fail then
+        reps := repeats;
+    fi;
+    for round in [1 .. reps] do
+        for v in [1 .. nv] do
+            if alive[v] then
+                stem := Concatenation("entry-", String(idx), "-",
+                                      String(v), "-", String(round));
+                outfile := Filename(dir, Concatenation(stem, ".out.g"));
+                logfile := Filename(dir, Concatenation(stem, ".log"));
+                args := ["-L", wss.(b.variants[v].ws), "-q",
+                         "--quitonbreak"];
+                if memLimit <> fail then
+                    Append(args, ["-K", memLimit]);
+                fi;
+                Append(args, ["-c",
+                    Concatenation("_ImagesBenchChildOnce(\"", b.name,
+                                  "\", ", String(v), ", \"", outfile,
+                                  "\");")]);
+                code := BenchRunGap(gapexe, args, logfile);
+                if code <> 0 or not IsExistingFile(outfile) then
+                    return rec(childFailed := code, log := logfile);
+                fi;
+                m := ReadAsFunction(outfile)();
+                RemoveFile(outfile);
+                if IsRecord(m) and IsBound(m.skipped) then
+                    return m;
+                fi;
+                if not m.ok then
+                    alive[v] := false;
+                elif best[v] = fail or m.ns < best[v] then
+                    best[v] := m.ns;
+                fi;
+            fi;
+        od;
+    od;
+    return List([1 .. nv], v -> rec(ok := alive[v], ns := best[v]));
 end;
 
 # Run one entry in a child GAP started from the workspace <ws>. Returns
@@ -426,7 +525,7 @@ end;
 RunImagesBenchmarks := function(arg)
     local opts, results, benches, b, v, ns, base, note, row, width, label,
           m, shown, screen, measured, idx, vidx, gapexe, tmpdir, ws,
-          childrenDied, isolated;
+          childrenDied, isolated, note2;
 
     opts := rec(tiers := ["quick"], only := fail, quiet := false,
                 repeats := fail, isolate := true, memLimit := "8g");
@@ -473,26 +572,41 @@ RunImagesBenchmarks := function(arg)
         if not opts.quiet then
             Print("building the child workspace ...\n");
         fi;
-        ws := BenchBuildWorkspace(gapexe, tmpdir);
+        ws := rec(default := BenchBuildWorkspace(gapexe, tmpdir, "default"));
+        if ForAny(benches, b -> ForAny(b.variants,
+                                       v -> v.ws <> "default")) then
+            if not opts.quiet then
+                Print("building the timing workspace ...\n");
+            fi;
+            ws.timing := BenchBuildWorkspace(gapexe, tmpdir, "timing");
+        fi;
     fi;
 
     # a table row is wider than GAP's default 80 columns, which would
     # otherwise be broken across lines mid-number
     screen := SizeScreen();
-    SizeScreen([Maximum(screen[1], width + 50), screen[2]]);
+    SizeScreen([Maximum(screen[1], width + 61), screen[2]]);
 
     if not opts.quiet then
         Print("\n", String("benchmark", -width), "  ", String("tier", -7),
+              "  ", String("verified", -9),
               String("min ms", 12), "  ratio\n");
-        Print(Concatenation(ListWithIdenticalEntries(width + 30, "-")), "\n");
+        Print(Concatenation(ListWithIdenticalEntries(width + 41, "-")), "\n");
     fi;
 
     results := [];
     for idx in [1 .. Length(benches)] do
         b := benches[idx];
         if opts.isolate then
-            isolated := BenchRunEntryIsolated(gapexe, ws, tmpdir, idx, b,
-                                              opts.repeats, opts.memLimit);
+            if ForAny(b.variants, v -> v.ws <> "default") then
+                isolated := BenchRunEntrySplit(gapexe, ws, tmpdir, idx, b,
+                                               opts.repeats, opts.memLimit);
+            else
+                isolated := BenchRunEntryIsolated(gapexe, ws.default,
+                                                  tmpdir, idx, b,
+                                                  opts.repeats,
+                                                  opts.memLimit);
+            fi;
             if IsRecord(isolated) and IsBound(isolated.childFailed) then
                 childrenDied := true;
                 if not opts.quiet then
@@ -512,7 +626,11 @@ RunImagesBenchmarks := function(arg)
                 measured := isolated;
             fi;
         else
-            if BenchHasPackages(b.needs) then
+            if ForAny(b.variants, v -> v.ws <> "default") then
+                # a per-variant workspace means a per-variant package
+                # load, which one process cannot provide
+                measured := "needs isolate := true";
+            elif BenchHasPackages(b.needs) then
                 if opts.repeats <> fail then
                     b.repeats := opts.repeats;
                 fi;
@@ -523,11 +641,15 @@ RunImagesBenchmarks := function(arg)
                 measured := fail;
             fi;
         fi;
-        if measured = fail then
+        if measured = fail or IsString(measured) then
+            if not IsString(measured) then
+                measured := Concatenation("needs ",
+                    JoinStringsWithSeparator(b.needs, ", "));
+            fi;
             if not opts.quiet then
                 Print(String(b.name, -width), "  ", String(b.tier, -7),
-                      String("skipped", 12), "  (needs ",
-                      JoinStringsWithSeparator(b.needs, ", "), ")\n");
+                      "  ", String(b.verified, -9),
+                      String("skipped", 12), "  (", measured, ")\n");
             fi;
             Add(results, rec(name := b.name, skipped := true));
             continue;
@@ -546,7 +668,8 @@ RunImagesBenchmarks := function(arg)
                 fi;
             fi;
             row := rec(name := b.name, variant := v.name, tier := b.tier,
-                       ns := ns, ok := m.ok, claim := b.claim);
+                       ns := ns, ok := m.ok, claim := b.claim,
+                       verified := b.verified);
             Add(results, row);
             if not opts.quiet then
                 if v.name = "" then
@@ -559,17 +682,19 @@ RunImagesBenchmarks := function(arg)
                 else
                     shown := "FAILED";
                 fi;
+                if vidx = 1 then
+                    note2 := String(b.verified, -9);
+                else
+                    note2 := String("", -9);
+                fi;
                 Print(String(label, -width), "  ", String(b.tier, -7),
+                      "  ", note2,
                       String(shown, 12), "  ", note, "\n");
             fi;
         od;
     od;
     if not opts.quiet then
         Print("\n");
-        Print("Note: the ~8% cost of the search timers cannot be measured in\n",
-              "one process. To see it, run this suite in a second GAP with\n",
-              "  _IMAGES_DO_TIMING := true;\n",
-              "assigned before the images package is loaded.\n\n");
     fi;
     if opts.isolate then
         if childrenDied then
@@ -599,6 +724,7 @@ ImagesBenchmarks := [
 rec(
   name := "pairaction/perm-d2800",
   tier := "quick",
+  verified := "one-sided",
   repeats := 3,
   claim := "CHANGES 1.4.0: MinimalImage of transformations, permutations \
 and partial permutations goes through a pair-action interface which never \
@@ -614,6 +740,7 @@ A/B variant: the old n^2 construction has been removed.",
 rec(
   name := "pairaction/trans-d800",
   tier := "quick",
+  verified := "one-sided",
   repeats := 3,
   claim := "CHANGES 1.4.0: one degree-800 example improves from over 8 \
 minutes to under a minute.",
@@ -627,6 +754,7 @@ minutes to under a minute.",
 rec(
   name := "pairaction/trans-S200",
   tier := "full",
+  verified := "one-sided",
   repeats := 1,
   claim := "The pair-action search on a large-orbit input, where no \
 small-orbit shortcut applies and the search itself is being measured.",
@@ -650,6 +778,7 @@ small-orbit shortcut applies and the search itself is being measured.",
 rec(
   name := "smallorbit/minimal-d600",
   tier := "quick",
+  verified := "A/B",
   repeats := 5,
   claim := "CHANGES 1.4.0: MinimalImage answers directly from a bounded \
 enumeration of the orbit when that orbit is small. The 'bruteForce' option \
@@ -670,6 +799,7 @@ and without it and must return the same image.",
 rec(
   name := "smallorbit/canonical-d600",
   tier := "quick",
+  verified := "A/B",
   repeats := 5,
   claim := "The same object under the default canonical ordering, which \
 the pre-pass now serves too: it returns the orbit minimum, which is \
@@ -692,6 +822,7 @@ and only the times are comparable.",
 rec(
   name := "smallorbit/minimal-d2800",
   tier := "quick",
+  verified := "A/B",
   repeats := 3,
   claim := "As smallorbit/minimal-d600, at the degree where the pair-action \
 search becomes expensive.",
@@ -710,6 +841,7 @@ search becomes expensive.",
 rec(
   name := "smallorbit/canonical-d2800",
   tier := "quick",
+  verified := "A/B",
   repeats := 3,
   claim := "As smallorbit/canonical-d600, at degree 2800: the search side \
 grows quadratically in the degree while the pre-pass side stays flat, so \
@@ -730,6 +862,7 @@ this is where extending the pre-pass to canonical orderings pays most.",
 rec(
   name := "smallorbit/cap-misfire",
   tier := "quick",
+  verified := "guard",
   repeats := 3,
   claim := "Regression guard for the pre-pass budget. An earlier budget \
 branched on whether the group already had a stabilizer chain, and on this \
@@ -763,6 +896,7 @@ mispriced again.",
 rec(
   name := "smallorbit/isminimal-false",
   tier := "quick",
+  verified := "A/B",
   repeats := 3,
   claim := "IsMinimalImage of a non-minimal object stops the orbit walk at \
 the first image smaller than the object, so answering 'false' is immediate \
@@ -783,6 +917,7 @@ cost-model budget the baseline enumerated the whole orbit instead).",
 rec(
   name := "smallorbit/perm-centralizer",
   tier := "quick",
+  verified := "guard",
   repeats := 3,
   claim := "CHANGES 1.4.0: the default stabilizer for permutations (their \
 centralizer) is computed only after the small-orbit enumeration has had a \
@@ -811,6 +946,7 @@ a large ratio in either direction means one path has regressed.",
 rec(
   name := "partialperm/sparse-support8-S100",
   tier := "quick",
+  verified := "one-sided",
   repeats := 5,
   claim := "CHANGES 1.4.0: partial permutations are encoded sparsely, so \
 one with small support under a large-degree group speeds up substantially \
@@ -830,6 +966,7 @@ variant: the totalising encoding has been removed.",
 rec(
   name := "stabilizer/discovery-check",
   tier := "quick",
+  verified := "A/B",
   repeats := 3,
   claim := "CHANGES 1.4.0: stabilizer discovery during the search is \
 skipped when the stabilizer is already known to be complete (1.18-1.47x). \
@@ -861,8 +998,38 @@ stabilizer already being complete rather than applied unconditionally.",
         end)]),
 
 rec(
+  name := "stabilizer/discovery-skip",
+  tier := "quick",
+  verified := "A/B",
+  repeats := 3,
+  claim := "CHANGES 1.4.0: stabilizer discovery during the search is \
+skipped when the stabilizer is already known to be complete, making \
+minimal images 1.18-1.47x faster. This is the instance from the commit \
+which introduced the skip (a 50-subset under PrimitiveGroup(100, 1), \
+351ms to 238ms there). The skip is not reachable from the options record, \
+so the slow side sets the benchmark hook _IMAGES_FORCE_DISCOVERY, which \
+runs the discovery pass even though it can only rediscover what it was \
+given; the answers are identical.",
+  setup := function()
+      return rec(G := PrimitiveGroup(100, 1),
+                 x := Set(Shuffle([1 .. 100]){[1 .. 50]}));
+  end,
+  variants := [
+    rec(name := "skip on (default)",
+        run := function(s) return MinimalImage(s.G, s.x, OnSets); end),
+    rec(name := "discovery forced",
+        run := function(s)
+            local r;
+            _IMAGES_FORCE_DISCOVERY := true;
+            r := MinimalImage(s.G, s.x, OnSets);
+            _IMAGES_FORCE_DISCOVERY := false;
+            return r;
+        end)]),
+
+rec(
   name := "stabilizer/supplied-order",
   tier := "full",
+  verified := "one-sided",
   repeats := 1,
   claim := "CHANGES 1.4.0: the position action of a user-supplied \
 stabilizer inherits the group's order whenever the action is faithful, \
@@ -893,6 +1060,7 @@ avoiding a full Schreier-Sims inside the search.",
 rec(
   name := "sets/grid-10x10",
   tier := "quick",
+  verified := "coverage",
   repeats := 3,
   claim := "The row/column grid symmetry problem carried over from the \
 original tst/timing.g, so that its coverage is not lost.",
@@ -907,6 +1075,7 @@ original tst/timing.g, so that its coverage is not lost.",
 rec(
   name := "setsets/100-sets-on-100-points",
   tier := "full",
+  verified := "one-sided",
   needs := ["ferret"],
   repeats := 3,
   claim := "CHANGES 1.4.0: sets of sets are canonicalised through the \
@@ -928,6 +1097,7 @@ to.",
 rec(
   name := "setsets/nested-8x16",
   tier := "quick",
+  verified := "coverage",
   repeats := 3,
   claim := "A chain of nested sets, where every pair is prefix-related: the \
 shape which forces GAP's ordering of sets of sets into the blocked \
@@ -947,6 +1117,7 @@ divergence ordering, whose A/B comparison this entry used to be.",
 rec(
   name := "digraph/random-n14",
   tier := "quick",
+  verified := "coverage",
   needs := ["digraphs"],
   repeats := 3,
   claim := "CHANGES 1.4.0: digraphs run through the same pair-action \
@@ -977,6 +1148,7 @@ rec(
   # (search/cyclic11-table and the cyclic12 entries), where it is real.
   name := "digraph/random-n24",
   tier := "full",
+  verified := "coverage",
   needs := ["digraphs"],
   repeats := 1,
   claim := "As digraph/random-n14 at the large end of what this shape \
@@ -999,6 +1171,7 @@ minimal images under the full symmetric group.",
 rec(
   name := "table/random-n8",
   tier := "quick",
+  verified := "coverage",
   repeats := 3,
   claim := "CHANGES 1.4.0: OnMultiplicationTables canonicalises Cayley \
 tables through the pair-action search on a lifted group on n^2 + n points.",
@@ -1010,6 +1183,30 @@ tables through the pair-action search on a lifted group on n^2 + n points.",
   run := function(s)
       return MinimalImage(s.G, s.x, OnMultiplicationTables);
   end),
+
+rec(
+  # The timers-on side starts from a workspace built with
+  # _IMAGES_DO_TIMING set, because the flag is read once at package
+  # load; process isolation is what makes this measurable in one run.
+  name := "search/timer-cost",
+  tier := "full",
+  verified := "A/B",
+  repeats := 3,
+  claim := "CHANGES 1.4.0: the search timers are off unless \
+_IMAGES_DO_TIMING is assigned before the package loads, because every \
+candidate the search examines paid a counter update, measured at 8% of a \
+large search when the change was made (the exact fraction depends on the \
+workload).",
+  setup := function()
+      return rec(G := PrimitiveGroup(100, 1),
+                 x := Set(Shuffle([1 .. 100]){[1 .. 50]}));
+  end,
+  variants := [
+    rec(name := "timers off",
+        run := function(s) return MinimalImage(s.G, s.x, OnSets); end),
+    rec(name := "timers on",
+        ws := "timing",
+        run := function(s) return MinimalImage(s.G, s.x, OnSets); end)]),
 
 ##  ------------------------------------------------------------------
 ##  The bounded-memory searches
@@ -1023,6 +1220,7 @@ rec(
   # at which the three-way comparison is measurable in the same moment.
   name := "search/cyclic11-table",
   tier := "full",
+  verified := "A/B",
   repeats := 1,
   claim := "CHANGES 1.4.0: the default 'bfs' search stores every partial \
 image achieving the minimal prefix; the iterative search stores none of \
@@ -1060,6 +1258,7 @@ rec(
   # hour, which is why it is opt-in rather than full.
   name := "search/cyclic12-table",
   tier := "opt-in",
+  verified := "A/B",
   repeats := 1,
   claim := "CHANGES 1.4.0: the default 'bfs' search exhausts memory on \
 highly symmetric inputs (a cyclic group's multiplication table of order 12 \
@@ -1086,6 +1285,7 @@ search/cyclic11-table claim.",
 rec(
   name := "search/cyclic12-table-bfs",
   tier := "opt-in",
+  verified := "A/B",
   repeats := 1,
   claim := "The baseline for search/cyclic12-table: the default search on \
 the same input, which is the '>8GB' side of that claim. Verified 2026-08: \

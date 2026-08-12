@@ -178,6 +178,14 @@ end;
 # image sets differ by an element of the stabilizer, which is already in
 # the group, so the pass can only ever rediscover what it was given. It
 # is worth a fifth of the running time on a set of points.
+
+# Benchmark hook: force the discovery pass to run even when the
+# stabilizer is known to be complete, so the value of the skip above is
+# measurable (stabilizer/discovery-skip in tst/bench.g). The skip is
+# otherwise unreachable from the options record. Never set this outside
+# benchmarking: it cannot change any answer, only waste time.
+_IMAGES_FORCE_DISCOVERY := false;
+
 _CanonicalSetImage := function(G, S, stab, settings, stabIsFull)
     local L, earlyskip, order, noDiscovery;
 
@@ -192,7 +200,8 @@ _CanonicalSetImage := function(G, S, stab, settings, stabIsFull)
         order := ValueGlobal(order);
     fi;
     earlyskip := settings.result = GetBool and order.branch = "minimum";
-    noDiscovery := settings.disableStabilizerCheck or stabIsFull;
+    noDiscovery := not _IMAGES_FORCE_DISCOVERY
+                   and (settings.disableStabilizerCheck or stabIsFull);
 
     if settings.search <> "bfs" then
         if order.branch <> "minimum" or IsBound(order.blockSize) then
