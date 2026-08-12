@@ -485,46 +485,42 @@ _IMAGES_PairSmallOrbit := function(l, set, G, mMax, settings)
     fi;
 
     # When the orbit is larger than the cap the whole enumeration is
-    # wasted, so the budget must track what the search would otherwise
-    # cost. The cost per enumerated element is a hash and dictionary
-    # constant of a few microseconds plus list work proportional to
-    # |set|, with the constant dominating for all but very large sets.
-    # When G already has a stabilizer chain and no enormous stabilizer
-    # was supplied the search is cheap, and only a small budget is
-    # justified. When the chain is missing (or a supplied stabilizer is
-    # so large that the search must run a Schreier-Sims on its position
-    # action) the search starts with a chain construction whose cost
-    # grows like a high power of mMax, and a far larger budget is still
-    # cheap by comparison.
+    # wasted, so the budget balances the two measured costs. Enumerating
+    # one element costs a hash and dictionary constant of a few
+    # microseconds plus list work proportional to |set|, per generator:
+    # about 11ns * g * (k + 100) each. The search costs about
+    # 110ns * mMax^2 at the floor -- the pair action has mMax^2 encoded
+    # points -- rising a further factor of a few with the group. The
+    # cap is their quotient, so a wasted enumeration costs at most
+    # about what the search was going to cost anyway (measured: the
+    # gamble pays 5x on some inputs and its downside is bounded near
+    # 2x), and it is capped at 500000 elements outright.
+    #
+    # The budget must not consult session state such as
+    # HasStabChainMutable(G). Under a non-minimum ordering that is a
+    # correctness constraint: this pre-pass and the search pick
+    # DIFFERENT representatives of the orbit (both valid), so which of
+    # the two runs must be decided by the orbit alone -- everything
+    # looked at here (degree, generator count, |set|, and whether the
+    # orbit closes within the cap) is constant on an orbit, where a
+    # Size(G) call between two canonical images of one orbit would
+    # change the answer for the second. Under the minimum orderings
+    # both paths return the same image, so a session-dependent budget
+    # was merely a bad cost model: an earlier version branched on
+    # HasStabChainMutable(G), assuming a chain-free group makes the
+    # search pay an expensive Schreier-Sims, and measurement showed the
+    # chain makes no difference to the search at all (the stabilizer
+    # order transfer already avoids that Schreier-Sims), while the
+    # generous chain-free budget enumerated 40320 elements in 600ms
+    # where the search takes 95ms. See smallorbit/cap-misfire in
+    # tst/bench.g.
     if settings.bruteForce = true then
         # the caller has taken responsibility for the orbit being small
         cap := infinity;
-    elif not minOrder then
-        # Under a non-minimum ordering this pre-pass and the search pick
-        # DIFFERENT representatives of the orbit (both valid), so which of
-        # the two runs must be decided by the orbit alone: if it were
-        # decided per object, two objects in one orbit could come back
-        # with different canonical images. Everything the budget below
-        # looks at -- the degree, the number of generators, and whether
-        # the orbit closes within the budget -- is constant on an orbit.
-        # In particular it must not consult HasStabChainMutable(G) the way
-        # the minimum case does: that is a property of the session, so a
-        # Size(G) call between two canonical images of one orbit would
-        # change the answer for the second one. The search on this path
-        # always builds the pair action and a stabilizer, so the generous
-        # budget is the appropriate one.
-        cap := Minimum(500000,
-                       Maximum(1024, QuoInt(mMax^3, 30 * Length(gens))));
     else
-        if HasStabChainMutable(G)
-           and not (settings.stabilizer <> fail
-                    and HasSize(settings.stabilizer)
-                    and Size(settings.stabilizer) > 2^60) then
-            cap := Maximum(512, QuoInt(10^6, Length(gens) * (k + 100)));
-        else
-            cap := Maximum(1024, QuoInt(mMax^3, 30 * Length(gens)));
-        fi;
-        cap := Minimum(cap, 500000);
+        cap := Minimum(500000,
+                       Maximum(512, QuoInt(10 * mMax^2,
+                                           Length(gens) * (k + 100))));
     fi;
 
     hash := _IMAGES_Get_Hash(Length(queue[1]));

@@ -302,8 +302,13 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    digraphs; on every other path this option has no effect.
 ##    <P/>
 ##    Under the default <C>"auto"</C> the pre-pass enumerates up to a work
-##    budget estimated from the degree and the number of generators, and
-##    gives up and runs the search when the orbit does not close within it.
+##    budget balancing the measured cost of enumeration against the
+##    measured cost of the search, computed from the degree, the number
+##    of generators and the size of the encoded object, and gives up and
+##    runs the search when the orbit does not close within it. The budget
+##    consults nothing but those constants, so it does not depend on
+##    session state (in particular, whether a stabilizer chain for
+##    <A>G</A> has already been computed changes nothing).
 ##    Passing <K>false</K> always runs the search. Passing <K>true</K>
 ##    removes the budget: the orbit is enumerated however large it turns
 ##    out to be, so pass it only when you know the orbit is small.

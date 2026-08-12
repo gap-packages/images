@@ -58,14 +58,28 @@ New functionality:
   the witness turns up before the budget does.
 * New option `bruteForce` (`true` / `false` / `"auto"`, default
   `"auto"`) selecting whether that enumeration is tried. `"auto"`
-  enumerates up to a work budget estimated from the degree and the number
-  of generators; `false` always runs the search; `true` removes the
-  budget and enumerates however long the orbit turns out to be. All three
-  compute the same answer, because the enumeration minimises exactly the
-  order the search minimises -- which is what the new
-  `tst/test_bruteforce.tst` checks. The budget is a heuristic and is
-  sometimes wrong in both directions, and these overrides are how to say
-  so.
+  enumerates up to a work budget computed from the degree, the number
+  of generators and the size of the encoded object; `false` always runs
+  the search; `true` removes the budget and enumerates however long the
+  orbit turns out to be. All three compute the same answer, because the
+  enumeration minimises exactly the order the search minimises -- which
+  is what the new `tst/test_bruteforce.tst` checks. The budget is a
+  heuristic and is sometimes wrong in both directions, and these
+  overrides are how to say so.
+  <br>
+  The budget balances the measured costs of the two paths (enumeration
+  costs about 22ns per element per point of degree; the search's floor
+  grows with the square of the degree), and consults no session state.
+  An earlier version branched on whether the group already had a
+  stabilizer chain, assuming a chain-free group made the search pay an
+  expensive Schreier-Sims; measurement showed the chain makes no
+  difference to the search (the stabilizer order transfer below already
+  avoids that cost), while the assumption made the pre-pass enumerate a
+  40320-element orbit in 600ms where the search takes 90ms, and made
+  `Size(G)` calls change which path later queries took. The cost-model
+  budget fixes that instance, keeps every measured win including a 5x
+  gamble the small chain-present budget would have declined, and makes
+  the path choice independent of the session's history with the group.
 * The position action of a user-supplied `stabilizer` in the
   transformation/permutation/partial permutation search now inherits the
   group's order whenever the action is faithful, which avoids a full

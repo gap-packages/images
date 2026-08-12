@@ -57,19 +57,20 @@ none of it has to be rediscovered.
 
 ## Known defects
 
-* **The small-orbit budget can misfire.** For the minimum orderings the
-  budget branches on `HasStabChainMutable(G)`, assuming a chain-free
-  group makes the search pay an expensive Schreier-Sims. When that is
-  wrong the pre-pass enumerates a large orbit the search would have
-  handled faster. Measured by `smallorbit/cap-misfire`, three variants in
-  one moment: enumerating 721.70ms, chain forced 69.43ms, pre-pass off
-  74.32ms. The third is the diagnosis — with the pre-pass disabled the
-  chain-free group is just as fast, so the 721ms is entirely wasted
-  enumeration. `Size(G)` on that group takes about 1ms.
-
-  The non-minimum orderings already use an orbit-invariant budget, because
-  correctness requires it. Using that budget everywhere would also remove
-  the session-dependence, but measure before assuming it is free.
+* ~~**The small-orbit budget can misfire.**~~ Done: the budget is now a
+  single cost-model cap for all orderings, derived from measured costs
+  (enumeration about 22ns per element per point of degree; search floor
+  about 110ns times degree squared), consulting no session state. The
+  chain branch was measured to be pure noise — search cost is identical
+  with and without a pre-existing chain on dense objects (the stabilizer
+  order transfer already avoids the Schreier-Sims it hedged against),
+  and within a few ms on sparse ones. The misfire instance went from
+  600ms to 90ms, `partialperm/sparse-support8-S100` halved, and
+  `stabilizer/supplied-order` improved 720ms to 600ms, while every
+  measured pre-pass win survived, including a 5x gamble (orbit 5040 at
+  degree 2800: enumeration 312ms against a 1519ms search) which the old
+  chain-present budget would have declined. `smallorbit/cap-misfire` is
+  now a regression guard.
 
 ## Honesty of the benchmark suite
 

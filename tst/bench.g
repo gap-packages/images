@@ -731,12 +731,15 @@ rec(
   name := "smallorbit/cap-misfire",
   tier := "quick",
   repeats := 3,
-  claim := "The pre-pass budget is chosen from whether the group already \
-has a stabilizer chain, on the assumption that a chain-free group makes the \
-search pay a Schreier-Sims whose cost grows like a high power of the degree. \
-When that assumption is wrong the pre-pass enumerates a large orbit which \
-the search would have handled faster. The two variants differ only in \
-whether Size(G) was called first.",
+  claim := "Regression guard for the pre-pass budget. An earlier budget \
+branched on whether the group already had a stabilizer chain, and on this \
+instance (orbit 40320, degree 640) the chain-free branch enumerated the \
+whole orbit in around 600ms where the search takes around 90ms; the \
+cost-model budget declines it. All three variants should now be within a \
+small factor of each other, and in particular calling Size(G) first (the \
+only difference between the first two) should change nothing. A large \
+ratio in any direction means the budget has become session-dependent or \
+mispriced again.",
   setup := function()
       return rec(G := BenchDiagonalCopies(SymmetricGroup(8), 80),
                  x := Random(SymmetricGroup(640)));
@@ -761,9 +764,12 @@ rec(
   name := "smallorbit/isminimal-false",
   tier := "quick",
   repeats := 3,
-  claim := "IsMinimalImage of a non-minimal object. The pre-pass enumerates \
-the whole orbit before comparing, so answering 'false' costs the same as \
-computing the minimum; stopping at the first smaller image would not.",
+  claim := "IsMinimalImage of a non-minimal object stops the orbit walk at \
+the first image smaller than the object, so answering 'false' is immediate \
+even when the orbit runs past the budget; MinimalImage on the same object \
+must compute the actual answer (here the budget declines the 40320-orbit \
+and the search runs, so this is early-exit against search; before the \
+cost-model budget the baseline enumerated the whole orbit instead).",
   setup := function()
       return rec(G := BenchDiagonalCopies(SymmetricGroup(8), 80),
                  x := Random(SymmetricGroup(640)));
