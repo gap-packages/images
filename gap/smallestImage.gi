@@ -265,22 +265,18 @@ InstallGlobalFunction("IsMinimalImageLessThan",
 end);
 
 _CanonicalSetSetImage := function(G, S, stab, stepval, settings)
-    local L, order, decode;
+    local L, order;
 
-    # Sets of sets are always canonicalised in the minimum order. The
-    # default ("standard") ordering is GAP's ordering of sets of sets,
-    # which is not decided at the first divergence (a set which is a
-    # prefix of another compares smaller), so the search must minimise
-    # under the blocked comparison the blockSize option selects. The
-    # "divergence" ordering instead ranks collections by their encoded
-    # sets -- at the first diverging value, the inner set containing it
-    # is smaller -- which is decided as the search runs, needs no
-    # blocking, and keeps all the minimum-order machinery.
-    if settings.setSetOrder = "divergence" then
-        order := rec(branch := "minimum");
-    else
-        order := rec(branch := "minimum", blockSize := stepval);
-    fi;
+    # Sets of sets are always canonicalised in the minimum order, under
+    # GAP's ordering of sets of sets. That ordering is not decided at the
+    # first divergence (a set which is a prefix of another compares
+    # smaller), so the search must minimise under the blocked comparison
+    # the blockSize option selects. (An ordering decided at the first
+    # divergence was tried as setSetOrder := "divergence" and removed
+    # again: measured across random collections it usually lost, often by
+    # large factors, and could exhaust memory where this ordering answers
+    # in seconds. See CHANGES.md.)
+    order := rec(branch := "minimum", blockSize := stepval);
     L := _NewSmallestImage(G, S, stab, x -> x, [false],
                            settings.disableStabilizerCheck,
                            order);
@@ -290,26 +286,6 @@ _CanonicalSetSetImage := function(G, S, stab, stepval, settings)
     fi;
 
     if settings.result = GetBool then
-        if settings.setSetOrder = "divergence" then
-            # The minimal encoding arranges the inner sets in divergence
-            # order, but the input was encoded with its blocks in GAP's
-            # order, so a minimal collection can still have a different
-            # encoding: compare the decoded collections instead.
-            decode := function(enc)
-                local blocks, x, inner, b;
-                blocks := [];
-                for x in enc do
-                    inner := (x - 1) mod stepval + 1;
-                    b := (x - inner)/stepval + 1;
-                    if not IsBound(blocks[b]) then
-                        blocks[b] := [];
-                    fi;
-                    AddSet(blocks[b], inner);
-                od;
-                return Set(Compacted(blocks));
-            end;
-            return decode(Set(L[1])) = decode(Set(S));
-        fi;
         return Set(L[1]) = Set(S);
     fi;
 
@@ -1256,7 +1232,7 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   settings := rec(result := resultarg, stabilizer := fail, order := imagearg, getStab := false,
                   disableStabilizerCheck := false, engine := "native", stab := fail,
                   search := "bfs", frontierLimit := fail,
-                  setSetOrder := "standard", bruteForce := "auto");
+                  bruteForce := "auto");
 
   if Length(arglist) >= index and IsRecord(arglist[index]) then
     settings := _ImageHelperFuncs.fillUserValues(settings, arglist[index]);
@@ -1274,10 +1250,6 @@ InstallGlobalFunction(_CanonicalImageParse, function ( arglist, resultarg, image
   fi;
   if settings.frontierLimit <> fail and not IsPosInt(settings.frontierLimit) then
     ErrorNoReturn("frontierLimit must be a positive integer");
-  fi;
-  if not settings.setSetOrder in ["standard", "divergence"] then
-    ErrorNoReturn("Unknown setSetOrder '", settings.setSetOrder,
-                  "': must be \"standard\" or \"divergence\"");
   fi;
   if not settings.bruteForce in [true, false, "auto"] then
     ErrorNoReturn("bruteForce must be true, false or \"auto\"");

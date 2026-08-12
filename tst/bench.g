@@ -110,21 +110,8 @@ BenchRowColumnSymmetry := function(x, y)
     return Group(perms);
 end;
 
-# A collection of <count> sets on [1..points] whose inner sets have many
-# different sizes: the shape the divergence ordering is documented to help
-# with. The inner sets are unrelated, so prefix pairs are rare.
-BenchMixedSizeSetSet := function(count, points)
-    local out, i;
-    out := [];
-    for i in [1 .. count] do
-        Add(out, Set(List([1 .. i], j -> Random([1 .. points]))));
-    od;
-    return Set(out);
-end;
-
 # A chain of nested sets on [1..points]. Every pair is prefix-related, so
-# this is the shape which forces GAP's ordering into its blocked comparison
-# -- the mechanism the divergence ordering was introduced to avoid.
+# this is the shape which forces GAP's ordering into its blocked comparison.
 BenchNestedSetSet := function(count, points)
     local base;
     base := Shuffle(ShallowCopy([1 .. points]));
@@ -933,54 +920,19 @@ to.",
   run := function(s) return MinimalImage(s.G, s.x, OnSetsSets); end),
 
 rec(
-  name := "setsets/divergence-mixed",
+  name := "setsets/nested-8x16",
   tier := "quick",
   repeats := 3,
-  claim := "CHANGES 1.4.0 claims setSetOrder := \"divergence\" needs no \
-blocked comparison and can be dramatically faster on collections with inner \
-sets of many sizes (one 25-set collection on 50 points improving from over \
-an hour to 23 seconds), and the commit which added it claims the ordering \
-is never slower. That 25/50 instance is not in the repository, and its \
-figure was measured directly, so it is not in doubt -- but on this \
-collection of mixed-size inner sets the divergence ordering is the slower \
-of the two, and the gap widens with size: in a sweep at a fixed seed the \
-two were equal at 6 sets on 12 points, divergence was 8x slower at 8/16 \
-and 42x slower at 10/20. So 'never slower' is false and which ordering \
-wins is strongly instance-dependent. Checked against the commit which \
-introduced the option, so this is not a later regression.",
-  setup := function()
-      return rec(G := SymmetricGroup(16), x := BenchMixedSizeSetSet(8, 16));
-  end,
-  variants := [
-    rec(name := "divergence",
-        run := function(s)
-            return MinimalImage(s.G, s.x, OnSetsSets,
-                                rec(setSetOrder := "divergence"));
-        end),
-    rec(name := "standard",
-        run := function(s) return MinimalImage(s.G, s.x, OnSetsSets); end)]),
-
-rec(
-  name := "setsets/divergence-nested",
-  tier := "quick",
-  repeats := 1,
-  claim := "The same comparison on a chain of nested sets, where every pair \
-is prefix-related. This is the shape which forces GAP's ordering into the \
-blocked comparison the divergence ordering exists to avoid, so it is where \
-divergence should win by the widest margin. It loses by the widest margin \
-instead -- around 1000x -- and one step larger (10 sets on 20 points) the \
-divergence ordering exhausts 4GB while GAP's ordering finishes in 10ms.",
+  claim := "A chain of nested sets, where every pair is prefix-related: the \
+shape which forces GAP's ordering of sets of sets into the blocked \
+comparison (a proper prefix compares smaller, so no static encoding of the \
+inner sets ranks candidates correctly). This is the distinctive workload of \
+the blockSize machinery, kept timed here after the removal of the \
+divergence ordering, whose A/B comparison this entry used to be.",
   setup := function()
       return rec(G := SymmetricGroup(16), x := BenchNestedSetSet(8, 16));
   end,
-  variants := [
-    rec(name := "divergence",
-        run := function(s)
-            return MinimalImage(s.G, s.x, OnSetsSets,
-                                rec(setSetOrder := "divergence"));
-        end),
-    rec(name := "standard",
-        run := function(s) return MinimalImage(s.G, s.x, OnSetsSets); end)]),
+  run := function(s) return MinimalImage(s.G, s.x, OnSetsSets); end),
 
 ##  ------------------------------------------------------------------
 ##  Digraphs and multiplication tables

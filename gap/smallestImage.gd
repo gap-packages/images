@@ -326,31 +326,6 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    decided from the orbit alone, so it cannot split a single orbit
 ##    between the two.
 ##    </Item>
-##    <Mark><C>setSetOrder</C> (default <C>"standard"</C>)</Mark>
-##    <Item> Which ordering of sets of sets <C>OnSetsSets</C> minimises.
-##    The default <C>"standard"</C> is &GAP;'s ordering. Passing
-##    <C>"divergence"</C> instead orders two collections by the first
-##    point where they diverge: the collection whose inner set contains
-##    the diverging value is smaller, so for inner sets
-##    <C>{1,2,3} &lt; {1,2,4} &lt; {1,2}</C>. The two orderings differ
-##    exactly at &GAP;'s prefix rule (a set which is a proper prefix of
-##    another compares smaller in &GAP;, larger under divergence). Both
-##    are stable, documented orderings, but they select different
-##    representatives, so do not mix them within one catalogue.
-##    <P/>
-##    Choose between them on the representative you want. If you are
-##    choosing on speed instead, measure on your own instances: which
-##    ordering wins depends strongly on the collection, and the spread in
-##    both directions is large. The divergence ordering is decided at the
-##    first divergence and so needs none of the blocked comparison
-##    &GAP;'s ordering forces on the search, and on one 25-set collection
-##    on 50 points that takes it from over an hour to 23 seconds. But it
-##    is the slower of the two on every collection in the package's
-##    benchmark suite, and worst of all on the prefix-heavy collections
-##    the blocked comparison exists for. See
-##    <C>setsets/divergence-mixed</C> and
-##    <C>setsets/divergence-nested</C> in <F>tst/bench.g</F>.
-##    </Item>
 ##    <Mark><C>search</C> (default <C>"bfs"</C>)</Mark>
 ##    <Item> Which search strategy the native engine uses. The default
 ##    <C>"bfs"</C> is the frontier search: it stores every partial image

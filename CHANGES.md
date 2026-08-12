@@ -116,33 +116,27 @@ New functionality:
   Chow, Araujo, Codish and Vojtechovsky (identical results on every
   instance both systems solved); unlike SAT approaches this also
   supports arbitrary subgroups of the symmetric group.
-* New option `setSetOrder := "divergence"` for `OnSetsSets`: minimise
-  under the ordering which compares two collections at the first
-  diverging point (the collection whose inner set contains it is
-  smaller), instead of GAP's ordering. GAP's ordering is not decided
-  at the first divergence -- whether {1,2} beats {1,2,4} depends on
-  whether the first set later receives an element -- which forces the
-  search into a blocked comparison with weaker pruning. The divergence
-  ordering needs no blocking. The two orderings select different
-  representatives; the default is unchanged.
-  <br>
-  Which of the two is faster depends strongly on the instance, and the
-  spread in both directions is large. On one 25-set collection on 50
-  points with mixed inner sizes the divergence ordering takes 23
-  seconds where the blocked ordering was measured past 3600s. On the
-  collections in `tst/bench.g` the direction reverses: on mixed-size
-  inner sets divergence is 8x slower at 8 sets on 16 points and 42x
-  slower at 10 sets on 20 points, and on a chain of nested sets --
-  the prefix-heavy shape the blocked comparison exists for, and so
-  where divergence might be expected to win most -- it is around 1000x
-  slower at 8 sets on 16 points and exhausts 4GB at 10 sets on 20
-  points where GAP's ordering finishes in 10ms. So the earlier claim
-  that the divergence ordering is never slower than the blocked one is
-  false, though its large wins are real. This is not a later
-  regression: the same measurements hold at the commit which introduced
-  the option. Choose between the orderings on the representative you
-  want, and if you are choosing on speed, measure on your own
-  instances.
+* An alternative ordering for `OnSetsSets` was tried during development
+  and removed again as a failed experiment. `setSetOrder := "divergence"`
+  compared two collections at their first diverging point, which avoids
+  the blocked comparison GAP's ordering forces on the search (GAP's
+  ordering is not decided at the first divergence: whether {1,2} beats
+  {1,2,4} depends on whether the first set later receives an element).
+  It was added on the strength of one directly measured win -- 23
+  seconds against more than 3600 on a 25-set collection on 50 points --
+  with the claim it was never slower. Measurement showed otherwise. On
+  a chain of nested sets, the prefix-heavy shape the blocked comparison
+  exists for, it is around 1000x slower at 8 sets on 16 points and
+  exhausts 4GB one step larger. Across seven random mixed-size
+  collections at 11 sets on 22 points it beat the blocked ordering once
+  (by 1.17x), lost three times by 36-257x, and twice exhausted 8GB on
+  instances the blocked ordering answers within 5.5 seconds. Its memory
+  growth is not in the stored frontier, so the bounded searches cannot
+  contain it (`search := "hybrid"` composes with it correctly and still
+  exhausts memory). Both orderings have instance-specific blowups --
+  the blocked ordering's 3600s above is one -- but the divergence
+  ordering's typical case loses and its worst case is memory
+  exhaustion, so it is gone. Passing `setSetOrder` is now an error.
 * New experimental options `search := "iterative"` and
   `search := "hybrid"` for the minimum-ordering search. The default
   ("bfs") search stores every partial image achieving the minimal
@@ -177,8 +171,8 @@ New functionality:
   had stopped running), reports wall-clock minima over repeated runs with
   state rebuilt from a fixed seed, and is tiered `"quick"` / `"full"` /
   `"opt-in"` so the multi-minute cases have to be asked for. Where a
-  claim has two sides -- pre-pass against search, divergence ordering
-  against GAP's, hybrid search against bfs -- both are run as variants of
+  claim has two sides -- pre-pass against search, hybrid search against
+  bfs -- both are run as variants of
   one entry so the ratio is measured in the same moment rather than
   compared against a number from earlier. The problems are chosen to have
   the shape each claim describes; they are not the original scripts, so

@@ -63,18 +63,6 @@ none of it has to be rediscovered.
   correctness requires it. Using that budget everywhere would also remove
   the session-dependence, but measure before assuming it is free.
 
-* **`setSetOrder := "divergence"` is strongly instance-dependent.** Its
-  large wins are real and directly measured (one 25-set collection on 50
-  points: blocked probed past 3600s, divergence 23s). But the claim that
-  it is never slower than the blocked ordering is false: on the
-  collections in `tst/bench.g` it is 8x slower at 8 mixed-size sets on 16
-  points, 42x at 10/20, and around 1000x on a chain of nested sets, where
-  it also exhausts 4GB at 10/20 while GAP's ordering finishes in 10ms.
-  Not a regression — the same holds at the commit which introduced it.
-  It loses worst on exactly the prefix-heavy shape the blocked comparison
-  exists for, which suggests a fixable pruning defect rather than an
-  inherent property. Profile before changing anything.
-
 ## Honesty of the benchmark suite
 
 The suite exists to make the performance claims in `CHANGES.md`
@@ -86,14 +74,13 @@ or the mechanism is not reachable from the options record:
 | --- | --- |
 | small-orbit pre-pass, minimum and canonical | A/B verified via `bruteForce` |
 | `IsMinimalImage` early exit | A/B verified |
-| divergence vs standard ordering | A/B verified |
 | pair-action interface, 5-14x at degree 2800 | no A/B: old `n^2` construction removed |
 | degree-800 example, 8 minutes to under a minute | original script gone; bench uses a shaped problem |
 | partial permutations, over 20x | no A/B: totalising encoding removed |
 | search timers cost about 8% | not measurable in one process |
 | discovery skip, 1.18-1.47x | skip not reachable from the options record; bench measures a neighbouring quantity |
 | 100 sets on 100 points, 10 minutes to seconds | instance recovered from commit `1a46452`; the slow side is the deleted implementation |
-| divergence, over an hour to 23 seconds | instance not kept |
+| divergence ordering, tried and removed | measurements in the CHANGES entry, reproducible from the shape described there |
 
 Decide per claim whether to add an A/B switch, mark it unverifiable, or
 weaken the wording. A `verified` field per entry, surfaced as a column in
