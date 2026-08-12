@@ -960,50 +960,33 @@ the group with the automorphism group of the digraph.",
   run := function(s) return MinimalImage(s.G, s.x, OnDigraphs); end),
 
 rec(
-  # A random digraph under the full symmetric group is one of the inputs
-  # the default search handles worst: it stores every partial image
-  # achieving the minimal prefix, and by n = 30 that exhausts an 8GB
-  # heap. Bounding the frontier is what makes this size reachable, so
-  # the entry runs the hybrid search rather than the default.
-  name := "digraph/random-n30-hybrid",
+  # This entry was digraph/random-n30-hybrid, on the theory that the
+  # frontier cap is what makes n = 30 reachable. Measured, n = 30 is
+  # not reachable by anything: at this seed the same instance family is
+  # 2s at n = 24 and already past 600s at n = 26, and at every size
+  # which completes the cap never fires (widest frontier seen 80640)
+  # and the default search handles the identical instance without
+  # memory trouble. Time explodes before memory does on this shape;
+  # the frontier-cap demonstration lives on multiplication tables
+  # (search/cyclic11-table and the cyclic12 entries), where it is real.
+  name := "digraph/random-n24",
   tier := "full",
   needs := ["digraphs"],
   repeats := 1,
-  claim := "As digraph/random-n14, at a size where the default search \
-runs out of memory and the frontier cap is what makes the input tractable.",
+  claim := "As digraph/random-n14 at the large end of what this shape \
+allows: a few seconds at n = 24, past 600s at n = 26 for the same seed. \
+30 vertices is tiny for graph-isomorphism tools and out of reach for \
+minimal images under the full symmetric group.",
   setup := function()
       local arcs, u, v;
       arcs := [];
-      for u in [1 .. 30] do
-          for v in [1 .. 30] do
+      for u in [1 .. 24] do
+          for v in [1 .. 24] do
               if Random([1 .. 4]) = 1 then Add(arcs, [u, v]); fi;
           od;
       od;
-      return rec(G := SymmetricGroup(30),
-                 x := DigraphByEdges(arcs, 30));
-  end,
-  run := function(s)
-      return MinimalImage(s.G, s.x, OnDigraphs,
-                          rec(search := "hybrid", frontierLimit := 100000));
-  end),
-
-rec(
-  name := "digraph/random-n30-bfs",
-  tier := "opt-in",
-  needs := ["digraphs"],
-  repeats := 1,
-  claim := "The baseline for digraph/random-n30-hybrid: the default search \
-on the same digraph. This is expected to exhaust memory.",
-  setup := function()
-      local arcs, u, v;
-      arcs := [];
-      for u in [1 .. 30] do
-          for v in [1 .. 30] do
-              if Random([1 .. 4]) = 1 then Add(arcs, [u, v]); fi;
-          od;
-      od;
-      return rec(G := SymmetricGroup(30),
-                 x := DigraphByEdges(arcs, 30));
+      return rec(G := SymmetricGroup(24),
+                 x := DigraphByEdges(arcs, 24));
   end,
   run := function(s) return MinimalImage(s.G, s.x, OnDigraphs); end),
 
@@ -1027,15 +1010,56 @@ tables through the pair-action search on a lifted group on n^2 + n points.",
 ##  ------------------------------------------------------------------
 
 rec(
-  name := "search/cyclic12-table",
+  # Order 11 is the largest cyclic table on which all three searches
+  # complete quickly, and the smallest at which the hybrid cap actually
+  # fires (it bails to re-enumeration at level 9; at order 10 the
+  # widest frontier is 90720, just under the cap). So this is the size
+  # at which the three-way comparison is measurable in the same moment.
+  name := "search/cyclic11-table",
   tier := "full",
   repeats := 1,
   claim := "CHANGES 1.4.0: the default 'bfs' search stores every partial \
-image achieving the minimal prefix, which exhausts memory on highly \
-symmetric inputs (a cyclic group's multiplication table of order 12 exceeds \
-8GB). The iterative search stores none of them; the hybrid search switches \
-to re-enumeration only when a level would exceed frontierLimit. All three \
-produce identical results.",
+image achieving the minimal prefix; the iterative search stores none of \
+them; the hybrid search switches to re-enumeration only when a level would \
+exceed frontierLimit. All three produce identical results, and where \
+memory suffices the hybrid search stays close to the default's speed even \
+when its cap fires (here it bails at level 9 and lands within about 20% \
+of bfs, as does the iterative search). The memory half of the claim is \
+one order up: see the cyclic12 opt-in entries.",
+  setup := function()
+      return rec(G := SymmetricGroup(11),
+                 x := MultiplicationTable(CyclicGroup(IsPermGroup, 11)));
+  end,
+  variants := [
+    rec(name := "bfs",
+        run := function(s)
+            return MinimalImage(s.G, s.x, OnMultiplicationTables);
+        end),
+    rec(name := "hybrid",
+        run := function(s)
+            return MinimalImage(s.G, s.x, OnMultiplicationTables,
+                                rec(search := "hybrid",
+                                    frontierLimit := 100000));
+        end),
+    rec(name := "iterative",
+        run := function(s)
+            return MinimalImage(s.G, s.x, OnMultiplicationTables,
+                                rec(search := "iterative"));
+        end)]),
+
+rec(
+  # Verified 2026-08: bfs on this input exhausts a hard 8GB cap after
+  # around five minutes, while these two searches complete in around
+  # 340s each. With the three-round floor this entry costs half an
+  # hour, which is why it is opt-in rather than full.
+  name := "search/cyclic12-table",
+  tier := "opt-in",
+  repeats := 1,
+  claim := "CHANGES 1.4.0: the default 'bfs' search exhausts memory on \
+highly symmetric inputs (a cyclic group's multiplication table of order 12 \
+exceeds 8GB -- measured: it died at a hard 8GB cap where both of these \
+searches complete in around 340s). This is the memory half of the \
+search/cyclic11-table claim.",
   setup := function()
       return rec(G := SymmetricGroup(12),
                  x := MultiplicationTable(CyclicGroup(IsPermGroup, 12)));
@@ -1058,8 +1082,9 @@ rec(
   tier := "opt-in",
   repeats := 1,
   claim := "The baseline for search/cyclic12-table: the default search on \
-the same input, which is the '>8GB' side of that claim. This is expected to \
-exhaust memory. Run it only deliberately.",
+the same input, which is the '>8GB' side of that claim. Verified 2026-08: \
+under the harness's hard memory cap the child dies at the cap after \
+around five minutes. Run it only deliberately.",
   setup := function()
       return rec(G := SymmetricGroup(12),
                  x := MultiplicationTable(CyclicGroup(IsPermGroup, 12)));

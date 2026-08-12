@@ -31,12 +31,20 @@ none of it has to be rediscovered.
 
 ## Not yet done
 
-* **The full tier has never completed end to end.** The first attempt
-  aborted when an entry exhausted memory; the second was contaminated by
-  a concurrent job. `digraph/random-n30-hybrid` and the
-  `search/cyclic12-table` variants have never been observed to finish.
-  The opt-in entries (`digraph/random-n30-bfs`,
-  `search/cyclic12-table-bfs`) have never been run at all.
+* ~~**The full tier has never completed end to end.**~~ Done: it now
+  completes in a few minutes (31 rows, 0 failures, 2026-08-12). The
+  blocker was `digraph/random-n30-hybrid`, which is simply infeasible:
+  the same instance family is 2s at n = 24 and past 600s at n = 26, the
+  frontier cap never fires at any size which completes, and bfs handles
+  the identical instances without memory trouble, so n = 30 was
+  unreachable by every search and the entry could never finish. It is
+  replaced by `digraph/random-n24`. The `search/cyclic12-table`
+  variants were never the problem -- the run always died at the digraph
+  entry before reaching them; measured, hybrid and iterative both
+  complete cyclic12 in around 340s, and bfs really does die at a hard
+  8GB cap, verifying the CHANGES claim. The three-way comparison now
+  runs at cyclic11 in the full tier (where the cap fires and everything
+  completes in around 10s), with the half-hour cyclic12 entries opt-in.
 * ~~**GAP's memory-limit abort is not catchable.**~~ Done: by default
   each entry now runs in its own GAP process under a hard `-K` cap
   (option `memLimit`, default `"8g"`), started from a workspace built at
