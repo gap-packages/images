@@ -626,7 +626,7 @@ minutes to under a minute.",
 
 rec(
   name := "pairaction/trans-S200",
-  tier := "quick",
+  tier := "full",
   repeats := 1,
   claim := "The pair-action search on a large-orbit input, where no \
 small-orbit shortcut applies and the search itself is being measured.",
@@ -906,7 +906,7 @@ original tst/timing.g, so that its coverage is not lost.",
 
 rec(
   name := "setsets/100-sets-on-100-points",
-  tier := "quick",
+  tier := "full",
   needs := ["ferret"],
   repeats := 3,
   claim := "CHANGES 1.4.0: sets of sets are canonicalised through the \
