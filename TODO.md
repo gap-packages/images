@@ -101,14 +101,26 @@ the bench entries track the shapes so a regression still shows.
 
 ## Possible improvements
 
-* **Serve `getStab` from the pre-pass.** It currently makes the pre-pass
-  decline outright. On the minimum orderings that costs a small-orbit
-  object the full search (roughly 300ms instead of 0.5ms on the
-  degree-2800 shape) for an answer which is identical either way. On the
-  canonical orderings it selects a different representative, which is
-  documented but unlovely. Either hoist the existing stabilizer
-  computation above the pre-pass and conjugate it to the returned image,
-  or build Schreier generators off the BFS tree. Not blocking anything.
+* ~~**Serve `getStab` from the pre-pass.**~~ Resolved by narrowing what
+  the option promises rather than by computing a stabilizer on the
+  enumeration path. `getStab` now means "the stabilizer the computation
+  arrived at, if it arrived at one": the pre-pass walks the orbit and
+  computes none, so it deposits `fail`. That removes both defects the
+  item was raised for -- asking for the stabilizer no longer costs the
+  full search (573x on the degree-2800 shape, measured as
+  `smallorbit/getstab-d2800`, where the stabilizer that search computes
+  turns out to be trivial), and no longer changes which representative a
+  canonical ordering returns, because `getStab` now has no influence on
+  the computation at all. `bruteForce := false` is the way to insist on a
+  stabilizer. The deposit is made on both paths, so a reused options
+  record cannot pass off an earlier call's stabilizer as this one's.
+  <br>
+  If this is ever revisited, note that the *order* of the stabilizer is
+  free on the pre-pass path even though the group is not: the walk knows
+  the orbit length, and `|G|` over it is the stabilizer order. Building
+  the group itself still needs Schreier generators off the BFS tree
+  (`parents` and `gennos` are already there), or the existing stabilizer
+  computation hoisted above the pre-pass and conjugated to the image.
 * ~~**Review tier assignments.**~~ Done: `pairaction/trans-S200` and
   `setsets/100-sets-on-100-points` moved to the full tier; every quick
   entry is now under a second per round and the whole quick tier runs

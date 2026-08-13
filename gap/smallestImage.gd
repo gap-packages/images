@@ -272,8 +272,10 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    representative when a stabilizer is supplied than when it is
 ##    computed. The same holds for the other options which change how the
 ##    stabilizer is obtained or used, namely
-##    <C>disableStabilizerCheck</C>, <C>getStab</C> and
-##    <C>bruteForce</C>. Each fixed choice of settings still gives a
+##    <C>disableStabilizerCheck</C> and <C>bruteForce</C>.
+##    (<C>getStab</C> is not among them: it only reports the stabilizer the
+##    computation arrived at anyway, and never changes the computation.)
+##    Each fixed choice of settings still gives a
 ##    canonical form -- the answer is constant on the orbit -- so what
 ##    matters is to use one setting throughout a computation, and not to
 ##    compare canonical images produced under different ones. No attempt
@@ -293,6 +295,16 @@ DeclareOperation( "MinimalImageOrderedPair", [IsPermGroup, IsObject, IsFunction]
 ##    <C>Stabilizer(<A>G</A>,<A>O</A>,<A>A</A>)</C>; with the native engine
 ##    it is a subgroup stabilizing the returned image, and may be a proper
 ##    subgroup. It is honoured on the same paths as <C>stabilizer</C>.
+##    <P/>
+##    This reports a stabilizer only when a search was run to obtain one.
+##    A transformation, permutation, partial permutation or digraph whose
+##    orbit is short is answered by the enumeration pre-pass described
+##    under <C>bruteForce</C> below, which walks the orbit and computes no
+##    stabilizer at all; such a call deposits <K>fail</K> in <C>stab</C>.
+##    Pass <C>bruteForce := false</C> alongside <C>getStab</C> to insist on
+##    the search, and so on a stabilizer, at the price of the search's cost
+##    on an object the enumeration answers in microseconds. Test the
+##    component rather than assuming a group.
 ##    </Item>
 ##    <Mark><C>bruteForce</C> (default <C>"auto"</C>)</Mark>
 ##    <Item> Whether to try the orbit-enumeration pre-pass described under

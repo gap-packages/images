@@ -106,13 +106,32 @@ gap> ForAll(objs, function(obj)
 > end);
 true
 
-# 'getStab' disables the pre-pass, because the orbit walk does not produce a
-# stabilizer. The answer must not depend on having asked for one.
+# 'getStab' reports the stabilizer the search accumulated, so a call answered
+# by the pre-pass -- which walks the orbit and computes no stabilizer -- gets
+# fail. Asking for one must not change the image, nor which path runs.
 gap> r := rec(getStab := true);;
 gap> ForAll(objs, obj -> MinimalImage(G, obj, OnPoints, r)
 >                        = MinimalImage(G, obj, OnPoints));
 true
+gap> r.stab;
+fail
+
+# It must be deposited afresh each call, not left over from an earlier one
+gap> r := rec(getStab := true, bruteForce := false);;
+gap> MinimalImage(G, objs[1], OnPoints, r);;
 gap> IsGroup(r.stab);
+true
+gap> Unbind(r.bruteForce);
+gap> MinimalImage(G, objs[1], OnPoints, r);;
+gap> r.stab;
+fail
+
+# Forcing the search is how to insist on a stabilizer, and it gives the same
+# image the pre-pass does
+gap> ForAll(objs, obj -> MinimalImage(G, obj, OnPoints,
+>                            rec(getStab := true, bruteForce := false))
+>                        = MinimalImage(G, obj, OnPoints,
+>                            rec(getStab := true)));
 true
 
 # A caller-supplied subgroup of the stabilizer still gives the right minimum,

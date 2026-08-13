@@ -860,6 +860,31 @@ this is where extending the pre-pass to canonical orderings pays most.",
         end)]),
 
 rec(
+  name := "smallorbit/getstab-d2800",
+  tier := "quick",
+  verified := "A/B",
+  repeats := 3,
+  claim := "'getStab' used to make the pre-pass decline outright, so asking \
+for the stabilizer cost a small-orbit object the whole search for an \
+identical image. It now reports what the computation arrived at, which on \
+this path is nothing (stab = fail). The 'forced-search' variant is exactly \
+what 'getStab' used to do, and is still how to insist on a stabilizer.",
+  setup := function()
+      return rec(G := BenchDiagonalCopies(Group((1,2,3,4,5)), 560),
+                 x := Random(SymmetricGroup(2800)));
+  end,
+  variants := [
+    rec(name := "reports-fail",
+        run := function(s)
+            return MinimalImage(s.G, s.x, OnPoints, rec(getStab := true));
+        end),
+    rec(name := "forced-search",
+        run := function(s)
+            return MinimalImage(s.G, s.x, OnPoints,
+                                rec(getStab := true, bruteForce := false));
+        end)]),
+
+rec(
   name := "smallorbit/cap-misfire",
   tier := "quick",
   verified := "guard",

@@ -409,9 +409,11 @@ end;
 # sorted-list comparison never reaches the proper-prefix case.
 #
 # For branch="minimum" orders the answer is the true minimum of the orbit,
-# so it agrees exactly with the search on every combination of options (a
-# getStab call, which returns fail here and falls through to the search,
-# still gets the same image).
+# so it agrees exactly with the search on every combination of options.
+#
+# The walk computes no stabilizer, so a getStab call which is answered here
+# gets stab = fail: getStab reports the stabilizer the search accumulated,
+# and no search ran. Pass bruteForce := false to insist on one.
 #
 # It fires for the dynamic (canonical) orders too, where the orbit minimum
 # is returned as the canonical representative. A minimum is constant on an
@@ -428,9 +430,6 @@ _IMAGES_PairSmallOrbit := function(l, set, G, mMax, settings)
           wantBool, minOrder;
 
     if settings.bruteForce = false then
-        return fail;
-    fi;
-    if settings.getStab then
         return fail;
     fi;
     order := settings.order;
@@ -626,6 +625,12 @@ _IMAGES_MinimalImage_PairSet := function(l, set, G, mMax, settings)
 
   result := _IMAGES_PairSmallOrbit(l, set, G, mMax, settings);
   if result <> fail then
+      if settings.getStab then
+          # No search ran, so there is no stabilizer to report. Deposit fail
+          # rather than leaving the component alone, which would let a reused
+          # options record pass off an earlier call's stabilizer as this one's.
+          settings.original.stab := fail;
+      fi;
       return result;
   fi;
 

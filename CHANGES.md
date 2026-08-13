@@ -47,7 +47,7 @@ New functionality:
   Whether the enumeration runs is decided from the orbit alone, so it
   cannot select different representatives for two objects in one orbit.
 * Documented that supplying a `stabilizer`, or setting
-  `disableStabilizerCheck`, `getStab` or `bruteForce`, can change which
+  `disableStabilizerCheck` or `bruteForce`, can change which
   representative a non-minimum ordering selects: the dynamic orderings
   prune and rank using the stabilizer. This was already true before this
   release and is not new behaviour. `MinimalImage` and its variants are
@@ -85,6 +85,22 @@ New functionality:
   budget fixes that instance, keeps every measured win including a 5x
   gamble the small chain-present budget would have declined, and makes
   the path choice independent of the session's history with the group.
+* `getStab` now reports the stabilizer the computation arrived at, rather
+  than forcing a computation which produces one. A transformation,
+  permutation, partial permutation or digraph whose orbit is short is
+  answered by the enumeration pre-pass, which walks the orbit and never
+  computes a stabilizer; such a call now deposits `fail` in the `stab`
+  component instead of a group. Previously `getStab` made the pre-pass
+  decline outright, so merely asking for the stabilizer cost a small-orbit
+  object the whole search for an image which is identical either way --
+  573x on the benchmark suite's degree-2800 example, where the stabilizer
+  bought with that time is trivial -- and on the canonical orderings it
+  changed which representative came back, since the two paths select
+  differently. Both effects are gone: `getStab` no longer influences the
+  computation at all, only what is reported about it. Pass
+  `bruteForce := false` alongside it to insist on a search, and so on a
+  group, and test the component rather than assuming one. Re-checkable as
+  `smallorbit/getstab-d2800` in `tst/bench.g`.
 * The position action of a user-supplied `stabilizer` in the
   transformation/permutation/partial permutation search now inherits the
   group's order whenever the action is faithful, which avoids a full
