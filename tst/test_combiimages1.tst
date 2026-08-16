@@ -1,4 +1,4 @@
-#@if LoadPackage("vole", false)
+#@if LoadPackage("vole", false) = true
 gap> ReadPackage("images","tst/test_functions.g");;
 gap> checkCanonicalImageAtoms();
 gap> checkCanonicalImageMultiset();
