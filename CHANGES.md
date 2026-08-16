@@ -1,5 +1,9 @@
 # Changelog for the images package
 
+## 1.4.1 (2026-08-17)
+
+* Fix accidental error in test suite when `vole` is not present.
+
 ## 1.4.0 (2026-08-12)
 
 New functionality:

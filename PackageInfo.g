@@ -10,8 +10,8 @@ SetPackageInfo( rec(
 
 PackageName := "images",
 Subtitle := "Minimal and Canonical images",
-Version := "1.4.0",
-Date := "12/08/2026", # dd/mm/yyyy format
+Version := "1.4.1",
+Date := "17/08/2026", # dd/mm/yyyy format
 License := "MPL-2.0",
 Persons := [
   rec(
