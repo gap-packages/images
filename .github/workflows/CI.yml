@@ -19,7 +19,7 @@ concurrency:
 jobs:
   # The CI test job
   test:
-    name: ${{ matrix.gap-version }}
+    name: ${{ matrix.gap-version }}${{ matrix.name-suffix }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -28,6 +28,14 @@ jobs:
           - 'devel'   # current GAP development version from git
           - 'latest'  # latest GAP release
           - 'minimal' # oldest GAP release supported by this package
+        vole: [true]
+        include:
+          # vole is not part of the GAP package distribution, so the distro
+          # runs the tests without it -- a different code path, and with
+          # 'onlyneeded' also a different one from any job above
+          - gap-version: 'devel'
+            vole: false
+            name-suffix: ' without vole'
 
     steps:
       - uses: actions/checkout@v6
@@ -35,6 +43,7 @@ jobs:
         with:
           gap-version: ${{ matrix.gap-version }}
       - uses: gap-actions/install-pkg@v1
+        if: matrix.vole
         with:
           packages: "peal/vole"
       - uses: gap-actions/build-pkg@v3
