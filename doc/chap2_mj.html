@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<script type="text/javascript"
+  src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<title>GAP (images) - Chapter 2: Minimal and Canonical Images</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="GAPDoc2HTML" />
+<link rel="stylesheet" type="text/css" href="manual.css" />
+<script src="manual.js" type="text/javascript"></script>
+<script type="text/javascript">overwriteStyle();</script>
+</head>
+<body class="chap2"  onload="jscontent()">
+
+
+<div class="chlinktop"><span class="chlink1">Goto Chapter: </span><a href="chap0_mj.html">Top</a>  <a href="chap1_mj.html">1</a>  <a href="chap2_mj.html">2</a>  <a href="chap3_mj.html">3</a>  <a href="chap4_mj.html">4</a>  <a href="chapBib_mj.html">Bib</a>  <a href="chapInd_mj.html">Ind</a>  </div>
+
+<div class="chlinkprevnexttop">&nbsp;<a href="chap0_mj.html">[Top of Book]</a>&nbsp;  <a href="chap0_mj.html#contents">[Contents]</a>&nbsp;  &nbsp;<a href="chap1_mj.html">[Previous Chapter]</a>&nbsp;  &nbsp;<a href="chap3_mj.html">[Next Chapter]</a>&nbsp;  </div>
+
+<p id="mathjaxlink" class="pcenter"><a href="chap2.html">[MathJax off]</a></p>
+<p><a id="X7B4A093B7FBA4C23" name="X7B4A093B7FBA4C23"></a></p>
+<div class="ChapSects"><a href="chap2_mj.html#X7B4A093B7FBA4C23">2 <span class="Heading">Minimal and Canonical Images</span></a>
+<div class="ContSect"><span class="tocline"><span class="nocss">&nbsp;</span><a href="chap2_mj.html#X8189E5DC81952A63">2.1 <span class="Heading">Supported objects and actions</span></a>
+</span>
+</div>
+<div class="ContSect"><span class="tocline"><span class="nocss">&nbsp;</span><a href="chap2_mj.html#X7DA24AB4803F68DA">2.2 <span class="Heading">Function documentation</span></a>
+</span>
+<div class="ContSSBlock">
+<span class="ContSS"><br /><span class="nocss">&nbsp;&nbsp;</span><a href="chap2_mj.html#X7E9EFA0E7A997586">2.2-1 MinimalImage</a></span>
+<span class="ContSS"><br /><span class="nocss">&nbsp;&nbsp;</span><a href="chap2_mj.html#X83E55B167F642BC5">2.2-2 OnMultiplicationTables</a></span>
+<span class="ContSS"><br /><span class="nocss">&nbsp;&nbsp;</span><a href="chap2_mj.html#X848A9B117C3EEF48">2.2-3 IsMinimalImageLessThan</a></span>
+<span class="ContSS"><br /><span class="nocss">&nbsp;&nbsp;</span><a href="chap2_mj.html#X81130CAB7A740965">2.2-4 MinimalImageOrderedPair</a></span>
+<span class="ContSS"><br /><span class="nocss">&nbsp;&nbsp;</span><a href="chap2_mj.html#X780189E3873B7A42">2.2-5 CanonicalImage</a></span>
+<span class="ContSS"><br /><span class="nocss">&nbsp;&nbsp;</span><a href="chap2_mj.html#X803A8BB57A63C577">2.2-6 ImagesAdvancedConfig</a></span>
+</div></div>
+</div>
+
+<h3>2 <span class="Heading">Minimal and Canonical Images</span></h3>
+
+<p>Given a group <span class="SimpleMath">\(G\)</span> and action <span class="SimpleMath">\(A\)</span>, the minimal image of an object <span class="SimpleMath">\(O\)</span> is the smallest image of <span class="SimpleMath">\(O\)</span> under any element of <span class="SimpleMath">\(G\)</span>, under the action <span class="SimpleMath">\(A\)</span>.</p>
+
+<p>As a more concrete example, let us consider the minimal image of the set <code class="code">[2,3,5,7]</code> under a group <span class="SimpleMath">\(G\)</span>.</p>
+
+<p>We can calculate all the images of our set under <span class="SimpleMath">\(G\)</span>, then choose the smallest one.</p>
+
+
+<div class="example"><pre>
+<span class="GAPprompt">gap&gt;</span> <span class="GAPinput">G := Group((1,2,3)(4,5,6)(7,8,9),(1,4,7)(2,5,8)(3,6,9));;</span>
+<span class="GAPprompt">gap&gt;</span> <span class="GAPinput">List(G, g -&gt; OnSets([2,3,5,7], g) );</span>
+[ [ 2, 3, 5, 7 ], [ 1, 2, 4, 9 ], [ 1, 3, 6, 8 ], [ 2, 4, 8, 9 ], 
+  [ 1, 6, 7, 8 ], [ 3, 5, 7, 9 ], [ 1, 5, 6, 8 ], [ 3, 4, 5, 7 ], 
+  [ 2, 4, 6, 9 ] ]
+<span class="GAPprompt">gap&gt;</span> <span class="GAPinput">Minimum(List(G, g -&gt; OnSets([2,3,5,7], g) ) );</span>
+[ 1, 2, 4, 9 ]
+</pre></div>
+
+<p>This is very inefficient, as it requires enumerating all members of <span class="SimpleMath">\(G\)</span>. The images package produces a function <code class="func">MinimalImage</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.2-1</span></a>), which performs this same operation more efficiently.</p>
+
+
+<div class="example"><pre>
+<span class="GAPprompt">gap&gt;</span> <span class="GAPinput">LoadPackage("images", false);</span>
+true
+<span class="GAPprompt">gap&gt;</span> <span class="GAPinput">MinimalImage(G, [2,3,5,7], OnSets);</span>
+[ 1, 2, 4, 9 ]
+</pre></div>
+
+<p>The most common use of <code class="code">MinimalImage</code> is to categorise objects into equivalence classes. This next example shows <code class="code">[2,3,5,7]</code> and <code class="code">[1,6,7,8]</code> are in the same orbit, while <code class="code">[3,5,7,8]</code> is in a different orbit.</p>
+
+
+<div class="example"><pre>
+<span class="GAPprompt">gap&gt;</span> <span class="GAPinput">MinimalImage(G, [2,3,5,7], OnSets);</span>
+[ 1, 2, 4, 9 ]
+<span class="GAPprompt">gap&gt;</span> <span class="GAPinput">MinimalImage(G, [1,6,7,8], OnSets);</span>
+[ 1, 2, 4, 9 ]
+<span class="GAPprompt">gap&gt;</span> <span class="GAPinput">MinimalImage(G, [3,5,7,8], OnSets);</span>
+[ 1, 2, 6, 8 ]
+</pre></div>
+
+<p>The <code class="code">result</code> configuration option changes what is returned: the image itself (<code class="code">GetImage</code>, the default), a permutation performing the mapping (<code class="code">GetPerm</code>), or just whether the object already is its own image (<code class="code">GetBool</code>, which is often much faster to compute).</p>
+
+
+<div class="example"><pre>
+<span class="GAPprompt">gap&gt;</span> <span class="GAPinput">p := MinimalImage(G, [2,3,5,7], OnSets, rec(result := GetPerm));</span>
+(1,3,2)(4,6,5)(7,9,8)
+<span class="GAPprompt">gap&gt;</span> <span class="GAPinput">OnSets([2,3,5,7], p);</span>
+[ 1, 2, 4, 9 ]
+<span class="GAPprompt">gap&gt;</span> <span class="GAPinput">MinimalImage(G, [2,3,5,7], OnSets, rec(result := GetBool));</span>
+false
+</pre></div>
+
+<p>In this situation, we do not really need the minimal image, just a method of telling if two sets are in the same equivalence class.</p>
+
+<p>Motivated by this, this package provides <code class="func">CanonicalImage</code> (<a href="chap2_mj.html#X780189E3873B7A42"><span class="RefLink">2.2-5</span></a>). <code class="code">CanonicalImage(G,O,A)</code> returns some image of <span class="SimpleMath">\(O\)</span> by an element of <span class="SimpleMath">\(G\)</span> under the action <span class="SimpleMath">\(A\)</span>, guaranteeing that if two objects O1 and O2 are in the same orbit of <span class="SimpleMath">\(G\)</span> then <code class="code">CanonicalImage(G,O1,A) = CanonicalImage(G,O2,A)</code>. However, the canonical image is not "minimal" under any sensible ordering. The advantage of <code class="code">CanonicalImage</code> is that it is much faster than <code class="code">MinimalImage</code>, often by orders of magnitude.</p>
+
+<p><strong class="button">WARNING:</strong> The value of <code class="code">MinimalImage</code> will remain identical between versions of <strong class="pkg">GAP</strong> and the <strong class="pkg">Images</strong> package, unless bugs are discovered. This is <em>not</em> true for <code class="code">CanonicalImage</code>.</p>
+
+<p><a id="X8189E5DC81952A63" name="X8189E5DC81952A63"></a></p>
+
+<h4>2.1 <span class="Heading">Supported objects and actions</span></h4>
+
+<p><code class="func">MinimalImage</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.2-1</span></a>), <code class="func">CanonicalImage</code> (<a href="chap2_mj.html#X780189E3873B7A42"><span class="RefLink">2.2-5</span></a>) and their variants accept the following combinations of object and action. The action argument defaults to <code class="code">OnPoints</code> in every case, which for lists is not a supported action, so for lists the action should always be given.</p>
+
+
+<ul>
+<li><p>a set of positive integers, with <code class="code">OnSets</code>;</p>
+
+</li>
+<li><p>a list of positive integers, with <code class="code">OnTuples</code>;</p>
+
+</li>
+<li><p>a set of sets of positive integers, with <code class="code">OnSetsSets</code>;</p>
+
+</li>
+<li><p>a list of sets of positive integers, with <code class="code">OnTuplesSets</code>;</p>
+
+</li>
+<li><p>a positive integer, with <code class="code">OnPoints</code>;</p>
+
+</li>
+<li><p>a permutation, transformation or partial permutation, with <code class="code">OnPoints</code> (that is, up to conjugacy);</p>
+
+</li>
+<li><p>a digraph (from the <strong class="pkg">Digraphs</strong> package), with <code class="code">OnDigraphs</code> (the group must move only vertices of the digraph, and multidigraphs are not supported);</p>
+
+</li>
+<li><p>a multiplication (Cayley) table, with <code class="func">OnMultiplicationTables</code> (<a href="chap2_mj.html#X83E55B167F642BC5"><span class="RefLink">2.2-2</span></a>);</p>
+
+</li>
+<li><p>a fundamental structure (see Chapter <a href="chap3_mj.html#X82DFAEB182674798"><span class="RefLink">3</span></a>), with <code class="code">OnFundamental</code>.</p>
+
+</li>
+</ul>
+<p>For digraphs the order minimised is the sorted list of arcs, compared lexicographically, so the minimal image is the relabelling whose arc list <code class="code">Set(DigraphEdges(D))</code> is smallest. This is neither the ordering of <code class="code">&lt;</code> on digraph objects nor the lexicographic order on adjacency matrices read row by row as 0/1 strings. An undirected graph is represented by a symmetric digraph and needs no separate treatment.</p>
+
+<p>Not every configuration option applies to every combination: the <code class="code">stabilizer</code> and <code class="code">getStab</code> options only affect sets, transformations, permutations, partial permutations, digraphs and multiplication tables, and the <code class="code">order</code> option is ignored for <code class="code">OnSetsSets</code>. See <code class="func">ImagesAdvancedConfig</code> (<a href="chap2_mj.html#X803A8BB57A63C577"><span class="RefLink">2.2-6</span></a>) for the details.</p>
+
+<p><a id="X7DA24AB4803F68DA" name="X7DA24AB4803F68DA"></a></p>
+
+<h4>2.2 <span class="Heading">Function documentation</span></h4>
+
+<p><a id="X7E9EFA0E7A997586" name="X7E9EFA0E7A997586"></a></p>
+
+<h5>2.2-1 MinimalImage</h5>
+
+<div class="func"><table class="func" width="100%"><tr><td class="tdleft"><code class="func">&#8227; MinimalImage</code>( <var class="Arg">G</var>, <var class="Arg">pnt</var>[, <var class="Arg">act</var>][, <var class="Arg">Config</var>] )</td><td class="tdright">(&nbsp;function&nbsp;)</td></tr></table></div>
+<div class="func"><table class="func" width="100%"><tr><td class="tdleft"><code class="func">&#8227; IsMinimalImage</code>( <var class="Arg">G</var>, <var class="Arg">pnt</var>[, <var class="Arg">act</var>][, <var class="Arg">Config</var>] )</td><td class="tdright">(&nbsp;function&nbsp;)</td></tr></table></div>
+<div class="func"><table class="func" width="100%"><tr><td class="tdleft"><code class="func">&#8227; MinimalImagePerm</code>( <var class="Arg">G</var>, <var class="Arg">pnt</var>[, <var class="Arg">act</var>][, <var class="Arg">Config</var>] )</td><td class="tdright">(&nbsp;function&nbsp;)</td></tr></table></div>
+<p><code class="func">MinimalImage</code> returns the minimal image of <var class="Arg">pnt</var> under the group <var class="Arg">G</var>. <code class="func">IsMinimalImage</code> returns a boolean which is <code class="keyw">true</code> if <code class="func">MinimalImage</code> would return <var class="Arg">pnt</var> (so the value is its own minimal image).</p>
+
+<p><code class="func">MinimalImagePerm</code> returns a permutation in <var class="Arg">G</var> which maps <var class="Arg">pnt</var> to its minimal image.</p>
+
+<p>The supported combinations of <var class="Arg">pnt</var> and <var class="Arg">act</var> are listed in Section <a href="chap2_mj.html#X8189E5DC81952A63"><span class="RefLink">2.1</span></a>. The option <var class="Arg">Config</var> defines a number of advanced configuration options, which are described in <code class="func">ImagesAdvancedConfig</code> (<a href="chap2_mj.html#X803A8BB57A63C577"><span class="RefLink">2.2-6</span></a>). Note that passing an <code class="code">order</code> option changes which image these functions compute: with any order other than <code class="code">CanonicalConfig_Minimum</code> they behave like <code class="func">CanonicalImage</code> (<a href="chap2_mj.html#X780189E3873B7A42"><span class="RefLink">2.2-5</span></a>) and the result need not be minimal.</p>
+
+<p><a id="X83E55B167F642BC5" name="X83E55B167F642BC5"></a></p>
+
+<h5>2.2-2 OnMultiplicationTables</h5>
+
+<div class="func"><table class="func" width="100%"><tr><td class="tdleft"><code class="func">&#8227; OnMultiplicationTables</code>( <var class="Arg">table</var>, <var class="Arg">g</var> )</td><td class="tdright">(&nbsp;function&nbsp;)</td></tr></table></div>
+<p>The action of a permutation <var class="Arg">g</var> on a multiplication (Cayley) table: the table of the isomorphic structure on the relabelled elements, so <code class="code">OnMultiplicationTables(T, g)[i^g][j^g] = T[i][j]^g</code>. A table is a list of <span class="SimpleMath">\(n\)</span> rows of length <span class="SimpleMath">\(n\)</span> with entries in <code class="code">[1..n]</code>, as produced by <code class="code">MultiplicationTable</code>; two magmas are isomorphic precisely when their tables lie in the same orbit under <code class="code">SymmetricGroup(n)</code>.</p>
+
+<p><code class="func">MinimalImage</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.2-1</span></a>) with this action returns the lexicographically least table in the orbit (comparing tables row by row, which is <strong class="pkg">GAP</strong>'s ordering of the tables as lists), so it is a distinguished representative of the isomorphism class of the magma.</p>
+
+
+<div class="example"><pre>
+<span class="GAPprompt">gap&gt;</span> <span class="GAPinput">T := MultiplicationTable(CyclicGroup(4));;</span>
+<span class="GAPprompt">gap&gt;</span> <span class="GAPinput">MinimalImage(SymmetricGroup(4), T, OnMultiplicationTables);</span>
+[ [ 1, 2, 3, 4 ], [ 2, 1, 4, 3 ], [ 3, 4, 2, 1 ], [ 4, 3, 1, 2 ] ]
+</pre></div>
+
+<p><a id="X848A9B117C3EEF48" name="X848A9B117C3EEF48"></a></p>
+
+<h5>2.2-3 IsMinimalImageLessThan</h5>
+
+<div class="func"><table class="func" width="100%"><tr><td class="tdleft"><code class="func">&#8227; IsMinimalImageLessThan</code>( <var class="Arg">G</var>, <var class="Arg">A</var>, <var class="Arg">B</var>, <var class="Arg">act</var> )</td><td class="tdright">(&nbsp;function&nbsp;)</td></tr></table></div>
+<p><code class="func">IsMinimalImageLessThan</code> checks if the minimal image of <var class="Arg">A</var> under the group <var class="Arg">G</var> is smaller than <var class="Arg">B</var>.</p>
+
+<p>It returns <code class="code">MinImage.Smaller</code>, <code class="code">MinImage.Equal</code> or <code class="code">MinImage.Larger</code>, if the minimal image of <var class="Arg">A</var> is smaller, equal or larger than <var class="Arg">B</var>.</p>
+
+<p><var class="Arg">A</var> and <var class="Arg">B</var> must be sets of the same size, and <var class="Arg">act</var> must be <code class="code">OnSets</code>; no other actions are currently supported, and this function accepts no configuration record.</p>
+
+<p><a id="X81130CAB7A740965" name="X81130CAB7A740965"></a></p>
+
+<h5>2.2-4 MinimalImageOrderedPair</h5>
+
+<div class="func"><table class="func" width="100%"><tr><td class="tdleft"><code class="func">&#8227; MinimalImageOrderedPair</code>( <var class="Arg">G</var>, <var class="Arg">pair</var>[, <var class="Arg">act</var>] )</td><td class="tdright">(&nbsp;operation&nbsp;)</td></tr></table></div>
+<div class="func"><table class="func" width="100%"><tr><td class="tdleft"><code class="func">&#8227; MinimalImageUnorderedPair</code>( <var class="Arg">G</var>, <var class="Arg">pair</var>[, <var class="Arg">act</var>] )</td><td class="tdright">(&nbsp;operation&nbsp;)</td></tr></table></div>
+<p><code class="func">MinimalImageOrderedPair</code> returns the lexicographically smallest pair <code class="code">[A,B]</code> such that some single <code class="code">g</code> in <var class="Arg">G</var> maps <code class="code"><var class="Arg">pair</var>[1]</code> to <code class="code">A</code> and <code class="code"><var class="Arg">pair</var>[2]</code> to <code class="code">B</code> under <var class="Arg">act</var>. <code class="func">MinimalImageUnorderedPair</code> instead minimises over both orderings of the pair, so exchanging the two entries of <var class="Arg">pair</var> does not change the result. The default action is <code class="code">OnPoints</code>.</p>
+
+<p><a id="X780189E3873B7A42" name="X780189E3873B7A42"></a></p>
+
+<h5>2.2-5 CanonicalImage</h5>
+
+<div class="func"><table class="func" width="100%"><tr><td class="tdleft"><code class="func">&#8227; CanonicalImage</code>( <var class="Arg">G</var>, <var class="Arg">pnt</var>[, <var class="Arg">act</var>][, <var class="Arg">Config</var>] )</td><td class="tdright">(&nbsp;function&nbsp;)</td></tr></table></div>
+<div class="func"><table class="func" width="100%"><tr><td class="tdleft"><code class="func">&#8227; IsCanonicalImage</code>( <var class="Arg">G</var>, <var class="Arg">pnt</var>[, <var class="Arg">act</var>][, <var class="Arg">Config</var>] )</td><td class="tdright">(&nbsp;function&nbsp;)</td></tr></table></div>
+<div class="func"><table class="func" width="100%"><tr><td class="tdleft"><code class="func">&#8227; CanonicalImagePerm</code>( <var class="Arg">G</var>, <var class="Arg">pnt</var>[, <var class="Arg">act</var>][, <var class="Arg">Config</var>] )</td><td class="tdright">(&nbsp;function&nbsp;)</td></tr></table></div>
+<p><code class="func">CanonicalImage</code> returns a canonical image of <var class="Arg">pnt</var> under the group <var class="Arg">G</var>. <code class="func">IsCanonicalImage</code> returns a boolean which is <code class="keyw">true</code> if <code class="func">CanonicalImage</code> would return <var class="Arg">pnt</var> (so the value is its own canonical image).</p>
+
+<p><code class="func">CanonicalImagePerm</code> returns a permutation in <var class="Arg">G</var> which maps <var class="Arg">pnt</var> to its canonical image.</p>
+
+<p>By default, these functions use <code class="code">CanonicalConfig_Fast</code>, an alias for the fastest known ordering (currently <code class="code">CanonicalConfig_RareRatioOrbitFixPlusMin</code>), which may change in new versions of the package. The supported combinations of <var class="Arg">pnt</var> and <var class="Arg">act</var> are listed in Section <a href="chap2_mj.html#X8189E5DC81952A63"><span class="RefLink">2.1</span></a>. The option <var class="Arg">Config</var> defines a number of advanced configuration options, which are described in <code class="func">ImagesAdvancedConfig</code> (<a href="chap2_mj.html#X803A8BB57A63C577"><span class="RefLink">2.2-6</span></a>). These include the ability to choose the canonicalising algorithm used.</p>
+
+<p><a id="X803A8BB57A63C577" name="X803A8BB57A63C577"></a></p>
+
+<h5>2.2-6 ImagesAdvancedConfig</h5>
+
+<div class="func"><table class="func" width="100%"><tr><td class="tdleft"><code class="func">&#8227; ImagesAdvancedConfig</code></td><td class="tdright">(&nbsp;global variable&nbsp;)</td></tr></table></div>
+<p>This section describes the advanced configuration options for both <code class="func">MinimalImage</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.2-1</span></a>) and <code class="func">CanonicalImage</code> (<a href="chap2_mj.html#X780189E3873B7A42"><span class="RefLink">2.2-5</span></a>). Assume we have called <code class="func">MinimalImage</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.2-1</span></a>) or <code class="func">CanonicalImage</code> (<a href="chap2_mj.html#X780189E3873B7A42"><span class="RefLink">2.2-5</span></a>) with arguments <code class="code">(<var class="Arg">G</var>,<var class="Arg">O</var>,<var class="Arg">A</var>)</code>.</p>
+
+
+<dl>
+<dt><strong class="Mark"><code class="code">order</code></strong></dt>
+<dd><p>The search ordering used while building the image. The most useful values are:</p>
+
+
+<dl>
+<dt><strong class="Mark"><code class="code">CanonicalConfig_Minimum</code></strong></dt>
+<dd><p>Lexicographically smallest image -- same as using MinimalImage.</p>
+
+</dd>
+<dt><strong class="Mark"><code class="code">CanonicalConfig_FixedMinOrbit</code></strong></dt>
+<dd><p>Lexicographically smallest set under the ordering of the integers given by the MinOrbitPerm function. This ordering (and <code class="code">CanonicalConfig_FixedMaxOrbit</code>) is not supported when canonicalising transformations, permutations or partial permutations, and will raise an error there.</p>
+
+</dd>
+<dt><strong class="Mark"><code class="code">CanonicalConfig_Fast</code></strong></dt>
+<dd><p>The current best algorithm, and the default for <code class="func">CanonicalImage</code> (<a href="chap2_mj.html#X780189E3873B7A42"><span class="RefLink">2.2-5</span></a>). It is an alias, currently for <code class="code">CanonicalConfig_RareRatioOrbitFixPlusMin</code>, and may change between versions of the package.</p>
+
+</dd>
+</dl>
+<p>The full list of orderings, whose behaviour is described in the paper <a href="chapBib_mj.html#biBJJPW19">[JJPW19]</a>, is: <code class="code">CanonicalConfig_Minimum</code>, <code class="code">CanonicalConfig_MinOrbit</code>, <code class="code">CanonicalConfig_MaxOrbit</code>, <code class="code">CanonicalConfig_SingleMaxOrbit</code>, <code class="code">CanonicalConfig_RareOrbit</code>, <code class="code">CanonicalConfig_CommonOrbit</code>, <code class="code">CanonicalConfig_RareRatioOrbit</code>, <code class="code">CanonicalConfig_CommonRatioOrbit</code>, <code class="code">CanonicalConfig_RareRatioOrbitFix</code>, <code class="code">CanonicalConfig_CommonRatioOrbitFix</code>, <code class="code">CanonicalConfig_RareRatioOrbitFixPlusMin</code>, <code class="code">CanonicalConfig_RareRatioOrbitFixPlusRare</code>, <code class="code">CanonicalConfig_RareRatioOrbitFixPlusCommon</code>, <code class="code">CanonicalConfig_RareOrbitPlusMin</code>, <code class="code">CanonicalConfig_RareOrbitPlusRare</code>, <code class="code">CanonicalConfig_RareOrbitPlusCommon</code>, <code class="code">CanonicalConfig_FixedMinOrbit</code>, <code class="code">CanonicalConfig_FixedMaxOrbit</code> and <code class="code">CanonicalConfig_Fast</code>.</p>
+
+<p>Note that these values are the value of the <code class="code">order</code> component of the configuration record, as in <code class="code">rec(order := CanonicalConfig_Fast)</code> -- passing one directly as the whole configuration record is an error. For the action <code class="code">OnSetsSets</code> the ordering is currently ignored, and the minimal image is computed whatever <code class="code">order</code> is given.</p>
+
+</dd>
+<dt><strong class="Mark"><code class="code">result</code></strong></dt>
+<dd><p>What to return: <code class="code">GetImage</code> (the image, the default), <code class="code">GetPerm</code> (a permutation in <var class="Arg">G</var> mapping <var class="Arg">O</var> to its image, as <code class="func">MinimalImagePerm</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.2-1</span></a>) returns), or <code class="code">GetBool</code> (<code class="keyw">true</code> if <var class="Arg">O</var> is its own image, as <code class="func">IsMinimalImage</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.2-1</span></a>) returns, which is often much faster than computing the image).</p>
+
+</dd>
+<dt><strong class="Mark"><code class="code">stabilizer</code></strong></dt>
+<dd><p>The group <code class="code">Stabilizer(<var class="Arg">G</var>,<var class="Arg">O</var>,<var class="Arg">A</var>)</code>, or a subgroup of this group; see <code class="func">Stabilizer</code> (<a href="https://docs.gap-system.org/doc/ref/chap41_mj.html#X86FB962786397E02"><span class="RefLink">Reference: Stabilizer</span></a>). If this group is large, it is more efficient to pre-calculate it. Default behaviour is to calculate the group, pass <code class="code">Group(())</code> to disable this behaviour. The generators of the given group are checked to stabilize <var class="Arg">O</var> (which characterises being a subgroup of the stabilizer), and a group failing the check is rejected with an error, so accidentally reusing a stabilizer computed for a different object cannot silently produce wrong answers. The <code class="code">"vole"</code> engine computes its own stabilizer and ignores this option.</p>
+
+<p>When canonicalising transformations, permutations, partial permutations or digraphs, the default stabilizer is computed with the <strong class="pkg">ferret</strong> package when it is loaded, which is much faster for groups of large degree; without <strong class="pkg">ferret</strong> a slower fallback is used. For permutations the default is the centralizer, and for digraphs under the full symmetric group on their vertices it is the automorphism group of the digraph. For the minimum orderings (which <code class="func">MinimalImage</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.2-1</span></a>) and its variants use), an object whose orbit under <var class="Arg">G</var> is small is answered by enumerating the orbit directly, and then no stabilizer is needed at all.</p>
+
+<p>This option is honoured for sets, transformations, permutations, partial permutations and digraphs. It is silently ignored for <code class="code">OnTuples</code>, <code class="code">OnTuplesSets</code>, points and fundamental structures, and for <code class="code">OnSetsSets</code> only the trivial group is accepted.</p>
+
+<p>Beware of passing <code class="code">Group(())</code> together with one of the dynamic orderings when the true stabilizer of <var class="Arg">O</var> is very large: the search then rediscovers the stabilizer piecemeal, and can take many seconds on instances the default settings solve instantly. The same applies to <code class="code">disableStabilizerCheck</code>.</p>
+
+<p>Passing a stabilizer can also change <em>which</em> representative a non-minimum ordering selects. <code class="func">MinimalImage</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.2-1</span></a>) and its variants are unaffected -- the minimum of an orbit is the minimum of that orbit whatever the search was told -- but the dynamic orderings prune and rank using the stabilizer, so <code class="func">CanonicalImage</code> (<a href="chap2_mj.html#X780189E3873B7A42"><span class="RefLink">2.2-5</span></a>) may return a different (equally valid) representative when a stabilizer is supplied than when it is computed. The same holds for the other options which change how the stabilizer is obtained or used, namely <code class="code">disableStabilizerCheck</code> and <code class="code">bruteForce</code>. (<code class="code">getStab</code> is not among them: it only reports the stabilizer the computation arrived at anyway, and never changes the computation.) Each fixed choice of settings still gives a canonical form -- the answer is constant on the orbit -- so what matters is to use one setting throughout a computation, and not to compare canonical images produced under different ones. No attempt is made here to say which orderings are sensitive to this and which are not.</p>
+
+</dd>
+<dt><strong class="Mark"><code class="code">disableStabilizerCheck</code> (default <code class="keyw">false</code>)</strong></dt>
+<dd><p>By default, during search we perform cheap checks to try to find extra elements of the stabilizer. Pass true to disable this check, this will make the algorithm MUCH slower if the stabilizer argument is a subgroup.</p>
+
+</dd>
+<dt><strong class="Mark"><code class="code">getStab</code> (default <code class="keyw">false</code>)</strong></dt>
+<dd><p>Store the stabilizer calculated during the search in the <code class="code">stab</code> component of the configuration record that was passed in. With the <code class="code">"vole"</code> engine this is <code class="code">Stabilizer(<var class="Arg">G</var>,<var class="Arg">O</var>,<var class="Arg">A</var>)</code>; with the native engine it is a subgroup stabilizing the returned image, and may be a proper subgroup. It is honoured on the same paths as <code class="code">stabilizer</code>.</p>
+
+<p>This reports a stabilizer only when a search was run to obtain one. A transformation, permutation, partial permutation or digraph whose orbit is short is answered by the enumeration pre-pass described under <code class="code">bruteForce</code> below, which walks the orbit and computes no stabilizer at all; such a call deposits <code class="keyw">fail</code> in <code class="code">stab</code>. Pass <code class="code">bruteForce := false</code> alongside <code class="code">getStab</code> to insist on the search, and so on a stabilizer, at the price of the search's cost on an object the enumeration answers in microseconds. Test the component rather than assuming a group.</p>
+
+</dd>
+<dt><strong class="Mark"><code class="code">bruteForce</code> (default <code class="code">"auto"</code>)</strong></dt>
+<dd><p>Whether to try the orbit-enumeration pre-pass described under <code class="code">stabilizer</code> above, which answers an object whose orbit under <var class="Arg">G</var> is small without any stabilizer chain at all. The pre-pass applies to transformations, permutations, partial permutations and digraphs; on every other path this option has no effect.</p>
+
+<p>Under the default <code class="code">"auto"</code> the pre-pass enumerates up to a work budget balancing the measured cost of enumeration against the measured cost of the search, computed from the degree, the number of generators and the size of the encoded object, and gives up and runs the search when the orbit does not close within it. The budget consults nothing but those constants, so it does not depend on session state (in particular, whether a stabilizer chain for <var class="Arg">G</var> has already been computed changes nothing). Passing <code class="keyw">false</code> always runs the search. Passing <code class="keyw">true</code> removes the budget: the orbit is enumerated however large it turns out to be, so pass it only when you know the orbit is small. The budget is a heuristic and is sometimes wrong in both directions, which is what these two overrides are for.</p>
+
+<p>For the minimum orderings all three settings compute the same answer, because the pre-pass minimises exactly the order the search minimises; they differ only in how long they take. Note that <code class="func">IsMinimalImage</code> (<a href="chap2_mj.html#X7E9EFA0E7A997586"><span class="RefLink">2.2-1</span></a>) stops the enumeration at the first image smaller than <var class="Arg">O</var>, so it can answer <code class="keyw">false</code> even for orbits which would run past the budget.</p>
+
+<p>Under a non-minimum ordering the pre-pass returns the minimum of the orbit, which is constant on the orbit and so is a canonical form, but is not the representative the search would have selected. Both are valid; they are different. This is the same settings-dependence described under <code class="code">stabilizer</code> above, and the same rule applies: use one setting throughout. Whether the pre-pass runs at all is decided from the orbit alone, so it cannot split a single orbit between the two.</p>
+
+</dd>
+<dt><strong class="Mark"><code class="code">search</code> (default <code class="code">"bfs"</code>)</strong></dt>
+<dd><p>Which search strategy the native engine uses. The default <code class="code">"bfs"</code> is the frontier search: it stores every partial image achieving the minimal prefix, which can exhaust memory on highly symmetric inputs (a cyclic group's multiplication table of order 12 exceeds 8GB). Passing <code class="code">"iterative"</code> stores none of them, re-enumerating the realisations of the fixed prefix at every level: bounded memory, at the price of re-enumeration time. Passing <code class="code">"hybrid"</code> runs the frontier search while each stored level fits under <code class="code">frontierLimit</code> nodes, and switches to re-enumeration from the last stored frontier only when a level would exceed the cap, so it matches the default search's speed when memory suffices and degrades gracefully instead of running out of memory. All three produce identical results.</p>
+
+<p><code class="code">"iterative"</code> and <code class="code">"hybrid"</code> are experimental. They support only the minimum ordering on unblocked domains (which excludes sets of sets); any other ordering is rejected with an error.</p>
+
+</dd>
+<dt><strong class="Mark"><code class="code">frontierLimit</code> (default chosen from the input)</strong></dt>
+<dd><p>The cap on the nodes stored per level by <code class="code">search := "hybrid"</code>; the other searches ignore it. When it is not given, the cap is <code class="code">Maximum(1000, QuoInt(50000000, m))</code> nodes for an object encoded on <code class="code">m</code> points, which roughly bounds the stored list entries rather than the node count. After a hybrid run the global <code class="code">_IMAGES_HYBRID_STATS</code> holds the widest frontier actually stored and the level at which the search switched to re-enumeration (<code class="keyw">fail</code> if it never did), which is the information needed to tune the cap.</p>
+
+</dd>
+<dt><strong class="Mark"><code class="code">engine</code> (default <code class="code">"native"</code>)</strong></dt>
+<dd><p>Which algorithm to use to compute the canonical image. The default <code class="code">"native"</code> uses this package's own algorithm. Passing <code class="code">"vole"</code> instead computes the canonical image using the <strong class="pkg">vole</strong> package (via <code class="code">VoleFind.Canonical</code>), which supports the same actions except for fundamental structures (Chapter <a href="chap3_mj.html#X82DFAEB182674798"><span class="RefLink">3</span></a>). <strong class="pkg">vole</strong> must already be loaded; an error is raised if it is requested but not available. Note that <strong class="pkg">vole</strong> produces a different (but equally valid) canonical representative, so the two engines must not be mixed for a given computation. The <code class="code">"vole"</code> engine only applies to <code class="func">CanonicalImage</code> (<a href="chap2_mj.html#X780189E3873B7A42"><span class="RefLink">2.2-5</span></a>); it cannot compute minimal images and will raise an error if requested to.</p>
+
+</dd>
+</dl>
+
+<div class="chlinkprevnextbot">&nbsp;<a href="chap0_mj.html">[Top of Book]</a>&nbsp;  <a href="chap0_mj.html#contents">[Contents]</a>&nbsp;  &nbsp;<a href="chap1_mj.html">[Previous Chapter]</a>&nbsp;  &nbsp;<a href="chap3_mj.html">[Next Chapter]</a>&nbsp;  </div>
+
+
+<div class="chlinkbot"><span class="chlink1">Goto Chapter: </span><a href="chap0_mj.html">Top</a>  <a href="chap1_mj.html">1</a>  <a href="chap2_mj.html">2</a>  <a href="chap3_mj.html">3</a>  <a href="chap4_mj.html">4</a>  <a href="chapBib_mj.html">Bib</a>  <a href="chapInd_mj.html">Ind</a>  </div>
+
+<hr />
+<p class="foot">generated by <a href="https://www.math.rwth-aachen.de/~Frank.Luebeck/GAPDoc">GAPDoc2HTML</a></p>
+</body>
+</html>

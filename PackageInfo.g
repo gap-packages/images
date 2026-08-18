@@ -1,103 +1,130 @@
-#############################################################################
-##  
-##  Demo PackageInfo.g for the GitHubPagesForGAP
-##
-
+#
+# images: Minimal and Canonical images
+#
+# This file contains package meta data. For additional information on
+# the meaning and correct usage of these fields, please consult the
+# manual of the "Example" package as well as the comments in its
+# PackageInfo.g file.
+#
 SetPackageInfo( rec(
 
-PackageName := "GitHubPagesForGAP",
-
-Subtitle := "A GitHub Pages generator for GAP packages",
-Version := "0.4",
-Date := "10/04/2025", # dd/mm/yyyy format
-License := "0BSD",
-
+PackageName := "images",
+Subtitle := "Minimal and Canonical images",
+Version := "1.4.2",
+Date := "18/08/2026", # dd/mm/yyyy format
+License := "MPL-2.0",
 Persons := [
   rec(
-    LastName      := "Horn",
-    FirstNames    := "Max",
-    IsAuthor      := true,
-    IsMaintainer  := true,
-    Email         := "mhorn@rptu.de",
-    WWWHome       := "https://www.quendi.de/math",
-    GitHubUsername:= "fingolfin",
-    PostalAddress := Concatenation(
-                       "Fachbereich Mathematik\n",
-                       "RPTU Kaiserslautern-Landau\n",
-                       "Gottlieb-Daimler-Straße 48\n",
-                       "67663 Kaiserslautern\n",
-                       "Germany" ),
-    Place         := "Kaiserslautern, Germany",
-    Institution   := "RPTU Kaiserslautern-Landau"
+    IsAuthor := true,
+    IsMaintainer := true,
+    FirstNames := "Christopher",
+    LastName := "Jefferson",
+    WWWHome := "https://heather.cafe/",
+    Email := "caj21@st-andrews.ac.uk",
+    Place := "St Andrews",
+    Institution := "University of St Andrews",
   ),
 
-  rec(
-    LastName      := "Thor",
-    FirstNames    := "A. U.",
+    rec(
+    LastName      := "Pfeiffer",
+    FirstNames    := "Markus",
     IsAuthor      := true,
     IsMaintainer  := false,
-    #Email         := "author@example.com",
-  ),
+    Email         := "markus.pfeiffer@morphism.de",
+    WWWHome       := "http://www.morphism.de/~markusp/",
+    Place         := "St Andrews",
+    Institution   := "University of St Andrews"
+    ),
 
-  rec(
-    LastName      := "Itor",
-    FirstNames    := "Jan",
-    IsAuthor      := false,
-    IsMaintainer  := true,
-    #Email         := "janitor@example.com",
-  ),
+    rec(
+    LastName := "Waldecker",
+    FirstNames := "Rebecca",
+    IsAuthor := true,
+    IsMaintainer := false,
+    Email := "rebecca.waldecker@mathematik.uni-halle.de",
+    WWWHome := "http://conway1.mathematik.uni-halle.de/~waldecker/",
+    Place := "Halle",
+    Institution := "Martin-Luther-Universität Halle-Wittenberg"
+    ),
+
+    rec(
+    LastName := "Jonauskyte",
+    FirstNames := "Eliza",
+    IsAuthor := true,
+    IsMaintainer := false,
+    Email := "ej31@st-andrews.ac.uk",
+    Place := "St Andrews",
+    Institution := "University of St Andrews"
+    )
+
 ],
 
-Status := "other",
+PackageWWWHome := "https://gap-packages.github.io/images/",
 
-# The following are not strictly necessary in your own PackageInfo.g
-# (in the sense that update.g only looks at the usual fields
-# like PackageWWWHome, ArchiveURL etc.). But they are convenient
-# if you use exactly the scheme for your package website that we propose.
-GithubUser := "gap-system",
-GithubRepository := ~.PackageName,
-GithubWWW := Concatenation("https://github.com/", ~.GithubUser, "/", ~.GithubRepository),
-
-PackageWWWHome := Concatenation("https://", ~.GithubUser, ".github.io/", ~.GithubRepository, "/"),
+ArchiveURL     := Concatenation("https://github.com/gap-packages/images/",
+                                "releases/download/v", ~.Version,
+                                "/images-", ~.Version),
 README_URL     := Concatenation( ~.PackageWWWHome, "README.md" ),
 PackageInfoURL := Concatenation( ~.PackageWWWHome, "PackageInfo.g" ),
-# The following assumes you are using the Github releases system. If not, adjust
-# it accordingly.
-ArchiveURL     := Concatenation(~.GithubWWW,
-                    "/releases/download/v", ~.Version, "/",
-                    ~.GithubRepository, "-", ~.Version),
 
-ArchiveFormats := ".tar.gz .tar.bz2",
+ArchiveFormats := ".tar.gz",
 
-AbstractHTML := 
-  "This is a pseudo package that contains no actual\
-  <span class=\"pkgname\">GAP</span> code. Instead, it is a template for other\
-  GAP packages that allows to quickly setup GitHub Pages.",
+##  Status information. Currently the following cases are recognized:
+##    "accepted"      for successfully refereed packages
+##    "submitted"     for packages submitted for the refereeing
+##    "deposited"     for packages for which the GAP developers agreed
+##                    to distribute them with the core GAP system
+##    "dev"           for development versions of packages
+##    "other"         for all other packages
+##
+Status := "deposited",
+
+SourceRepository := rec(
+  Type := "git",
+  URL := "https://github.com/gap-packages/images"
+),
+IssueTrackerURL := Concatenation( ~.SourceRepository.URL, "/issues" ),
+
+AbstractHTML   :=  "A package for finding minimal and canonical images in permutation groups",
 
 PackageDoc := rec(
-  BookName  := "GitHubPagesForGAP",
+  BookName  := "images",
   ArchiveURLSubset := ["doc"],
-  HTMLStart := "doc/chap0.html",
+  HTMLStart := "doc/chap0_mj.html",
   PDFFile   := "doc/manual.pdf",
   SixFile   := "doc/manual.six",
-  LongTitle := "A GitHub Pages generator for GAP packages",
+  LongTitle := "Minimal and Canonical images",
 ),
 
-# The following dependencies are fake and for testing / demo purposes
 Dependencies := rec(
-  GAP := ">=4.8.1",
-  NeededOtherPackages := [
-    ["GAPDoc", ">= 1.2"],
-    ["IO", ">= 4.1"],
-  ],
-  SuggestedOtherPackages := [["orb", ">= 4.2"]],
-  ExternalConditions := []
+  GAP := ">= 4.13",
+  NeededOtherPackages := [ [ "Digraphs", ">= 1.0.0"],
+                           [ "Datastructures", ">= 0.2.0"],
+   ],
+  SuggestedOtherPackages := [ ["ferret", ">= 0.8.0"],
+                              ["vole", ">= 0.6.0"],
+                            ],
+  ExternalConditions := [ ],
 ),
 
-AvailabilityTest := ReturnTrue,
+AvailabilityTest := function()
+        return true;
+end,
 
-Keywords := ["GitHub Pages", "GAP"]
+TestFile := "tst/testall.g",
 
+Keywords := [  ],
+
+AutoDoc := rec(
+    TitlePage := rec(
+        Copyright := """
+&copyright; 2013-2026
+"""
+    ),
+    entities := rec(
+        Images := "<Package>Images</Package>",
+    ),
+)
 ));
 
 
