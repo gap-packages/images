@@ -1,5 +1,10 @@
 # Changelog for the images package
 
+## Unreleased
+
+* Fix an error in `MinimalImage` and friends for a group given by an
+  empty list of generators, such as `Group([], ())`.
+
 ## 1.4.1 (2026-08-17)
 
 * Fix accidental error in test suite when `vole` is not present.

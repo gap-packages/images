@@ -72,6 +72,20 @@ true
 gap> pp^MinimalImagePerm(SymmetricGroup(30), pp, OnPoints)
 >    = MinimalImage(SymmetricGroup(30), pp, OnPoints);
 true
+
+# a group given by an empty list of generators: the orbit budget divides
+# by the generator count
+gap> triv := Group([], ());;
+gap> MinimalImage(triv, PartialPerm([2,4],[3,5]), OnPoints);
+[2,3][4,5]
+gap> MinimalImage(triv, Transformation([2,1,1]), OnPoints);
+Transformation( [ 2, 1, 1 ] )
+gap> MinimalImage(triv, [2,4], OnSets);
+[ 2, 4 ]
+gap> IsMinimalImage(triv, PartialPerm([2,4],[3,5]), OnPoints);
+true
+gap> MinimalImagePerm(triv, PartialPerm([2,4],[3,5]), OnPoints);
+()
 gap> STOP_TEST( "test_minimage.tst", 10000 );
 images package: test_minimage.tst
 #############################################################################

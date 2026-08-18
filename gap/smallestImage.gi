@@ -522,8 +522,9 @@ _IMAGES_PairSmallOrbit := function(l, set, G, mMax, settings)
     # generous chain-free budget enumerated 40320 elements in 600ms
     # where the search takes 95ms. See smallorbit/cap-misfire in
     # tst/bench.g.
-    if settings.bruteForce = true then
-        # the caller has taken responsibility for the orbit being small
+    if settings.bruteForce = true or IsEmpty(gens) then
+        # the caller has taken responsibility for the orbit being small;
+        # a group given by an empty generating list has a one-element orbit
         cap := infinity;
     else
         cap := Minimum(500000,
