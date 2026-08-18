@@ -1,6 +1,6 @@
 # Changelog for the images package
 
-## Unreleased
+## 1.4.2 (2026-08-18)
 
 * Fix an error in `MinimalImage` and friends for a group given by an
   empty list of generators, such as `Group([], ())`.
